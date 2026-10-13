@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Career Mode 🖥️ 🤖 🏢</title>
+  <link rel="icon" type="image/png" href="navigation/favicon.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="bg-gray-950 text-gray-100">
+  <div id="app">
+    <div class="flex h-screen">
+      <!-- Sidebar -->
+      <nav class="flex w-56 shrink-0 flex-col border-r border-gray-800 bg-gray-900 px-3 py-4">
+        <img src="navigation/logo.png" alt="career-mode" class="mx-auto mb-4 h-28 w-28 select-none" draggable="false" />
+        <div class="space-y-1">
+          <button data-nav="calendar"
+            class="nav-item flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-gray-50">
+            <span>📅</span><span data-i18n="nav.calendar">Calendar</span>
+          </button>
+          <button data-nav="agencies"
+            class="nav-item flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-gray-50">
+            <span>🏢</span><span data-i18n="nav.companies">Companies</span>
+          </button>
+          <button data-nav="follow-up"
+            class="nav-item flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-gray-50">
+            <span>🔍</span><span data-i18n="nav.followUp">Follow Up</span>
+          </button>
+          <button data-nav="pending"
+            class="nav-item flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-gray-50">
+            <span>⏳</span><span data-i18n="nav.pending">Pending</span>
+          </button>
+        </div>
+
+        <hr class="my-3 border-gray-800">
+
+        <button data-nav="profile"
+          class="nav-item flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-gray-50">
+          <span>👤</span><span data-i18n="nav.profile">My Profile</span>
+        </button>
+        <button data-nav="outreach"
+          class="nav-item flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-gray-50">
+          <span>📤</span><span data-i18n="nav.outreach">Outreach</span>
+        </button>
+
+        <hr class="my-3 border-gray-800">
+
+        <div class="space-y-1">
+          <button data-nav="settings"
+            class="nav-item flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-gray-50">
+            <span>⚙️</span><span data-i18n="nav.settings">Settings</span>
+          </button>
+          <a href="/docs" target="_blank" rel="noreferrer"
+            class="flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-gray-50">
+            <span>📚</span><span data-i18n="nav.apiDocs">API docs</span>
+          </a>
+        </div>
+      </nav>
+
+      <!-- Main content -->
+      <main class="flex-1 overflow-y-auto pb-[40px]">
+        <!-- Calendar view -->
+        <section id="view-calendar" class="hidden px-8 py-6">
+          <header class="mb-6 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <button id="today"
+                class="state-pill rounded-full border px-3 py-1 text-xs" data-i18n="calendar.thisWeek">This Week</button>
+              <button id="prev-week"
+                class="rounded-full border border-gray-800 px-3 py-1 text-sm text-gray-400 hover:border-gray-700 hover:bg-gray-800 hover:text-gray-50">←</button>
+              <h1 id="week-label" class="text-lg font-medium text-gray-100"></h1>
+              <button id="next-week"
+                class="rounded-full border border-gray-800 px-3 py-1 text-sm text-gray-400 hover:border-gray-700 hover:bg-gray-800 hover:text-gray-50">→</button>
+              <span id="week-range" class="text-sm text-gray-500"></span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="new-application-btn" type="button"
+                class="state-pill rounded-full border px-4 py-2 text-sm font-medium" data-i18n="calendar.newApplication">
+                + Application
+              </button>
+              <button id="new-event-btn" type="button"
+                class="state-pill rounded-full border px-4 py-2 text-sm font-medium" data-i18n="calendar.newUpdate">
+                + Update
+              </button>
+              <button id="sync-calendar-btn" type="button" disabled title="Google Calendar not synced"
+                aria-label="Google Calendar not synced" data-i18n-title="calendar.syncOff" data-i18n-aria-label="calendar.syncOff"
+                class="state-pill flex h-[38px] w-[38px] items-center justify-center rounded-full border disabled:cursor-not-allowed disabled:opacity-40 disabled:grayscale">
+                <img src="navigation/google-calendar.png" alt="" class="h-5 w-5" draggable="false" />
+              </button>
+              <button id="weekly-report-btn" type="button" aria-pressed="false"
+                class="state-pill rounded-full border px-4 py-2 text-sm font-medium" data-i18n="calendar.weeklyReport">
+                📊 Weekly Report
+              </button>
+            </div>
+          </header>
+          <p id="sync-status" class="notice -mt-3 mb-3 text-right text-xs" role="status"></p>
+          <div id="calendar-body" class="slide-transition">
+            <div id="week-grid" class="grid grid-cols-5 gap-3 slide-transition"></div>
+
+            <div id="weekly-report-section" class="mx-auto hidden max-w-[470px]">
+              <h2 class="text-lg font-semibold text-gray-100" data-i18n="report.title">Weekly Report</h2>
+              <p id="weekly-report-meta" class="mb-4 text-sm text-gray-500"></p>
+              <div id="weekly-report-content" class="static-page rounded-2xl border border-gray-800 bg-gray-900 p-4"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Pending view (central page): the queued links, and the form that queues one (see js/pending.js) -->
+        <section id="view-pending" class="hidden px-8 py-6">
+          <div class="mx-auto max-w-2xl">
+            <header class="mb-6">
+              <h1 class="text-lg font-medium text-gray-100" data-i18n="pending.title">Pending</h1>
+              <p id="pending-meta" class="text-sm text-gray-500"></p>
+            </header>
+
+            <div id="pending-list" class="mb-6 rounded-2xl border border-gray-800 bg-gray-900 p-2"></div>
+
+            <h2 class="text-base font-medium text-gray-100" data-i18n="pending.queueTitle">Queue application link</h2>
+            <p class="mb-3 text-sm text-gray-500" data-i18n-html="pending.queueHelp">Add link to the queue to apply in bulk later using
+              <code class="code">/apply-pending</code>
+            </p>
+
+            <form id="apply-form" class="space-y-3">
+              <div class="flex items-start gap-2">
+                <input type="text" id="apply-url" placeholder="JD Post link" data-i18n-placeholder="pending.placeholder"
+                  autocomplete="off"
+                  class="min-w-0 flex-1 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"
+                  required />
+                <button type="submit" id="apply-form-submit"
+                  class="rounded-full bg-gray-100 px-5 py-2 text-sm font-medium text-gray-900 hover:bg-white disabled:opacity-50" data-i18n="pending.queue">Queue</button>
+              </div>
+              <p id="apply-url-error" class="notice text-xs text-red-400"></p>
+              <p id="apply-feedback" class="hidden items-center gap-2 text-xs"></p>
+            </form>
+          </div>
+        </section>
+
+        <!-- Outreach view (static page, not markdown) -->
+        <section id="view-outreach" class="hidden px-8 py-6">
+          <div class="mx-auto max-w-3xl">
+            <header class="mb-6 flex items-center gap-2" id="outreach-tabs"></header>
+            <div class="static-page slide-transition" id="outreach-content"></div>
+          </div>
+        </section>
+
+        <!-- My Profile view: profile/profile.md drawn as cards (see js/profile-view.js) -->
+        <section id="view-profile" class="hidden px-8 py-6">
+          <div class="mx-auto max-w-3xl">
+            <header class="mb-6">
+              <h1 class="text-lg font-medium text-gray-100" data-i18n="profile.title">My Profile</h1>
+              <p class="text-sm text-gray-500" data-i18n="profile.subtitle">What the skills read to fill a form or write to a recruiter. It stays on
+                this computer.</p>
+            </header>
+            <div id="profile-content"></div>
+          </div>
+        </section>
+
+        <!-- Agencies & Clients view (one list) -->
+        <section id="view-companies" class="hidden px-10 py-6">
+          <div class="mx-auto max-w-3xl">
+            <header class="mb-4 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <button type="button" id="filter-active-btn" class="tab-pill" data-i18n="companies.active">🤝 Active</button>
+                <button type="button" id="filter-archived-btn" class="tab-pill" data-i18n="companies.archived">📦 Archived</button>
+              </div>
+            </header>
+            <div id="companies-content" class="slide-transition"></div>
+          </div>
+        </section>
+
+        <!-- Settings view: a stack of sections (see js/settings.js) -->
+        <section id="view-settings" class="hidden px-8 py-6">
+          <div class="mx-auto max-w-2xl">
+            <header class="mb-6">
+              <h1 class="text-lg font-medium text-gray-100" data-i18n="settings.title">Settings</h1>
+              <p class="text-sm text-gray-500" data-i18n="settings.subtitle">How this copy of career-mode is set up on this computer.</p>
+            </header>
+            <div id="settings-content" class="space-y-6"></div>
+          </div>
+        </section>
+
+        <!-- Follow Up Applications view (central page, not popup) -->
+        <section id="view-follow-up" class="hidden px-8 py-6">
+          <div class="mx-auto max-w-2xl">
+            <header class="mb-6">
+              <h1 class="text-lg font-medium text-gray-100" data-i18n="followUp.title">Follow Up Applications</h1>
+              <p class="text-sm text-gray-500" data-i18n="followUp.subtitle">Active agencies and clients, by the days since their first event — pick the
+                ones to archive.</p>
+            </header>
+
+            <div class="mb-6 flex items-end gap-2">
+              <div class="flex-1">
+                <label for="follow-up-days" class="mb-1 block text-xs text-gray-500" data-i18n="followUp.days">Days since the first event</label>
+                <input type="number" id="follow-up-days" value="0" min="0"
+                  class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" />
+              </div>
+              <div>
+                <label for="follow-up-sort" class="mb-1 block text-xs text-gray-500" data-i18n="followUp.sortBy">Sort by</label>
+                <select id="follow-up-sort"
+                  class="select-chevron appearance-none rounded-lg border border-gray-700 bg-gray-800 py-2 pl-3 pr-9 text-sm text-gray-100">
+                  <option value="days" data-i18n="followUp.sortOldest">Days (oldest first)</option>
+                  <option value="newest" data-i18n="followUp.sortNewest">Days (newest first)</option>
+                  <option value="name" data-i18n="followUp.sortName">Name (A–Z)</option>
+                </select>
+              </div>
+              <button id="follow-up-fetch-btn" type="button"
+                class="rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white" data-i18n="followUp.fetch">Fetch</button>
+            </div>
+
+            <div id="follow-up-content"></div>
+
+            <div class="mt-4 flex justify-end">
+              <button id="follow-up-archive-btn" type="button"
+                class="hidden rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500" data-i18n="followUp.archiveSelected">Archive
+                selected</button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Google Calendar sync: the events it would add, to tick and confirm (see js/calendar-sync.js) -->
+  <div id="sync-overlay" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-6">
+    <form id="sync-form"
+      class="flex max-h-full w-full max-w-2xl scale-95 flex-col rounded-2xl border border-gray-800 bg-gray-900 p-6 opacity-0 shadow-xl transition-all duration-200">
+      <div>
+        <h2 class="text-base font-medium text-gray-100" data-i18n="sync.title">Sync Google Calendar</h2>
+        <p id="sync-subtitle" class="mt-1 text-xs text-gray-500"></p>
+      </div>
+      <ul id="sync-list" class="mt-3 min-h-0 flex-1 space-y-2 overflow-y-auto"></ul>
+      <p id="sync-error" class="notice mt-3 text-xs text-red-400" role="alert"></p>
+      <div class="mt-3 flex justify-end gap-2 pt-1">
+        <button type="button" id="sync-cancel"
+          class="rounded-full border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-gray-50" data-i18n="common.cancel">Cancel</button>
+        <button type="submit" id="sync-confirm"
+          class="rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white disabled:opacity-50"></button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Update form overlay -->
+  <div id="form-overlay" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-6">
+    <form id="event-form"
+      class="w-full max-w-md scale-95 space-y-3 rounded-2xl border border-gray-800 bg-gray-900 p-6 opacity-0 shadow-xl transition-all duration-200">
+      <div class="flex items-center justify-between">
+        <h2 id="event-form-title" class="text-base font-medium text-gray-100" data-i18n="form.titleUpdate">Update</h2>
+        <button type="button" id="form-delete" title="Delete" data-i18n-title="common.delete"
+          class="hidden rounded-full p-1.5 text-gray-500 hover:bg-red-950 hover:text-red-400">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.5" class="h-5 w-5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M6 6.75h12M9.75 6.75V4.5a1.5 1.5 0 0 1 1.5-1.5h1.5a1.5 1.5 0 0 1 1.5 1.5v2.25m3 0v12a1.5 1.5 0 0 1-1.5 1.5h-6a1.5 1.5 0 0 1-1.5-1.5v-12h9Zm-6 4.5v6m3-6v6" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="flex gap-2">
+        <div class="flex-1">
+          <input type="date" id="f-date" aria-label="Date" data-i18n-aria-label="form.date"
+            class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" required />
+        </div>
+        <div class="w-32">
+          <input type="time" id="f-time" aria-label="Time" data-i18n-aria-label="form.time"
+            class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" />
+        </div>
+      </div>
+
+      <div id="f-event-wrap">
+        <select id="f-event" aria-label="Event" data-i18n-aria-label="form.event"
+          class="select-chevron w-full appearance-none rounded-lg border border-gray-700 bg-gray-800 py-2 pl-3 pr-9 text-sm text-gray-100"></select>
+      </div>
+
+      <div id="f-apply-wrap" class="hidden">
+        <select id="f-apply-type" aria-label="Type" data-i18n-aria-label="form.type"
+          class="select-chevron w-full appearance-none rounded-lg border border-gray-700 bg-gray-800 py-2 pl-3 pr-9 text-sm text-gray-100"></select>
+      </div>
+
+      <div id="f-company-wrap">
+        <p class="mb-1 block text-xs text-gray-500">🏢 <span data-i18n="form.company">Company</span> <span class="req">*</span> <span
+            class="text-gray-600" data-i18n="form.companyHint">(agency, client or both: at least one)</span></p>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <input type="text" id="f-agency" list="agency-list" placeholder="Agency" data-i18n-placeholder="form.agency" autocomplete="off"
+              class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" />
+          </div>
+          <div>
+            <input type="text" id="f-client" list="client-list" placeholder="Client" data-i18n-placeholder="form.client" autocomplete="off"
+              class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" />
+          </div>
+        </div>
+        <p id="f-company-hint" class="notice mt-1 text-xs text-amber-400"></p>
+        <datalist id="agency-list"></datalist>
+        <datalist id="client-list"></datalist>
+      </div>
+
+      <div id="f-recruiter-wrap" class="hidden">
+        <label for="f-recruiter" class="mb-1 block text-xs text-gray-500">🧑‍💼 <span data-i18n="form.recruiters">Recruiters (one URL per line)</span></label>
+        <textarea id="f-recruiter" rows="3"
+          class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"></textarea>
+      </div>
+
+      <div>
+        <label for="f-notes" class="mb-1 block text-xs text-gray-500">🗒️ <span data-i18n="form.notes">Notes</span></label>
+        <textarea id="f-notes" rows="8"
+          class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"></textarea>
+      </div>
+
+      <div id="f-jd-wrap" class="hidden">
+        <label for="f-jd" class="mb-1 block text-xs text-gray-500">📎 <span data-i18n="form.appLink">Application link</span> <span id="f-jd-optional"
+            class="text-gray-600" data-i18n="common.optional">(optional)</span><span id="f-jd-req" class="req hidden">*</span></label>
+        <input type="text" id="f-jd" autocomplete="off"
+          class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" />
+      </div>
+
+      <p id="form-error" class="notice text-xs text-red-400"></p>
+
+      <div class="flex gap-2 pt-2">
+        <button type="button" id="form-cancel"
+          class="flex-1 rounded-full border border-gray-700 py-2 text-sm text-gray-400 hover:bg-gray-800 hover:text-gray-50" data-i18n="common.cancel">Cancel</button>
+        <button type="submit" id="form-submit"
+          class="flex-1 rounded-full bg-gray-100 py-2 text-sm font-medium text-gray-900 hover:bg-white" data-i18n="common.save">Save</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Application form overlay: an application sent by hand to a company new to the app -->
+  <div id="app-overlay" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-6">
+    <form id="app-form"
+      class="w-full max-w-md scale-95 space-y-3 rounded-2xl border border-gray-800 bg-gray-900 p-6 opacity-0 shadow-xl transition-all duration-200">
+      <h2 class="text-base font-medium text-gray-100">📝 <span data-i18n="app.title">New application</span></h2>
+
+      <div>
+        <label for="app-type" class="mb-1 block text-xs text-gray-500">📨 <span data-i18n="app.type">Type</span> <span class="req">*</span></label>
+        <select id="app-type"
+          class="select-chevron w-full appearance-none rounded-lg border border-gray-700 bg-gray-800 py-2 pl-3 pr-9 text-sm text-gray-100"
+          required>
+          <option value="" disabled selected data-i18n="app.choose">Choose</option>
+          <option value="email_apply" data-i18n="app.typeEmail">Email</option>
+          <option value="passive" data-i18n="app.typePassive">Passive</option>
+          <option value="web_form" data-i18n="app.typeWeb">Web</option>
+        </select>
+      </div>
+
+      <div class="flex items-center justify-between">
+        <label for="app-agency" class="text-sm text-gray-300">🤝 <span data-i18n="app.agency">Agency</span></label>
+        <input type="checkbox" id="app-agency" class="h-4 w-4 rounded border-gray-700 bg-gray-800" checked />
+      </div>
+
+      <div>
+        <label for="app-company" class="mb-1 block text-xs text-gray-500"><span id="app-company-text">🏢 Company</span>
+          <span class="req">*</span></label>
+        <input type="text" id="app-company" list="agency-list" autocomplete="off"
+          class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" required />
+        <p id="app-company-hint" class="notice mt-1 text-xs text-amber-400"></p>
+      </div>
+
+      <div>
+        <label for="app-home" class="mb-1 block text-xs text-gray-500">🔗 <span data-i18n="app.home">Company Home</span> <span id="app-home-optional"
+            class="hidden text-gray-600" data-i18n="common.optional">(optional)</span><span id="app-home-req" class="req">*</span></label>
+        <input type="text" id="app-home" placeholder="https://www.linkedin.com/company/name/home" autocomplete="off"
+          class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" required />
+      </div>
+
+      <div>
+        <label for="app-recruiter" class="mb-1 block text-xs text-gray-500">🧑‍💼 <span data-i18n="form.recruiters">Recruiters (one URL per line)</span> <span
+            class="text-gray-600" data-i18n="common.optional">(optional)</span></label>
+        <textarea id="app-recruiter" rows="3" placeholder="https://www.linkedin.com/in/recruiter"
+          class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"></textarea>
+      </div>
+
+      <div>
+        <label for="app-website" class="mb-1 block text-xs text-gray-500">🌐 <span data-i18n="app.website">Company website</span> <span
+            class="text-gray-600" data-i18n="common.optional">(optional)</span></label>
+        <input type="url" id="app-website" autocomplete="off"
+          class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" />
+      </div>
+
+      <div>
+        <label for="app-notes" class="mb-1 block text-xs text-gray-500">🗒️ <span data-i18n="form.notes">Notes</span> <span
+            class="text-gray-600" data-i18n="common.optional">(optional)</span></label>
+        <textarea id="app-notes" rows="5"
+          class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"></textarea>
+      </div>
+
+      <div id="app-link-wrap">
+        <label for="app-link" class="mb-1 block text-xs text-gray-500">📎 <span data-i18n="form.appLink">Application link</span> <span id="app-link-optional"
+            class="text-gray-600" data-i18n="common.optional">(optional)</span><span id="app-link-req" class="req hidden">*</span></label>
+        <input type="text" id="app-link" autocomplete="off"
+          class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" />
+      </div>
+
+      <p id="app-error" class="notice text-xs text-red-400"></p>
+
+      <div class="flex gap-2 pt-2">
+        <button type="button" id="app-cancel"
+          class="flex-1 rounded-full border border-gray-700 py-2 text-sm text-gray-400 hover:bg-gray-800 hover:text-gray-50" data-i18n="common.cancel">Cancel</button>
+        <button type="submit" id="app-submit"
+          class="flex-1 rounded-full bg-gray-100 py-2 text-sm font-medium text-gray-900 hover:bg-white" data-i18n="common.save">Save</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Agency/Client edit form overlay -->
+  <div id="edit-overlay" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-6">
+    <form id="edit-form"
+      class="max-h-[85vh] w-full max-w-md scale-95 space-y-3 overflow-y-auto rounded-2xl border border-gray-800 bg-gray-900 p-6 opacity-0 shadow-xl transition-all duration-200">
+      <div class="flex items-center justify-between">
+        <h2 id="edit-form-title" class="text-base font-medium text-gray-100" data-i18n="common.edit">Edit</h2>
+        <div class="flex items-center gap-1">
+          <button type="button" id="edit-form-archive" title="Archive" data-i18n-title="common.archive"
+            class="rounded-full p-1.5 text-gray-500 hover:bg-amber-950 hover:text-amber-400">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.5" class="h-5 w-5">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
+            </svg>
+          </button>
+          <button type="button" id="edit-form-delete" title="Delete" data-i18n-title="common.delete"
+            class="rounded-full p-1.5 text-gray-500 hover:bg-red-950 hover:text-red-400">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.5" class="h-5 w-5">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M6 6.75h12M9.75 6.75V4.5a1.5 1.5 0 0 1 1.5-1.5h1.5a1.5 1.5 0 0 1 1.5 1.5v2.25m3 0v12a1.5 1.5 0 0 1-1.5 1.5h-6a1.5 1.5 0 0 1-1.5-1.5v-12h9Zm-6 4.5v6m3-6v6" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="edit-form-fields" class="space-y-3"></div>
+
+      <p id="edit-form-error" class="notice text-xs text-red-400"></p>
+
+      <div class="flex gap-2 pt-2">
+        <button type="button" id="edit-form-cancel"
+          class="flex-1 rounded-full border border-gray-700 py-2 text-sm text-gray-400 hover:bg-gray-800 hover:text-gray-50" data-i18n="common.cancel">Cancel</button>
+        <button type="submit" id="edit-form-submit"
+          class="flex-1 rounded-full bg-gray-100 py-2 text-sm font-medium text-gray-900 hover:bg-white" data-i18n="common.save">Save</button>
+      </div>
+    </form>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,336 @@
+body {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Native date/time picker icons default to a dark glyph, invisible on our dark inputs. */
+input[type='date']::-webkit-calendar-picker-indicator,
+input[type='time']::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+/* Explicit system-font stack for static pages (Outreach and future ones) — same
+   font the rest of the app already gets from Tailwind's Preflight default, made
+   explicit here so it doesn't depend on that staying unchanged. Matches Tailwind's
+   default `font-sans` stack exactly (Calendar's font) — `ui-sans-serif` has to
+   come first, since without it some browsers skip straight past `-apple-system`/
+   `system-ui` to 'Segoe UI'/'Helvetica Neue'/Arial instead of the OS's real UI font. */
+.static-page {
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/* Inline code (a filename, a command, a setting): one look everywhere. Inside a text box (`pre.outreach-box`)
+   it is plain text instead, see below. */
+.code {
+  border-radius: 0.25rem;
+  background-color: #1f2937;
+  padding: 0.125rem 0.25rem;
+  color: #d1d5db;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+/* Default link color/hover for any static page — covers plain <a> tags (e.g. in
+   Profile's Basics list) that aren't inside .outreach-prose below. */
+.static-page a {
+  color: #60a5fa;
+  text-decoration: underline;
+}
+.static-page a:hover {
+  color: #93c5fd;
+}
+
+/* The red asterisk next to the title of a mandatory field. */
+.req {
+  color: #ef4444;
+  margin-left: 0.1rem;
+}
+
+/* A notice line (a hint, an error, a status) folds open and closed instead of popping in. Folded, it takes no
+   room at all: its margins go too (!important beats the spacing its container gives it). */
+.notice {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.2s ease, opacity 0.2s ease, margin 0.2s ease;
+}
+.notice.is-open {
+  max-height: 8rem;
+  opacity: 1;
+}
+.notice:not(.is-open) {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* The description of a field in Settings unfolds under the field when it gets the focus and stays open
+   (.is-open, set in settings.js) until another field gets it: losing the focus does not fold it away. */
+.field-hint {
+  display: grid;
+  grid-template-rows: minmax(0, 0fr);
+  opacity: 0;
+  transition: grid-template-rows 0.18s ease, opacity 0.18s ease;
+}
+.field-hint-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+.field.is-open .field-hint {
+  grid-template-rows: minmax(0, 1fr);
+  opacity: 1;
+}
+
+#event-form.is-open,
+#sync-form.is-open,
+#app-form.is-open,
+#edit-form.is-open {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.slide-transition {
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+.slide-transition.slide-out-left {
+  transform: translateX(-24px);
+  opacity: 0;
+}
+.slide-transition.slide-out-right {
+  transform: translateX(24px);
+  opacity: 0;
+}
+.slide-transition.slide-in-prepare-left {
+  transition: none;
+  transform: translateX(24px);
+  opacity: 0;
+}
+.slide-transition.slide-in-prepare-right {
+  transition: none;
+  transform: translateX(-24px);
+  opacity: 0;
+}
+/* Opacity-only, no transform — a plain fade for content refreshes that aren't
+   "moved to a different section" (e.g. a filter changing, not a tab switch).
+   Reuses .slide-transition's own transition timing (it already covers opacity). */
+.slide-transition.fade-out-only {
+  opacity: 0;
+}
+#week-grid.fading {
+  transition: opacity 0.12s ease;
+}
+#week-grid.fade-out {
+  opacity: 0;
+}
+
+.day-column {
+  min-height: 420px;
+}
+
+.event-pill {
+  transform: translateY(0) scale(1);
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease;
+}
+
+.event-pill:hover {
+  transform: translateY(-1px) scale(1.015);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.event-pill:active {
+  transform: translateY(-1px) scale(0.98);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+.event-pill.agency-highlight {
+  outline: 2px solid #ffffff;
+  outline-offset: 1px;
+}
+
+.nav-item.active {
+  background-color: #1f2937;
+  color: #f9fafb;
+}
+
+/* Pressed effect for pill-shaped buttons/links (nav, week nav, form actions, etc). */
+button.rounded-full,
+a.rounded-full {
+  transition: transform 0.12s ease;
+}
+button.rounded-full:active,
+a.rounded-full:active {
+  transform: scale(0.96);
+}
+
+.copy-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: #111827;
+  border: 1px solid #374151;
+  color: #d1d5db;
+  cursor: pointer;
+}
+.copy-btn:hover {
+  background: #1f2937;
+}
+
+/* ---------- Outreach page (static, not markdown) ---------- */
+/* A button with an on/off state: the tabs and the four buttons of the Calendar (+ Application, + Update, the
+   Google Calendar one, Weekly Report), which are on while their form, popup or section is open. Off, it is
+   outlined; on hover and on (`.active`) it looks the same, with the dark gray that Today and the arrows of the
+   Calendar, the Cancel buttons and the sidebar have on hover and the active item of the sidebar has. */
+.tab-pill,
+.state-pill {
+  border-color: #374151;
+  color: #d1d5db;
+  background-color: transparent;
+  transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+.tab-pill:hover:not(:disabled),
+.state-pill:hover:not(:disabled),
+.tab-pill.active,
+.state-pill.active {
+  background-color: #1f2937;
+  border-color: #374151;
+  color: #f9fafb;
+}
+
+/* Pill-shaped tab, shared by any section with a top tab bar (Outreach, Agencies/Clients). */
+.tab-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 9999px;
+  border-width: 1px;
+  border-style: solid;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.outreach-prose {
+  line-height: 1.65;
+  color: #d1d5db;
+  margin: 0.5rem 0 1rem;
+}
+.outreach-prose a {
+  color: #60a5fa;
+  text-decoration: underline;
+}
+.outreach-prose a:hover {
+  color: #93c5fd;
+}
+
+/* Collapsible capsule, shared by every accordion-style list (Companies, Follow Up, Outreach messages), in the
+   Calendar's card colors (gray-900 on gray-800). */
+.capsule {
+  border: 1px solid #1f2937;
+  border-radius: 0.75rem;
+  background: #111827;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+}
+.capsule-summary {
+  display: block;
+  width: 100%;
+  cursor: pointer;
+  border: none;
+  background: none;
+  text-align: left;
+  padding: 0.75rem 1.25rem;
+  font-weight: 500;
+  color: #f3f4f6;
+  transition: background-color 0.12s ease;
+}
+.capsule-summary:hover {
+  background-color: #1f2937;
+}
+/* Companies cards add an Edit button next to the title, aligned to the same
+   row instead of pushing content down inside the expanded body. */
+.capsule-header {
+  display: flex;
+  align-items: center;
+  padding-right: 1.25rem;
+}
+.capsule-header:hover {
+  background-color: #1f2937;
+}
+.capsule-header .capsule-summary {
+  width: auto;
+  flex: 1;
+  min-width: 0;
+  padding-right: 0;
+}
+.capsule-header .capsule-summary:hover {
+  background-color: transparent;
+}
+.capsule-edit-btn {
+  display: none;
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+}
+
+.capsule[data-open='true'] .capsule-edit-btn {
+  display: inline-flex;
+}
+/* A card that is always open (the Questions tab): a title that doesn't react, since there is nothing to fold. */
+.capsule-static .capsule-summary {
+  cursor: default;
+}
+.capsule-static .capsule-summary:hover {
+  background: none;
+}
+.capsule-body-wrap {
+  display: grid;
+  /* minmax(0, 0fr), not just 0fr — a bare 0fr still respects the track's
+     implicit "auto" minimum, which defers to the content's min-content size
+     (a button/paragraph can't shrink below its own height), so it never
+     actually reaches 0 and a sliver of the body bleeds through when closed. */
+  grid-template-rows: minmax(0, 0fr);
+  transition: grid-template-rows 0.18s ease;
+}
+.capsule[data-open='true'] .capsule-body-wrap {
+  grid-template-rows: minmax(0, 1fr);
+}
+.capsule-body {
+  overflow: hidden;
+  min-height: 0;
+  padding: 0 1.25rem 1.25rem;
+}
+
+/* A text to copy (a message, a prompt): the same box as an entry of a company's Timeline. */
+.outreach-box {
+  position: relative;
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  margin: 0;
+  color: #d1d5db;
+  font-family: inherit;
+  font-size: 0.875rem;
+  white-space: pre-wrap;
+  transition: border-color 0.12s ease;
+}
+.outreach-box code {
+  font-family: inherit;
+  font-size: inherit;
+}
+.outreach-box:hover {
+  border-color: #4b5563;
+}
+
+
+/* Native <select> arrows sit flush against the right edge. These selects drop the
+   native arrow (appearance-none in the markup) and draw their own with room around it. */
+.select-chevron {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+}

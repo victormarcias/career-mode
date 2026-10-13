@@ -1,0 +1,18 @@
+node_modules/
+dist/
+.env
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+data/
+backup/
+.claude/*
+!.claude/skills/
+.DS_Store
+.server.pid
+.server.log
+# profile/ holds the user's own data: everything in it is ignored except this README and the examples
+profile/*
+!profile/README.md
+!profile/*.example.md

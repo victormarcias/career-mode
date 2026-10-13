@@ -1,0 +1,6 @@
+fastapi>=0.115
+uvicorn>=0.30
+sqlalchemy>=2.0
+alembic>=1.13
+pydantic>=2.7
+certifi>=2024.0
