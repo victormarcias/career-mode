@@ -5,21 +5,21 @@ import { companyHint, escapeHtml, setNotice } from './dom-utils.js'
 import { t } from './i18n.js'
 
 // What an event of the calendar can be logged as (the server accepts only these two).
-const SYNC_TYPES = ['hr_intro', 'tech_interview', 'culture_interview']
+export const SYNC_TYPES = ['hr_intro', 'tech_interview', 'culture_interview']
 
 const STATUS_MS = 8000
 
 // The Monday to Friday the calendar is showing, as the dates the server wants.
-function weekDates(weekStart) {
+export function weekDates(weekStart) {
   return { start: toISODate(weekStart), end: toISODate(addDays(weekStart, 4)) }
 }
 
 // What to say when there is nothing to confirm, or after a sync.
-function repeatingNote(recurringSkipped) {
+export function repeatingNote(recurringSkipped) {
   return recurringSkipped ? ` ${t(recurringSkipped === 1 ? 'sync.repeatingOne' : 'sync.repeatingMany', { count: recurringSkipped })}` : ''
 }
 
-function syncSummary({ created, updated }) {
+export function syncSummary({ created, updated }) {
   const parts = []
   if (created) parts.push(t(created === 1 ? 'sync.addedOne' : 'sync.addedMany', { count: created }))
   if (updated) parts.push(t(updated === 1 ? 'sync.movedOne' : 'sync.movedMany', { count: updated }))
@@ -27,7 +27,7 @@ function syncSummary({ created, updated }) {
 }
 
 // The button works only once a calendar is set in Settings.
-function applySyncState(button, configured) {
+export function applySyncState(button, configured) {
   button.disabled = !configured
   const title = configured ? t('sync.title') : t('calendar.syncOff')
   button.title = title
@@ -47,7 +47,7 @@ const typeOptions = (selected) =>
 // event, its company, with the same two fields as the Update form (an agency, a client, or both). `item.type` is
 // the server's suggestion ("tech" in the title picks Technical interview, "culture" Culture Interview), `item.agency` and `item.client` its offer.
 // A name the app does not have yet is created when the event is added, so an event can be the first of its company.
-function syncRowsHtml(items) {
+export function syncRowsHtml(items) {
   return items
     .map((item, i) => {
       const moved = item.action === 'moved'
@@ -78,14 +78,14 @@ function syncRowsHtml(items) {
     .join('')
 }
 
-function confirmLabel(count) {
+export function confirmLabel(count) {
   if (!count) return t('sync.nothingSelected')
   return t(count === 1 ? 'sync.confirmOne' : 'sync.confirmMany', { count })
 }
 
 // What to send for the popup as it stands: the ticked rows, each with its type and, when it is new, its company.
 // `state` is [{checked, type, agency, client}], in the order of `items`.
-function syncPayload(items, state) {
+export function syncPayload(items, state) {
   return items.flatMap((item, i) => {
     const s = state[i]
     if (!s?.checked) return []
@@ -95,7 +95,7 @@ function syncPayload(items, state) {
 }
 
 // The first ticked new event that has neither an agency nor a client, or null. Every event belongs to a company.
-function firstWithoutCompany(items, state) {
+export function firstWithoutCompany(items, state) {
   return items.find((item, i) => state[i]?.checked && item.action === 'new' && !state[i].agency?.trim() && !state[i].client?.trim()) ?? null
 }
 

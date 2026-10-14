@@ -1,0 +1,5 @@
+-r requirements.txt
+pytest>=8
+httpx>=0.27
+# Starlette 1.x's TestClient prefers httpx2 and warns when it only finds httpx.
+httpx2

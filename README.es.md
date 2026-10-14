@@ -104,6 +104,14 @@ En `.claude/skills/`, cada uno con su README:
 
 Van a `backup/` (o `BACKUP_DIR`), que git ignora. `.env` queda afuera a propósito: tiene tus claves.
 
+## Tests
+
+```bash
+./run-tests.sh   # pytest para el servidor, node --test para el front end
+```
+
+Usan solo datos inventados, y `tests/test_no_personal_data.py` verifica que nada de tu `profile/` termine en un archivo que git rastrea.
+
 ## Licencia
 
 [MIT](LICENSE).

@@ -9,7 +9,7 @@ import { t } from './i18n.js'
 
 // Only a link is queued: an email address alone has none of what the application needs (the recruiter, the
 // role, the date), so the skill reads those from the JD Post.
-function isLink(value) {
+export function isLink(value) {
   try {
     return ['http:', 'https:'].includes(new URL(value).protocol)
   } catch {
@@ -18,14 +18,14 @@ function isLink(value) {
 }
 
 // The queued links, oldest first.
-function queuedLinks(applications) {
+export function queuedLinks(applications) {
   return applications
     .filter((a) => a.event === 'pending')
     .sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? ''))
 }
 
 // One row per queued link: the link itself opens in a new tab; the pencil opens the form to edit or delete it.
-function listHtml(items) {
+export function listHtml(items) {
   if (!items.length) return `<p class="py-4 text-center text-sm text-gray-400">${t('pending.empty')}</p>`
   return items
     .map(

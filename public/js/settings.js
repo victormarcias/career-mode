@@ -14,7 +14,7 @@ const SECTIONS = [
 ]
 
 // Escapes the text and turns what is between backticks (a filename or a command) into code.
-function codeHtml(text) {
+export function codeHtml(text) {
   return escapeHtml(text).replace(/`([^`\n]+)`/g, `<code class="code">$1</code>`)
 }
 
@@ -26,7 +26,7 @@ function spinnerHtml() {
 // one the eye filled in and nobody edited (`original` is what the eye loaded); one the eye filled in and
 // somebody cleared is removed. A plain value emptied goes back to its default. `state` is
 // {NAME: {typed, original}}; a variable it doesn't mention is left alone.
-function envPayload(vars, state) {
+export function envPayload(vars, state) {
   const values = {}
   for (const v of vars) {
     const s = state[v.name]
@@ -96,7 +96,7 @@ export function fieldHtml(v) {
 // value and keeps it in `dataset.original`, so saving without editing sends nothing.
 // Returns whether the field is now showing its text. If the server refuses, the field
 // stays hidden and the error is thrown.
-async function toggleReveal(input, fetchSecret) {
+export async function toggleReveal(input, fetchSecret) {
   if (input.type === 'text') {
     input.type = 'password'
     return false

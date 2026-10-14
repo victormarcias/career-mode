@@ -10,7 +10,7 @@ import { t } from './i18n.js'
 
 // The LinkedIn fields take the whole link, as copied from the browser's address bar. One pasted
 // without its https:// (or its www.) is completed, so linkedin.com/in/name works too.
-function linkedinUrl(value) {
+export function linkedinUrl(value) {
   const link = value.trim()
   return /^(www\.)?linkedin\.com\//i.test(link) ? `https://www.${link.replace(/^www\./i, '')}` : link
 }
@@ -32,13 +32,13 @@ function linkedinPath(value) {
 }
 
 // A company's page is /company/<name> (also /school/ and /showcase/); a person's is /in/<name>.
-const isCompanyHome = (value) => /^\/(company|school|showcase)\/[^/]+/.test(linkedinPath(value) ?? '')
-const isRecruiterProfile = (value) => /^\/in\/[^/]+/.test(linkedinPath(value) ?? '')
+export const isCompanyHome = (value) => /^\/(company|school|showcase)\/[^/]+/.test(linkedinPath(value) ?? '')
+export const isRecruiterProfile = (value) => /^\/in\/[^/]+/.test(linkedinPath(value) ?? '')
 
 // The first problem with the form, as a sentence to show, or null when it can be saved. Company Home
 // is required for an agency only, and the recruiters never are (not everyone has a LinkedIn profile),
 // but a link that is given has to be the right kind of address.
-function validateApplication(fields) {
+export function validateApplication(fields) {
   if (!TYPES.includes(fields.type)) return t('app.errType')
   if (fields.type === 'passive' && !fields.agency) return t('form.errPassiveAgency')
   if (fields.type === 'web_form' && !fields.link.trim()) return t('form.errLinkRequired')
@@ -77,7 +77,7 @@ export function splitRecruiters(notes) {
 
 // Creates what is new and returns the event. An existing company is found by name (ignoring case)
 // and reused as it is, except that an agency gets the recruiters that are missing added to its list.
-async function saveApplication(fields, { agencies, clients, now = new Date() }, client = api) {
+export async function saveApplication(fields, { agencies, clients, now = new Date() }, client = api) {
   const problem = validateApplication(fields)
   if (problem) throw new Error(problem)
 
@@ -116,7 +116,7 @@ async function saveApplication(fields, { agencies, clients, now = new Date() }, 
 }
 
 // What the form says under the company name: whether saving will create it, as an agency or as a direct client.
-function applicationCompanyHint({ company, agency }, { agencies, clients }) {
+export function applicationCompanyHint({ company, agency }, { agencies, clients }) {
   return companyHint(agencies, clients, agency ? company : '', agency ? '' : company)
 }
 

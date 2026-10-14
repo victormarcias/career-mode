@@ -23,7 +23,8 @@ Rules for this repo only; the user's own cross-repo preferences live in their ow
 
 ## Checks
 
-- There are no automated tests for now: they are written once the features are done (the old ones are in the git history). Check a change by running it, and say plainly what was and wasn't checked.
+- `./run-tests.sh` runs pytest on the server (`tests/test_*.py`) and `node --test` on the front end (`tests/js/`, where `setup.mjs` loads the English texts first), and `.github/workflows/tests.yml` runs it on every push. A change comes with its test; say plainly what was and wasn't checked. The front end functions a test needs are `export`ed from their module.
+- Tests use invented people and companies only. `tests/test_no_personal_data.py` fails when anything from the real `profile/profile.md` is in a tracked file, and is skipped where there is no such file (a fresh clone, CI).
 - `./run-local.sh` starts the server (and sets up `.venv`); `./stop.sh` stops it. The server isn't restarted by editing JS, HTML or CSS (those are served as they are), but a change to `server/` needs a restart.
 
 ## The user's own data
