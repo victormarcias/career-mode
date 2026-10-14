@@ -15,7 +15,15 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-[ -x .venv/bin/python ] || { echo "No .venv yet: run ./run-local.sh once first." >&2; exit 1; }
+# Colour only when writing to a terminal (and NO_COLOR is not set), so logs and pipes stay plain.
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+  GREEN=$'\033[32m'; YELLOW=$'\033[33m'; BLUE=$'\033[34m'; BOLD=$'\033[1m'; RESET=$'\033[0m'
+else
+  GREEN=''; YELLOW=''; BLUE=''; BOLD=''; RESET=''
+fi
+if [ -t 2 ] && [ -z "${NO_COLOR:-}" ]; then RED=$'\033[31m'; else RED=''; fi
+
+[ -x .venv/bin/python ] || { echo "${RED}❌ No .venv yet: run ./run-local.sh once first.${RESET}" >&2; exit 1; }
 BACKUP="$(.venv/bin/python server/cli.py backup-dir)"
 DIR="$BACKUP"
 PROFILE_FILES="profile.md outreach.md cv.pdf photo.png photo.jpg"
@@ -26,12 +34,12 @@ for arg in "$@"; do
     --replace) REPLACE=1 ;;
     -y|--yes) YES=1 ;;
     -h|--help) sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
-    -*) echo "Unknown option $arg (see --help)" >&2; exit 2 ;;
+    -*) echo "${RED}❌ Unknown option $arg (see --help)${RESET}" >&2; exit 2 ;;
     *) DIR="$arg" ;;
   esac
 done
 
-[ -d "$DIR" ] || { echo "No such folder: $DIR" >&2; exit 1; }
+[ -d "$DIR" ] || { echo "${RED}❌ No such folder: $DIR${RESET}" >&2; exit 1; }
 
 # the profile files of a backup (DIR/profile/): without --replace only the ones this copy does not
 # have yet come back; with it they overwrite
@@ -41,19 +49,19 @@ restore_profile() {
   for f in $PROFILE_FILES; do
     [ -f "$DIR/profile/$f" ] || continue
     if [ -f "profile/$f" ] && [ "$REPLACE" = 0 ]; then
-      echo "  skipped profile/$f: it is already there (--replace overwrites it)"
+      echo "${YELLOW}⏭️  Skipped profile/$f: it is already there (--replace overwrites it)${RESET}"
     else
       cp "$DIR/profile/$f" "profile/$f"
       case "$f" in *.md) chmod 600 "profile/$f" ;; esac
-      echo "Restored profile/$f"
+      echo "${GREEN}📄 Restored profile/$f${RESET}"
     fi
   done
 }
 
 if [ "$REPLACE" = 1 ]; then
   if [ "$YES" = 0 ]; then
-    read -r -p "This empties the database, overwrites your profile files and loads $DIR. Continue? [y/N] " answer
-    [ "$answer" = "y" ] || [ "$answer" = "Y" ] || { echo "Cancelled."; exit 1; }
+    read -r -p "${YELLOW}⚠️  This empties the database, overwrites your profile files and loads $DIR. Continue? [y/N] ${RESET}" answer
+    [ "$answer" = "y" ] || [ "$answer" = "Y" ] || { echo "${YELLOW}🚫 Cancelled.${RESET}"; exit 1; }
   fi
   SAFETY="$BACKUP/history/$(date +%Y-%m-%d_%H%M%S)_before-restore"
   .venv/bin/python server/cli.py export "$SAFETY"
@@ -63,8 +71,9 @@ if [ "$REPLACE" = 1 ]; then
   done
   .venv/bin/python server/cli.py import "$DIR" --replace
   restore_profile
-  echo "What it replaced is in $SAFETY"
+  echo "${BLUE}🗂️  What it replaced is in $SAFETY${RESET}"
 else
   .venv/bin/python server/cli.py import "$DIR"
   restore_profile
 fi
+echo "${GREEN}✅ Restore finished.${RESET}"

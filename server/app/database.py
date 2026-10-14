@@ -47,6 +47,8 @@ def alembic_config(db_path=None) -> Config:
 
 def migrate(db_path=None):
     """Brings the database up to the latest schema. Safe to run on every start."""
+    # A fresh clone has no data/ folder (git ignores it) and SQLite won't create it.
+    Path(db_path or db_path_from_env()).parent.mkdir(parents=True, exist_ok=True)
     command.upgrade(alembic_config(db_path), 'head')
 
 
