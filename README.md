@@ -97,7 +97,7 @@ In `.claude/skills/`, each with its own README:
 ## Backups
 
 ```bash
-./backup-data.sh                    # calendar, companies, profile, CV, photo
+./backup-data.sh                    # calendar, companies, profile, CV, photo, profile.pdf
 ./restore-backup.sh                 # load the backup back
 ./restore-backup.sh <folder> --replace
 ```

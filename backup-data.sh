@@ -3,6 +3,10 @@
 # by default):
 #   calendar.csv, companies.csv   the database: the events, the agencies and the clients
 #   profile/                      profile.md, outreach.md (your messages), cv.pdf and photo.*
+#   profile.pdf                   the profile laid out as a document, to open in Google Docs
+#                                 (Drive: upload it, then Open with Google Docs). It is made with Chrome
+#                                 or Chromium, and is skipped, with a warning, if there is neither.
+#                                 Not part of history/: it is rebuilt every time
 # and keeps a dated copy of all of it in history/ (skipped when nothing changed since the
 # last copy). .env is left out on purpose: it holds keys. Bring a copy back with
 #   ./restore-backup.sh <backup folder>/history/<date>
@@ -34,6 +38,18 @@ for f in $PROFILE_FILES; do
     echo "${GREEN}📄 Copied profile/$f${RESET}"
   fi
 done
+
+# profile.pdf: the profile as a document, to open in Google Docs. Rebuilt every time and kept out of history/
+# (a PDF carries its creation time, so it would always look changed). A failure here never stops the backup.
+rm -f "$BACKUP/profile.pdf"
+if [ -f profile/profile.md ]; then
+  if .venv/bin/python server/cli.py profile-pdf "$BACKUP/profile.pdf" >/dev/null; then
+    chmod 600 "$BACKUP/profile.pdf"
+    echo "${GREEN}📑 Made $BACKUP/profile.pdf (Drive: upload it, then Open with Google Docs)${RESET}"
+  else
+    echo "${YELLOW}⚠️  No profile.pdf this time (see the message above); everything else was backed up.${RESET}"
+  fi
+fi
 
 # the newest copy (the names sort by date)
 LAST="$(ls -1d "$BACKUP"/history/*/ 2>/dev/null | sort | tail -n 1 || true)"

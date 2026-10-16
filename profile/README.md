@@ -154,6 +154,10 @@ good backup: paste `profile.md` into one (Google Docs, Claude Docs...), or ask
 the AI to create it from the file. To restore, give the AI the document and ask
 it to rewrite `profile.md` from it, comparing with the current one first.
 
+`./backup-data.sh` makes that document for you: `backup/profile.pdf`, your profile
+laid out with its headings, bullets and links (it needs Chrome or Chromium to
+print it). Upload it to Google Drive and choose *Open with Google Docs*.
+
 The document holds your birthdate, phone and salary range, so keep it private:
 never share it with "anyone with the link".
 

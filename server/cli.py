@@ -7,6 +7,8 @@
                                                  --replace empties the database first
     python server/cli.py stats                   how many rows each table has
     python server/cli.py backup-dir              print the backup folder (BACKUP_DIR in .env or the shell, else backup)
+    python server/cli.py profile-pdf [FILE]      a PDF of profile/profile.md to open in Google Docs (default: BACKUP_DIR/profile.pdf);
+                                                 needs Chrome or Chromium to print it
 
 Add `--db FILE` to use another database than data/career-mode.db. The CSV files are the
 exchange format: a snapshot to keep, move to another computer or seed a new install.
@@ -22,10 +24,12 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from sqlalchemy import func, select  # noqa: E402
 
 from app import models, snapshot  # noqa: E402
-from app.database import db_path_from_env, make_engine, migrate, session_factory  # noqa: E402
+from app.database import ROOT, db_path_from_env, make_engine, migrate, session_factory  # noqa: E402
+from app.profile_pdf import render_pdf  # noqa: E402
 from app.settings import backup_dir  # noqa: E402
 
 FILES = ('agencies', 'clients', 'events')
+PROFILE_DIR = ROOT / 'profile'
 
 
 def read_snapshot(directory):
@@ -52,9 +56,22 @@ def read_snapshot(directory):
     return data, []
 
 
+def profile_pdf(out):
+    """Writes the PDF of profile/profile.md to `out`, or exits saying what is missing."""
+    source = PROFILE_DIR / 'profile.md'
+    if not source.is_file():
+        sys.exit('There is no profile/profile.md to make a PDF of')
+    text = source.read_text(encoding='utf-8')
+    title = next((line.lstrip('# ').strip() for line in text.splitlines() if line.startswith('# ')), 'Profile')
+    try:
+        return render_pdf(text, out, title=title)
+    except RuntimeError as err:
+        sys.exit(str(err))
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('command', choices=('export', 'import', 'stats', 'backup-dir'))
+    parser.add_argument('command', choices=('export', 'import', 'stats', 'backup-dir', 'profile-pdf'))
     parser.add_argument('directory', nargs='?')
     parser.add_argument('--db', default=str(db_path_from_env()))
     parser.add_argument('--replace', action='store_true')
@@ -62,6 +79,9 @@ def main(argv=None):
 
     if args.command == 'backup-dir':  # for the scripts: no database involved
         print(backup_dir())
+        return
+    if args.command == 'profile-pdf':  # no database involved either
+        print(profile_pdf(args.directory or os.path.join(backup_dir(), 'profile.pdf')))
         return
     migrate(args.db)
     engine = make_engine(args.db)
