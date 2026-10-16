@@ -60,7 +60,7 @@ Offer a default only where it is a choice (position type, work shift, working fr
 
 1. Build the new profile in memory.
 2. Show what will change: for an existing profile, a before/after of each section touched; for a fresh one, the filled sections, and a line listing what was skipped and is left `(not set)`. Wait for the user's OK.
-3. Back up the current `profile/profile.md` to `profile/backups/profile-YYYYmmdd-HHMMSS.md` (create the folder, mode 600), then write the new one.
+3. Back up the current `profile/profile.md` to `profile/backups/profile-YYYYmmdd-HHMMSS.md` (create the folder with mode 700 and the file with mode 600), then write the new one.
 4. Say what changed, and remind the user to check it against the CV: the skills copy this file into real applications.
 
 Never commit, and write nothing outside `profile/`. Never read linkedin.com: a LinkedIn link in the CV is only copied as it is written.

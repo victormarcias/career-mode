@@ -29,7 +29,8 @@ Show the post and hashtags directly in chat. That's the deliverable. The user co
 
 Only do this if the user separately asks for it (in the same turn or a later one) — don't generate it by default.
 
-1. Write the post's paragraph text (just the reflection, no hashtags needed) to a plain text file.
-2. Run `scripts/generate_daily_image.py <post_text_file> [output_path]` from this repo's root. It calls the Gemini API (reading `GEMINI_API_KEY` from this repo's own `.env`, gitignored) and writes the image to `output_path` (or `/tmp/daily-post-image.png` if omitted).
-3. Copy the resulting image to `~/Downloads` — always, even if you already wrote it to a temp/scratch path. The user expects to find it there.
-4. Deliver it to the user as a downloadable attachment (`display: "attach"`) — never render it inline, since it's meant to be saved and uploaded elsewhere, not looked at in the chat panel.
+1. Check the key is set: `GEMINI_API_KEY` in `curl -s http://localhost:8333/api/settings/env` (`isSet`). If it is not, say so and stop: the user sets it in Settings, or by running `/setup` again.
+2. Make a temporary directory outside this repo (`mktemp -d`) and write the post's paragraph text (just the reflection, no hashtags needed) to a plain text file in it.
+3. Run `scripts/generate_daily_image.py <post_text_file> <temp_dir>/daily-post-image.png` from this repo's root. It calls the Gemini API (reading `GEMINI_API_KEY` from this repo's own `.env`, gitignored) and prints the path of the image it wrote. If it fails, show its error and stop; don't retry in a loop.
+4. Copy the resulting image to `~/Downloads` — always, even if you already wrote it to a temp/scratch path. The user expects to find it there. Then delete the temporary directory: like the post, the image leaves nothing behind but that copy.
+5. Deliver it to the user as a downloadable attachment (`display: "attach"`) — never render it inline, since it's meant to be saved and uploaded elsewhere, not looked at in the chat panel.
