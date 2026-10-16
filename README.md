@@ -93,6 +93,7 @@ In `.claude/skills/`, each with its own README:
 - `reply-recruiter`: answers a recruiter who wrote first
 - `submit-profile`: fills candidate portals from your profile
 - `write-daily-post`: writes the daily post and its image
+- `commit`: commits your changes on the current branch, short and under your name
 
 ## Backups
 
