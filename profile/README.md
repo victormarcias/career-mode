@@ -10,6 +10,7 @@ everything else, so your own files never leave this computer.
 | `outreach.md` | Your messages, shown in Outreach → Messages. Yours. |
 | `cv.pdf` | Your CV, copied here by `/setup` (the `CV_PDF_PATH` setting points to it). The skills attach and upload it, and `/read-cv` reads it. Yours. |
 | `photo.png` (or `.jpg`) | Your profile picture, uploaded in Settings. The skills upload it to forms that ask for one. Yours. |
+| `daily-posts/` | The posts `/write-daily-post` writes, each as `daily-post-YYYYMMDD.txt` with its image (`.png`) next to it, and `log.csv`, the date of each one and whether it went well (`ok`, or `error` when the image was discarded). The first line of each `.txt` is its topic. Yours. |
 | `profile.example.md`, `outreach.example.md` | The same two files to start from: an invented person (Juan Perez) for the profile, and the six messages with a placeholder where each text goes. They ship with the repo. |
 
 `./run-local.sh` makes `profile.md` and `outreach.md` from the examples the
