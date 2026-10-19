@@ -7,8 +7,9 @@
                                                  --replace empties the database first
     python server/cli.py stats                   how many rows each table has
     python server/cli.py backup-dir              print the backup folder (BACKUP_DIR in .env or the shell, else backup)
-    python server/cli.py profile-pdf [FILE]      a PDF of profile/profile.md to open in Google Docs (default: BACKUP_DIR/profile.pdf);
+    python server/cli.py profile-pdf [FILE]      a PDF of profile/profile.md to open in Google Docs (default: BACKUP_DIR/profile/profile.pdf);
                                                  needs Chrome or Chromium to print it
+    python server/cli.py outreach-pdf [FILE]     the same for profile/outreach.md, your messages (default: BACKUP_DIR/profile/outreach.pdf)
 
 Add `--db FILE` to use another database than data/career-mode.db. The CSV files are the
 exchange format: a snapshot to keep, move to another computer or seed a new install.
@@ -56,13 +57,13 @@ def read_snapshot(directory):
     return data, []
 
 
-def profile_pdf(out):
-    """Writes the PDF of profile/profile.md to `out`, or exits saying what is missing."""
-    source = PROFILE_DIR / 'profile.md'
+def markdown_pdf(name, out):
+    """Writes the PDF of profile/<name>.md to `out`, or exits saying what is missing."""
+    source = PROFILE_DIR / (name + '.md')
     if not source.is_file():
-        sys.exit('There is no profile/profile.md to make a PDF of')
+        sys.exit('There is no profile/%s.md to make a PDF of' % name)
     text = source.read_text(encoding='utf-8')
-    title = next((line.lstrip('# ').strip() for line in text.splitlines() if line.startswith('# ')), 'Profile')
+    title = next((line.lstrip('# ').strip() for line in text.splitlines() if line.startswith('# ')), name.capitalize())
     try:
         return render_pdf(text, out, title=title)
     except RuntimeError as err:
@@ -71,7 +72,7 @@ def profile_pdf(out):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('command', choices=('export', 'import', 'stats', 'backup-dir', 'profile-pdf'))
+    parser.add_argument('command', choices=('export', 'import', 'stats', 'backup-dir', 'profile-pdf', 'outreach-pdf'))
     parser.add_argument('directory', nargs='?')
     parser.add_argument('--db', default=str(db_path_from_env()))
     parser.add_argument('--replace', action='store_true')
@@ -80,8 +81,9 @@ def main(argv=None):
     if args.command == 'backup-dir':  # for the scripts: no database involved
         print(backup_dir())
         return
-    if args.command == 'profile-pdf':  # no database involved either
-        print(profile_pdf(args.directory or os.path.join(backup_dir(), 'profile.pdf')))
+    if args.command in ('profile-pdf', 'outreach-pdf'):  # no database involved either
+        name = args.command.split('-')[0]
+        print(markdown_pdf(name, args.directory or os.path.join(backup_dir(), 'profile', name + '.pdf')))
         return
     migrate(args.db)
     engine = make_engine(args.db)

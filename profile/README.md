@@ -155,7 +155,7 @@ good backup: paste `profile.md` into one (Google Docs, Claude Docs...), or ask
 the AI to create it from the file. To restore, give the AI the document and ask
 it to rewrite `profile.md` from it, comparing with the current one first.
 
-`./backup-data.sh` makes that document for you: `backup/profile.pdf`, your profile
+`./backup-data.sh` makes that document for you: `backup/profile/profile.pdf`, your profile
 laid out with its headings, bullets and links (it needs Chrome or Chromium to
 print it). Upload it to Google Drive and choose *Open with Google Docs*.
 
@@ -163,5 +163,7 @@ The document holds your birthdate, phone and salary range, so keep it private:
 never share it with "anyone with the link".
 
 The same goes for `outreach.md` (and any other file of yours you put
-here): git ignores them all, so back them up the same way. To restore
-`outreach.md`, give the AI the document again.
+here): git ignores them all, so back them up the same way. The backup also
+makes `backup/profile/outreach.pdf`, your messages laid out to read. `/setup`
+offers the backup's `outreach.md` when it asks for your messages. For any other
+file, give the AI the document again.

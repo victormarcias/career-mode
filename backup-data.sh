@@ -3,13 +3,16 @@
 # by default):
 #   calendar.csv, companies.csv   the database: the events, the agencies and the clients
 #   profile/                      profile.md, outreach.md (your messages), cv.pdf and photo.*
-#   profile.pdf                   the profile laid out as a document, to open in Google Docs
-#                                 (Drive: upload it, then Open with Google Docs). It is made with Chrome
-#                                 or Chromium, and is skipped, with a warning, if there is neither.
-#                                 Not part of history/: it is rebuilt every time
+#   profile/profile.pdf           the profile laid out as a document (Drive: upload it, then Open
+#                                 with Google Docs)
+#   profile/outreach.pdf          your messages as a document, ending with their exact text for /setup
+#                                 Both PDFs are made with Chrome or Chromium and skipped, with a warning,
+#                                 if there is neither. They are rebuilt every time and left out of history/
 # and keeps a dated copy of all of it in history/ (skipped when nothing changed since the
 # last copy). .env is left out on purpose: it holds keys. Bring a copy back with
 #   ./restore-backup.sh <backup folder>/history/<date>
+# When it is run from a terminal it opens the backup folder at the end (`open` on macOS,
+# `xdg-open` on Linux), so you can see what was written.
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -39,24 +42,28 @@ for f in $PROFILE_FILES; do
   fi
 done
 
-# profile.pdf: the profile as a document, to open in Google Docs. Rebuilt every time and kept out of history/
-# (a PDF carries its creation time, so it would always look changed). A failure here never stops the backup.
-rm -f "$BACKUP/profile.pdf"
-if [ -f profile/profile.md ]; then
-  if .venv/bin/python server/cli.py profile-pdf "$BACKUP/profile.pdf" >/dev/null; then
-    chmod 600 "$BACKUP/profile.pdf"
-    echo "${GREEN}📑 Made $BACKUP/profile.pdf (Drive: upload it, then Open with Google Docs)${RESET}"
-  else
-    echo "${YELLOW}⚠️  No profile.pdf this time (see the message above); everything else was backed up.${RESET}"
+# profile.pdf and outreach.pdf, in the backup's profile/ folder: the profile and your messages as documents, to read or
+# to open in Google Docs. Rebuilt every time, and left out of the comparison and of history/ below: a PDF carries its
+# creation time, so it would always look changed.
+# restore-backup.sh only restores the files it knows, so these are never loaded back. A failure here never stops the backup.
+for doc in profile outreach; do
+  rm -f "$BACKUP/$doc.pdf" "$BACKUP/profile/$doc.pdf"  # the first is where an older backup kept it
+  if [ -f "profile/$doc.md" ]; then
+    if .venv/bin/python server/cli.py "$doc-pdf" "$BACKUP/profile/$doc.pdf" >/dev/null; then
+      chmod 600 "$BACKUP/profile/$doc.pdf"
+      echo "${GREEN}📑 Made $BACKUP/profile/$doc.pdf${RESET}"
+    else
+      echo "${YELLOW}⚠️  No $doc.pdf this time (see the message above); everything else was backed up.${RESET}"
+    fi
   fi
-fi
+done
 
 # the newest copy (the names sort by date)
 LAST="$(ls -1d "$BACKUP"/history/*/ 2>/dev/null | sort | tail -n 1 || true)"
 unchanged() {  # $1: a copy in history/ (with its trailing slash)
   diff -q "$BACKUP/calendar.csv" "$1calendar.csv" >/dev/null \
     && diff -q "$BACKUP/companies.csv" "$1companies.csv" >/dev/null \
-    && diff -rq "$BACKUP/profile" "$1profile" >/dev/null 2>&1
+    && diff -rq -x profile.pdf -x outreach.pdf "$BACKUP/profile" "$1profile" >/dev/null 2>&1
 }
 if [ -n "$LAST" ] && unchanged "$LAST"; then
   echo "${YELLOW}😌 No changes since ${LAST%/}: no new copy.${RESET}"
@@ -65,5 +72,13 @@ else
   mkdir -p "$DEST"
   cp "$BACKUP/calendar.csv" "$BACKUP/companies.csv" "$DEST/"
   cp -R "$BACKUP/profile" "$DEST/profile"
+  rm -f "$DEST/profile/profile.pdf" "$DEST/profile/outreach.pdf"
   echo "${GREEN}✅ Kept a copy in $DEST${RESET}"
+fi
+
+# show the folder, but only when someone is looking: not from cron or a pipe
+if [ -t 1 ]; then
+  if command -v open >/dev/null 2>&1; then open "$BACKUP"
+  elif command -v xdg-open >/dev/null 2>&1; then xdg-open "$BACKUP" >/dev/null 2>&1 || true
+  fi
 fi

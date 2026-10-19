@@ -171,3 +171,38 @@ def test_the_cli_says_what_is_missing(no_browser, monkeypatch, tmp_path):
     monkeypatch.setattr(cli, 'PROFILE_DIR', tmp_path / 'profile')
     with pytest.raises(SystemExit, match='No Chrome or Chromium'):
         cli.main(['profile-pdf', str(tmp_path / 'x.pdf')])
+
+
+# ---------- the messages, as a document like the profile ----------
+
+
+def test_the_example_messages_come_out_as_a_readable_document():
+    example = (ROOT / 'profile' / 'outreach.example.md').read_text(encoding='utf-8')
+    html = markdown_to_html(example)
+    for line in example.splitlines():
+        if line.startswith('## ') or line.startswith('### '):
+            level = 2 if line.startswith('## ') else 3
+            assert '<h%d>%s</h%d>' % (level, htmllib.escape(line[level + 1:].strip()), level) in html
+    assert html.count('<pre>') == 12 and '```' not in html  # six messages, two languages each
+
+
+def test_the_cli_makes_the_messages_pdf_and_the_profile_pdf_by_default_in_the_profile_folder_of_the_backup(fake_browser, monkeypatch, tmp_path):
+    (tmp_path / 'profile').mkdir()
+    (tmp_path / 'profile' / 'outreach.md').write_text('# Outreach — Ana Invented\n\n## 📝 A Message\n')
+    (tmp_path / 'profile' / 'profile.md').write_text('# Profile — Ana Invented\n')
+    monkeypatch.setattr(cli, 'PROFILE_DIR', tmp_path / 'profile')
+    monkeypatch.setattr(cli, 'backup_dir', lambda: str(tmp_path / 'backup'))
+    monkeypatch.setenv('CAREER_MODE_BROWSER', str(fake_browser[0]))
+    html_log = Path(str(fake_browser[1]) + '.html')
+    cli.main(['outreach-pdf'])
+    assert (tmp_path / 'backup' / 'profile' / 'outreach.pdf').read_bytes().startswith(b'%PDF-')
+    assert '<h2>📝 A Message</h2>' in html_log.read_text() and 'Exact text' not in html_log.read_text()
+    cli.main(['profile-pdf'])
+    assert (tmp_path / 'backup' / 'profile' / 'profile.pdf').is_file()
+    assert '<h1>Profile — Ana Invented</h1>' in html_log.read_text()
+
+
+def test_the_cli_says_when_there_are_no_messages(no_browser, monkeypatch, tmp_path):
+    monkeypatch.setattr(cli, 'PROFILE_DIR', tmp_path / 'nothing-here')
+    with pytest.raises(SystemExit, match='no profile/outreach.md'):
+        cli.main(['outreach-pdf', str(tmp_path / 'x.pdf')])
