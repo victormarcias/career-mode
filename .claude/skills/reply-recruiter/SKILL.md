@@ -9,7 +9,7 @@ For a recruiter who reached out first (a **passive contact**), not for a JD Post
 
 ## Hard rule: never read the platform
 
-Same rule as `/apply-pending` for the browser: never open a Job Board Platform (LinkedIn, etc.) with Claude in Chrome or the user's session — a platform can flag automated activity and restrict the account. Here nothing on the platform is read at all (not even a public page): the recruiter's profile link and the company's page are only **written down as given**. Work from what the message itself gives (name, title and company in the signature) plus the company's own website or a web search; if something is missing, leave it out or ask the user, never fill it in from the platform. And never send anything on the platform: the reply is only shown in chat.
+Unlike `/apply-pending`, which may read a JD Post, here nothing on a Job Board Platform (LinkedIn, etc.) is read at all, with no tool and not even a public page — a platform can flag automated activity and restrict the account: the recruiter's profile link and the company's page are only **written down as given**. Work from what the message itself gives (name, title and company in the signature) plus the company's own website or a web search; if something is missing, leave it out or ask the user, never fill it in from the platform. And never send anything on the platform: the reply is only shown in chat.
 
 ## 1. Analyze the message
 

@@ -1,26 +1,30 @@
 ---
 name: apply-pending
-description: Apply to a job the user sends — a JD Post link from a Job Board Platform (LinkedIn, Indeed...), a recruiter message, or any other portal link — or process the whole queue when the user says "Apply Bulk links" (or similar, e.g. "process the pending ones"). Use this whenever the user pastes a JD Post link and asks to apply, forwards something from a recruiter, or asks to work through queued/pending applications. Covers reading the JD Post, creating or updating the Agency/Client profile and choosing the channel, then hands off the actual sending to /apply-email or /apply-site, and logs the application in the Calendar once it went out.
+description: Apply to a job the user sends — a JD Post link from a Job Board Platform (LinkedIn, Indeed...), a recruiter message, or any other portal link — or process the whole queue when the user invokes /apply-pending with no link, or says "Apply Bulk links" (or similar, e.g. "process the pending ones"). Use this whenever the user pastes a JD Post link and asks to apply, forwards something from a recruiter, or asks to work through queued/pending applications. Covers reading the JD Post, creating or updating the Agency/Client profile and choosing the channel, then hands off the actual sending to /apply-email or /apply-site, and logs the application in the Calendar once it went out.
 ---
 
 # Apply to a pending job link
 
-Everything here operates on career-mode's own database (events, agencies, clients) through its local API. This covers both cases: the user hands you one link directly, or you're clearing the queue of `pending` applications the sidebar's "Pending" page created.
+Everything here operates on career-mode's own database (events, agencies, clients) through its local API. This covers both cases: the user hands you one link directly, or you're clearing the queue of `pending` applications the sidebar's "Pending" page created. **`/apply-pending` with no link is the second case:** the first thing to do is check the pending list in the API (`GET /api/events?event=pending`) and work through it, without asking whether to start — the command is the order.
 
 ## Reading and writing the data
 
 Use the local API at `http://localhost:8333` (the interactive docs are at `/docs`; if a request can't connect, `./run-local.sh` starts the server). Send JSON with `curl -s -H 'Content-Type: application/json'`. The routes you need: `GET /api/agencies`, `GET /api/clients`, `GET /api/events` (filter with `?event=pending`, `?jdUrl=...`, `?agencyId=...`), `POST` to any of the three to create, `PATCH /api/<collection>/<id>` to change some fields, `DELETE /api/<collection>/<id>`. Never open the SQLite file directly: the API applies the rules below. Errors come back as `{"detail": "..."}`; a 409 means it already exists (name taken) or still has events.
 
-## Hard rule: a Job Board Platform is read without the user's session, and only a JD Post
+## Rule: on a Job Board Platform only a JD Post is read, and only read
 
-Never open a Job Board Platform (LinkedIn, Indeed, etc.) with Claude in Chrome or with anything signed in as the user: a platform can flag automated activity and restrict or disable the account. The browser is only for application forms on third-party sites (Workable, Viterbit, Loxo, the company's own ATS, etc.).
+Reading a JD Post on a Job Board Platform (LinkedIn, Indeed, etc.) is fine, and that is all: its profiles, company pages, feeds and messages are never opened, and nothing is ever done on the platform (no Easy Apply, like, comment, connect or message). A platform can flag automated activity and restrict the user's account, so keep it to reading, one post at a time with a short pause between them. The browser is also for application forms on third-party sites (Workable, Viterbit, Loxo, the company's own ATS, etc.) and for reading any other page that WebFetch can't read (see the last point below).
 
-What a JD Post says is read from its **public page, with WebFetch** (it has no session, so nothing of the user's goes with it):
+How a JD Post is read:
 
-- A JD Post link, or a platform's short link (for example `lnkd.in`): fetch it. A short link answers with a redirect to the platform's own address: fetch that address again **without its query string** (tracking parameters like `?utm_source=...&rcm=...` can identify the user), only the path.
-- Ask it for the JD Post's text: how to apply (an email address, a link, or only "send me a message"), the author, the company, the role, the requirements, the language and how long ago it was posted ("1w" is a week).
-- Everything else on a Job Board Platform (profiles, company pages, feeds) is never fetched: its link is only **written down as given**, in `jdUrl`, in the event notes, in a profile's `linkedin` field.
-- If the page gives no JD Post text (a login wall, an error, a deleted post), don't try another way in: ask the user to paste the JD Post's text and go on with that.
+1. **WebFetch first**, on the post's public page (no session, so nothing of the user's goes with it). A JD Post link, or a platform's short link (for example `lnkd.in`): fetch it. A short link answers with a redirect to the platform's own address: fetch that address again **without its query string** (tracking parameters like `?utm_source=...&rcm=...` can identify the user), only the path.
+2. **If that gives no JD Post text** (a login wall, an error, a post that only renders in a browser), open that same post, still without its query string, with **Claude in Chrome** (`mcp__claude-in-chrome__*`, loaded in one ToolSearch call) in a new tab, read its text and close the tab. Only that page: no clicks, no scrolling through feeds, no following links to the author's profile or the company.
+3. If the post still gives no text (it was deleted), ask the user to paste the JD Post's text and go on with that.
+
+What to take from it: how to apply (an email address, a link, or only "send me a message"), the author, the company, the role, the requirements, the language and how long ago it was posted ("1w" is a week).
+
+- Everything else on a Job Board Platform (profiles, company pages, feeds) is never fetched or opened: its link is only **written down as given**, in `jdUrl`, in the event notes, in a profile's `linkedin` field.
+- **When stuck on any other page** (a company's careers page, an ATS, a recruiter's own site: WebFetch returns nothing, an app that only renders in a browser, a login wall, a page that needs a click), open it with **Claude in Chrome** in a new tab and read it there, instead of stopping to ask the user. The user is not asked to paste what a browser can read.
 
 ## The core process, for one link
 
@@ -45,7 +49,7 @@ What a JD Post says is read from its **public page, with WebFetch** (it has no s
 
 ## Processing the whole pending queue ("Apply Bulk links")
 
-The sidebar's "Pending" page doesn't apply to anything itself — it queues a JD Post link as an event with `event: 'pending'` and `jdUrl`, and stops there. Only links are queued: the form refuses an email address alone. Nothing gets processed until the user says **"Apply Bulk links"** (or similar) in chat. When that happens:
+The sidebar's "Pending" page doesn't apply to anything itself — it queues a JD Post link as an event with `event: 'pending'` and `jdUrl`, and stops there. Only links are queued: the form refuses an email address alone. Nothing gets processed until the user invokes `/apply-pending` with no link or says **"Apply Bulk links"** (or similar) in chat. When that happens:
 
 1. `GET /api/events?event=pending` for every pending event, oldest first (the list comes newest first, so reverse it).
 2. A `pending` event holds only a link, so for each one, one at a time with a short pause between them, run the core process above (read the JD Post as the hard rule says, then steps 1-6). Step 6 replaces the pending placeholder with the real `application` event.

@@ -9,7 +9,7 @@ Everything personal ends up in files git ignores (`profile/`, `data/`, `.env`), 
 
 Ask with the question tool (`AskUserQuestion`): **one thing at a time**, with the answers as options, and always a "Skip for now" option. Say in one line what each step did. Never ask again about something they skipped in this run. If the user asks you to stop, stop and say how to continue later (`/setup` again).
 
-Never read a Job Board Platform (LinkedIn, etc.) by any tool. A link to one is only written down as given.
+Never open a Job Board Platform's profiles or company pages (LinkedIn, etc.) by any tool. A link to one is only written down as given.
 
 ## 1. Look around (no questions)
 

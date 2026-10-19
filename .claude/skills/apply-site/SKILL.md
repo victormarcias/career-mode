@@ -17,6 +17,8 @@ Open the form's link in a new tab of the connected Chrome and leave the user's o
 7. Submit directly, no confirmation needed. Reasons worth actually stopping for are real red flags (not remote, salary far off from the profile's range, missing a hard requirement) — not a routine "should I send this?" check.
 8. Check that it went through: a confirmation message or page, not a form that came back with errors. Fix a validation error you can fix (a phone format, a required field the profile answers); anything else is flagged.
 
+**When stuck** (a captcha, a sign-in, a click or a field you can't do, a step you don't understand), don't close anything or give up on the page: leave the form open in Claude in Chrome with everything you could fill in, bring that tab to the front, and tell the user exactly what is left to click or type. They do it themselves; when they say it is done, check the confirmation (step 8) and report it as submitted.
+
 **Report back** to the caller: submitted (with what the confirmation said), or stopped and why (captcha, account, video, red flag, a question the profile doesn't answer). `/apply-pending` logs the application in the Calendar only when it went out, so a form left half-filled is reported as stopped, never as done.
 
 This is the delivery step only — if a new Agency/Client needs a profile or the application needs to be logged in the Calendar, that's `/apply-pending`'s job, not this one's.
