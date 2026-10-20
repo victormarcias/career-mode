@@ -86,7 +86,8 @@ fi
 
 # the newest copy (the names sort by date)
 LAST="$(ls -1d "$BACKUP"/history/*/ 2>/dev/null | sort | tail -n 1 || true)"
-unchanged() {  # $1: a copy in history/ (with its trailing slash)
+# Return success when CSVs and profile files match $1 (a history path with a trailing slash), ignoring generated PDFs.
+unchanged() {
   diff -q "$BACKUP/calendar.csv" "$1calendar.csv" >/dev/null \
     && diff -q "$BACKUP/companies.csv" "$1companies.csv" >/dev/null \
     && diff -rq -x profile.pdf -x outreach.pdf "$BACKUP/profile" "$1profile" >/dev/null 2>&1

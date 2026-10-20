@@ -21,6 +21,7 @@ PROMPT_PREFIX = (
 
 
 def load_env(path):
+    """Read stripped key-value pairs from a file, or return an empty mapping if absent."""
     env = {}
     if not os.path.isfile(path):
         return env
@@ -35,6 +36,7 @@ def load_env(path):
 
 
 def main():
+    """Generate an image from the post file via Gemini and print its saved path."""
     if len(sys.argv) < 2:
         print("Usage: generate_daily_image.py <post_text_file> [output_path]", file=sys.stderr)
         sys.exit(1)

@@ -44,9 +44,11 @@ pre code { color: #000; }
 
 
 def _inline(text: str) -> str:
+    """Escape text and render inline Markdown while preserving literal code spans."""
     spans = []
 
     def hold(match):
+        """Store an escaped code span and return its placeholder for later restoration."""
         spans.append('<code>%s</code>' % match.group(1))
         return '\u0000%d\u0000' % (len(spans) - 1)
 
@@ -58,6 +60,7 @@ def _inline(text: str) -> str:
 
 
 def _indent(line: str) -> int:
+    """Return the number of leading spaces in a line."""
     return len(line) - len(line.lstrip(' '))
 
 
@@ -95,6 +98,7 @@ def _list(lines: list, start: int):
 
 
 def markdown_to_html(markdown: str) -> str:
+    """Convert supported Markdown blocks to HTML, escaping literal text and code."""
     lines = markdown.replace('\r\n', '\n').split('\n')
     out = []
     i = 0
@@ -127,6 +131,7 @@ def markdown_to_html(markdown: str) -> str:
 
 
 def document_html(markdown: str, title: str = 'Profile') -> str:
+    """Wrap rendered Markdown in a complete HTML document with print styles and an escaped title."""
     return '<!doctype html><html><head><meta charset="utf-8"><title>%s</title><style>%s</style></head><body>%s</body></html>' % (
         html.escape(title), STYLE, markdown_to_html(markdown))
 
