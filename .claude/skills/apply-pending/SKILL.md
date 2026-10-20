@@ -1,6 +1,6 @@
 ---
 name: apply-pending
-description: Apply to a job the user sends — a JD Post link from a Job Board Platform (LinkedIn, Indeed...), a recruiter message, or any other portal link — or process the whole queue when the user invokes /apply-pending with no link, or says "Apply Bulk links" (or similar, e.g. "process the pending ones"). Use this whenever the user pastes a JD Post link and asks to apply, forwards something from a recruiter, or asks to work through queued/pending applications. Covers reading the JD Post, creating or updating the Agency/Client profile and choosing the channel, then hands off the actual sending to /apply-email or /apply-site, and logs the application in the Calendar once it went out.
+description: Apply to a job the user sends — a JD Post link from a Job Board Platform (LinkedIn, Indeed...), a recruiter message, or any other portal link — or process the whole queue when the user invokes /apply-pending with no link. Use this whenever the user pastes a JD Post link and asks to apply, forwards something from a recruiter, or asks to work through queued/pending applications. Covers reading the JD Post, creating or updating the Agency/Client profile and choosing the channel, then hands off the actual sending to /apply-email or /apply-site, and logs the application in the Calendar once it went out.
 ---
 
 # Apply to a pending job link
@@ -47,9 +47,9 @@ What to take from it: how to apply (an email address, a link, or only "send me a
    - If this becomes a Rejection later with no reason given, the notes default to "Other candidates." rather than "No reason given."
    - Any new event reactivates the agency, except a closing event (**Rejection, Red Flag, On-hold, Offer or Archive**), which archives it. The server does that when you create the event — you never set the status by hand, just create the event with the right `event` type.
 
-## Processing the whole pending queue ("Apply Bulk links")
+## Processing the whole pending queue
 
-The sidebar's "Pending" page doesn't apply to anything itself — it queues a JD Post link as an event with `event: 'pending'` and `jdUrl`, and stops there. Only links are queued: the form refuses an email address alone. Nothing gets processed until the user invokes `/apply-pending` with no link or says **"Apply Bulk links"** (or similar) in chat. When that happens:
+The sidebar's "Pending" page doesn't apply to anything itself — it queues a JD Post link as an event with `event: 'pending'` and `jdUrl`, and stops there. Only links are queued: the form refuses an email address alone. Nothing gets processed until the user invokes `/apply-pending`. When that happens:
 
 1. `GET /api/events?event=pending` for every pending event, oldest first (the list comes newest first, so reverse it).
 2. A `pending` event holds only a link, so for each one, one at a time with a short pause between them, run the core process above (read the JD Post as the hard rule says, then steps 1-6). Step 6 replaces the pending placeholder with the real `application` event.

@@ -101,9 +101,7 @@ function initApp() {
   handleRoute()
 }
 
-// These types are not picked in this form: an application and a passive message are logged with
-// "+ Application" (Type: Email, Passive or Web), an archive with the Archive button of a company (its
-// Edit, or Follow Up), and a pending one is what the Pending page leaves for "Apply Bulk links".
+// These types are not picked in this form
 const LOCKED_TYPES = ['application', 'passive_message', 'archive', 'pending']
 
 // The types are listed A-Z by name. An event of one of the locked types that is being edited keeps its
