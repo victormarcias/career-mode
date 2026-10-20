@@ -103,7 +103,7 @@ In `.claude/skills/`, each with its own README:
 ./restore-backup.sh <folder> --replace
 ```
 
-They go to `backup/` (or `BACKUP_DIR`), which git ignores. `.env` is left out on purpose: it holds your keys.
+They go to `backup/` (or `BACKUP_DIR`), which git ignores. It also keeps one copy of your `.env` (`backup/env/env`, readable only by you) with your keys and passwords: keep that folder private, not synced or shared.
 
 ## Tests
 

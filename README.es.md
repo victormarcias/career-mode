@@ -103,7 +103,7 @@ En `.claude/skills/`, cada uno con su README:
 ./restore-backup.sh <carpeta> --replace
 ```
 
-Van a `backup/` (o `BACKUP_DIR`), que git ignora. `.env` queda afuera a propósito: tiene tus claves.
+Van a `backup/` (o `BACKUP_DIR`), que git ignora. También guarda una copia de tu `.env` (`backup/env/env`, legible solo por vos) con tus claves y contraseñas: mantené esa carpeta privada, sin sincronizar ni compartir.
 
 ## Tests
 

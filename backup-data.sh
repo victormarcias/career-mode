@@ -2,14 +2,15 @@
 # Backs up what is yours, to the backup folder (BACKUP_DIR in Settings or .env; `backup`
 # by default):
 #   calendar.csv, companies.csv   the database: the events, the agencies and the clients
-#   profile/                      profile.md, outreach.md (your messages), cv.pdf and photo.*
+#   profile/                      profile.md, outreach.md (your messages), cv.pdf, photo.* and daily-posts/
 #   profile/profile.pdf           the profile laid out as a document (Drive: upload it, then Open
 #                                 with Google Docs)
 #   profile/outreach.pdf          your messages as a document, ending with their exact text for /setup
 #                                 Both PDFs are made with Chrome or Chromium and skipped, with a warning,
 #                                 if there is neither. They are rebuilt every time and left out of history/
 # and keeps a dated copy of all of it in history/ (skipped when nothing changed since the
-# last copy). .env is left out on purpose: it holds keys. Bring a copy back with
+# last copy). Your .env (the keys and passwords of Settings) goes to <backup folder>/env/env, readable only by
+# you: one copy, replaced every time and not part of history/, so old passwords don't pile up. Bring a copy back with
 #   ./restore-backup.sh <backup folder>/history/<date>
 # When it is run from a terminal it opens the backup folder at the end (`open` on macOS,
 # `xdg-open` on Linux), so you can see what was written.
@@ -42,6 +43,13 @@ for f in $PROFILE_FILES; do
   fi
 done
 
+# the posts of the daily post skill: the texts, their images and the log of what was posted
+rm -rf -- "${BACKUP:?}/profile/daily-posts"
+if [ -d profile/daily-posts ]; then
+  cp -R profile/daily-posts "$BACKUP/profile/daily-posts"
+  echo "${GREEN}📄 Copied profile/daily-posts/${RESET}"
+fi
+
 # profile.pdf and outreach.pdf, in the backup's profile/ folder: the profile and your messages as documents, to read or
 # to open in Google Docs. Rebuilt every time, and left out of the comparison and of history/ below: a PDF carries its
 # creation time, so it would always look changed.
@@ -57,6 +65,24 @@ for doc in profile outreach; do
     fi
   fi
 done
+
+# env/env: the latest copy of your .env, with its keys and passwords, so a new computer or a lost file doesn't mean making
+# them all again. One file, replaced every time, outside history/ and outside the comparison below. It is only as private
+# as the backup folder: it is not copied anywhere git could pick it up (a folder inside this repository has to be ignored).
+rm -f "$BACKUP/env/env"
+if [ -f .env ]; then
+  ignored=0
+  git check-ignore -q "$BACKUP/env/env" 2>/dev/null || ignored=$?  # 0 ignored, 1 inside the repo and not ignored, else outside it
+  if [ "$ignored" = 1 ]; then
+    echo "${YELLOW}⚠️  Skipped .env: $BACKUP is inside this repository and git does not ignore it (add it to .gitignore)${RESET}"
+  else
+    mkdir -p "$BACKUP/env"
+    chmod 700 "$BACKUP/env"
+    cp .env "$BACKUP/env/env"
+    chmod 600 "$BACKUP/env/env"
+    echo "${GREEN}🔑 Copied .env to $BACKUP/env/env (keys and passwords: keep $BACKUP private)${RESET}"
+  fi
+fi
 
 # the newest copy (the names sort by date)
 LAST="$(ls -1d "$BACKUP"/history/*/ 2>/dev/null | sort | tail -n 1 || true)"
