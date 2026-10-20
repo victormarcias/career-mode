@@ -8,10 +8,12 @@
 #
 # The backup folder is BACKUP_DIR (Settings or .env; `backup` by default). DIR has
 # calendar.csv and companies.csv (the older JSON backups work too) and, from the newer
-# backups, a profile/ folder (profile.md, outreach.md, cv.pdf, photo.*). Without --replace
+# backups, a profile/ folder (profile.md, outreach.md, cv.pdf, photo.*, daily-posts/). Without --replace
 # nothing is overwritten: what is already in the database or in profile/ is skipped and
 # reported. With --replace the current data and profile files are first copied to
 # <backup folder>/history/<date>_before-restore/, so they can be loaded back.
+# The backup folder's own env/env (the latest copy of your .env) comes back the same way:
+# only if there is none here, or with --replace; restart the app after it so it reads it.
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -58,6 +60,39 @@ restore_profile() {
   done
 }
 
+# the .env of a backup folder (DIR/env/env; the dated copies in history/ don't have one)
+restore_env() {
+  [ -f "$DIR/env/env" ] || return 0
+  if [ -f .env ] && [ "$REPLACE" = 0 ]; then
+    echo "${YELLOW}⏭️  Skipped .env: it is already there (--replace overwrites it)${RESET}"
+  else
+    cp "$DIR/env/env" .env
+    chmod 600 .env
+    echo "${GREEN}🔑 Restored .env: restart the app (./stop.sh, ./run-local.sh) so it reads it${RESET}"
+  fi
+}
+
+# the posts of the daily post skill (DIR/profile/daily-posts/): same rule, file by file
+restore_daily_posts() {
+  [ -d "$DIR/profile/daily-posts" ] || return 0
+  mkdir -p profile/daily-posts
+  restored=0; skipped=0
+  for src in "$DIR"/profile/daily-posts/*; do
+    [ -f "$src" ] || continue
+    f="$(basename "$src")"
+    if [ -f "profile/daily-posts/$f" ] && [ "$REPLACE" = 0 ]; then
+      skipped=$((skipped + 1))
+    else
+      cp "$src" "profile/daily-posts/$f"
+      restored=$((restored + 1))
+    fi
+  done
+  echo "${GREEN}📄 Restored $restored file(s) of profile/daily-posts/${RESET}"
+  if [ "$skipped" -gt 0 ]; then
+    echo "${YELLOW}⏭️  Skipped $skipped file(s) of profile/daily-posts/ that are already there (--replace overwrites them)${RESET}"
+  fi
+}
+
 if [ "$REPLACE" = 1 ]; then
   if [ "$YES" = 0 ]; then
     read -r -p "${YELLOW}⚠️  This empties the database, overwrites your profile files and loads $DIR. Continue? [y/N] ${RESET}" answer
@@ -69,11 +104,17 @@ if [ "$REPLACE" = 1 ]; then
   for f in $PROFILE_FILES; do
     [ -f "profile/$f" ] && cp "profile/$f" "$SAFETY/profile/$f"
   done
+  if [ -d profile/daily-posts ]; then cp -R profile/daily-posts "$SAFETY/profile/daily-posts"; fi
+  if [ -f .env ]; then mkdir -p "$SAFETY/env"; chmod 700 "$SAFETY/env"; cp .env "$SAFETY/env/env"; chmod 600 "$SAFETY/env/env"; fi
   .venv/bin/python server/cli.py import "$DIR" --replace
   restore_profile
+  restore_daily_posts
+  restore_env
   echo "${BLUE}🗂️  What it replaced is in $SAFETY${RESET}"
 else
   .venv/bin/python server/cli.py import "$DIR"
   restore_profile
+  restore_daily_posts
+  restore_env
 fi
 echo "${GREEN}✅ Restore finished.${RESET}"

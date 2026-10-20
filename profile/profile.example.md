@@ -108,4 +108,4 @@ I'm a Full Stack Developer with 8+ years of experience working with internationa
 
 - Describe my experience exactly as this file and the CV say; don't oversell anything I'm still learning.
 - Never add a role or a technology just because a form offers it: only what the CV and this file actually back.
-- Never open a Job Board Platform (LinkedIn, etc.) with the connected browser or the user's session. A JD Post's public page may be read without a session (WebFetch); profiles and company pages are only written down as given.
+- On a Job Board Platform (LinkedIn, etc.) only a JD Post may be read, and only read: with WebFetch first and, if that gives no text, that one post in the connected browser. Profiles, company pages and feeds are never opened, only written down as given, and nothing is ever done on the platform.

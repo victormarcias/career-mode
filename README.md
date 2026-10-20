@@ -93,16 +93,17 @@ In `.claude/skills/`, each with its own README:
 - `reply-recruiter`: answers a recruiter who wrote first
 - `submit-profile`: fills candidate portals from your profile
 - `write-daily-post`: writes the daily post and its image
+- `commit`: commits your changes on the current branch, short and under your name
 
 ## Backups
 
 ```bash
-./backup-data.sh                    # calendar, companies, profile, CV, photo
+./backup-data.sh                    # calendar, companies, profile, CV, photo, profile.pdf
 ./restore-backup.sh                 # load the backup back
 ./restore-backup.sh <folder> --replace
 ```
 
-They go to `backup/` (or `BACKUP_DIR`), which git ignores. `.env` is left out on purpose: it holds your keys.
+They go to `backup/` (or `BACKUP_DIR`), which git ignores. It also keeps one copy of your `.env` (`backup/env/env`, readable only by you) with your keys and passwords: keep that folder private, not synced or shared.
 
 ## Tests
 

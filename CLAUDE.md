@@ -27,6 +27,12 @@ Rules for this repo only; the user's own cross-repo preferences live in their ow
 - Tests use invented people and companies only. `tests/test_no_personal_data.py` fails when anything from the real `profile/profile.md` is in a tracked file, and is skipped where there is no such file (a fresh clone, CI).
 - `./run-local.sh` starts the server (and sets up `.venv`); `./stop.sh` stops it. The server isn't restarted by editing JS, HTML or CSS (those are served as they are), but a change to `server/` needs a restart.
 
+## Git
+
+- Work in this checkout, on the branch already checked out: never create, switch or rename a branch (the user makes their own) and never use a worktree.
+- Never commit on your own: leave the changes in the working tree so the user reads the diff first, and commit only when they run `/commit` (`.claude/skills/commit`: default author, one short line, no Claude co-author).
+- Never push: the user does.
+
 ## The user's own data
 
 - Everything personal lives in `profile/`, where git ignores everything except `README.md` and the `*.example.*` files (an invented person): `profile/profile.md` (contact details, birthdate, salary range, roles, stack, bio, work history, and the rules for presenting them) and `profile/outreach.md` (the message templates the Outreach tab shows). `./run-local.sh` makes each of them from its example on the first run, and `profile/README.md` explains how to fill `profile.md` from a public CV with an AI.
