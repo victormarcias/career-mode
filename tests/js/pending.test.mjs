@@ -11,7 +11,7 @@ globalThis.fetch = async (url, options = {}) => {
   return { ok: status >= 200 && status < 300, status, json: async () => body }
 }
 
-const { isLink, initPending, listHtml, queuedLinks, renderPending } = await import('../../public/js/pending.js')
+const { isLink, initPending, listHtml, parseLinks, queuedLinks, renderPending } = await import('../../public/js/pending.js')
 const { toISODate } = await import('../../public/js/dates.js')
 
 const queued = (id, jdUrl, date = '2026-10-08', time = null) => ({ id, event: 'pending', jdUrl, date, time })
@@ -151,4 +151,84 @@ test('the pencil of a queued link opens its form', () => {
   el('pending-list').fire('click', { target: { closest: () => null } })
   el('pending-list').fire('click', { target: { closest: () => ({ dataset: { edit: 'gone' } }) } })
   assert.deepEqual(opened, [app])
+})
+
+// ---------- several links at once ----------
+
+test('what is pasted is split by lines or spaces: links once each in order, and what is not a link apart', () => {
+  const text = '  https://a.example/1\r\nrecruiter@acme.com\n\nhttps://b.example/2 https://a.example/1\n  not a link  \n'
+  assert.deepEqual(parseLinks(text), {
+    links: ['https://a.example/1', 'https://b.example/2'],
+    invalid: ['recruiter@acme.com', 'not', 'a', 'link'],
+  })
+  assert.deepEqual(parseLinks(''), { links: [], invalid: [] })
+  assert.deepEqual(parseLinks(' \n '), { links: [], invalid: [] })
+})
+
+test('typing several lines warns if any of them is not a link', () => {
+  const el = page()
+  initPending({ onOpenEvent() {}, getApplications: () => [] })
+  el('apply-url').value = 'https://a.example/1\nrecruiter@acme.com'
+  el('apply-url').fire('input')
+  assert.ok(el('apply-url-error').classes.has('is-open'))
+  el('apply-url').value = 'https://a.example/1\nhttps://b.example/2'
+  el('apply-url').fire('input')
+  assert.ok(!el('apply-url-error').classes.has('is-open'))
+})
+
+const posted = () => calls.filter((c) => c.method === 'POST').map((c) => c.body.jdUrl)
+
+test('several links are each checked and queued, in the order they were pasted', async () => {
+  const el = page()
+  initPending({ onOpenEvent() {}, getApplications: () => [] })
+  el('apply-url').value = 'https://a.example/1\nhttps://b.example/2\nhttps://c.example/3'
+  await el('apply-form').fire('submit')
+  assert.deepEqual(posted(), ['https://a.example/1', 'https://b.example/2', 'https://c.example/3'])
+  assert.equal(calls.filter((c) => c.method === 'GET').length, 3)
+  assert.match(el('apply-feedback').innerHTML, /Queued 3 links\./)
+  assert.equal(el('apply-form').resets, 1)
+  assert.equal(el('apply-form-submit').disabled, false)
+})
+
+test('the ones already queued or applied to are skipped, and a line that is not a link stays in the box', async () => {
+  const el = page()
+  initPending({ onOpenEvent() {}, getApplications: () => [] })
+  el('apply-url').value = 'https://new.example/1\nhttps://queued.example/2\nhttps://applied.example/3\nrecruiter@acme.com'
+  responder = (url, options) => {
+    if (options.method === 'POST') return { status: 201, body: {} }
+    if (url.includes(encodeURIComponent('https://queued.example/2'))) return { status: 200, body: [queued('q', 'https://queued.example/2')] }
+    if (url.includes(encodeURIComponent('https://applied.example/3'))) return { status: 200, body: [{ id: 'a', event: 'application' }] }
+    return { status: 200, body: [] }
+  }
+  await el('apply-form').fire('submit')
+  assert.deepEqual(posted(), ['https://new.example/1'])
+  const text = el('apply-feedback').innerHTML
+  assert.match(text, /Queued 1 link\./)
+  assert.match(text, /Already queued: 1\./)
+  assert.match(text, /Already applied: 1\./)
+  assert.match(text, /Not links: 1\./)
+  assert.equal(el('apply-url').value, 'recruiter@acme.com')
+  assert.equal(el('apply-form').resets, 0)
+})
+
+test('when one fails the others are still queued, and the failed one stays in the box to try again', async () => {
+  const el = page()
+  initPending({ onOpenEvent() {}, getApplications: () => [] })
+  el('apply-url').value = 'https://a.example/1\nhttps://b.example/2\nhttps://c.example/3'
+  responder = (url, options) => ({ status: options.method === 'POST' && options.body.includes('b.example') ? 500 : 200, body: options.method === 'POST' ? {} : [] })
+  await el('apply-form').fire('submit')
+  assert.deepEqual(posted(), ['https://a.example/1', 'https://b.example/2', 'https://c.example/3'])
+  assert.match(el('apply-feedback').innerHTML, /Queued 2 links\./)
+  assert.match(el('apply-feedback').innerHTML, /Could not queue 1/)
+  assert.equal(el('apply-url').value, 'https://b.example/2')
+  assert.equal(el('apply-form-submit').disabled, false)
+})
+
+test('only text that is not a link queues nothing and asks nothing of the server', async () => {
+  const el = page()
+  initPending({ onOpenEvent() {}, getApplications: () => [] })
+  el('apply-url').value = 'recruiter@acme.com\n   \nsend me your CV'
+  await el('apply-form').fire('submit')
+  assert.deepEqual(calls, [])
+  assert.match(el('apply-url-error').textContent, /Enter the JD Post link/)
 })

@@ -50,7 +50,7 @@ Every agency and client you have dealt with, in one place: website, LinkedIn, th
 </p>
 
 ### Follow Up
-Shows how many days each application has been open, counted from its first event, so you can see which ones need a nudge. Sort by oldest, newest or name.
+Shows how many days each application has been open, counted from your latest application, so you can see which ones need a nudge. Sort by oldest, newest or name.
 
 <p align="center">
   <img src="docs/screenshots/en/follow-up.png" alt="Follow Up" width="560">
