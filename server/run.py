@@ -8,7 +8,7 @@ import sys
 import uvicorn
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from app.database import db_path_from_env  # noqa: E402
+from app.database import DEFAULT_DB_PATH  # noqa: E402
 from app.main import create_app  # noqa: E402
 from app.settings import DEFAULT_PORT, load_env_file  # noqa: E402
 
@@ -21,10 +21,10 @@ def bind(host, port):
 
 
 def main():
-    load_env_file()  # PORT and CAREER_MODE_DB can live in .env (CAREER_MODE_DB is also in Settings)
+    load_env_file()  # PORT can live in .env
     parser = argparse.ArgumentParser(description='career-mode: the app and its API, on localhost.')
     parser.add_argument('--port', type=int, default=int(os.environ.get('PORT', DEFAULT_PORT)))
-    parser.add_argument('--db', default=str(db_path_from_env()), help='SQLite file (created if missing)')
+    parser.add_argument('--db', default=str(DEFAULT_DB_PATH), help='SQLite file (created if missing)')
     args = parser.parse_args()
 
     sockets = []

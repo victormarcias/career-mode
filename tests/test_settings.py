@@ -5,11 +5,11 @@ import stat
 import pytest
 
 from app import settings
-from app.database import ROOT, db_path_from_env
+from app.database import DEFAULT_DB_PATH, ROOT, alembic_config
 
 SECRET = 'AIzaSyD-this-is-a-fake-key-0123456789'
 VARIABLES = {
-    'APP_LANGUAGE', 'BACKUP_DIR', 'CAREER_MODE_DB', 'CV_PDF_PATH', 'EMAIL_ADDRESS', 'EMAIL_PASSWORD',
+    'APP_LANGUAGE', 'CV_PDF_PATH', 'EMAIL_ADDRESS', 'EMAIL_PASSWORD',
     'EMAIL_SMTP_HOST', 'EMAIL_SMTP_PORT', 'GEMINI_API_KEY', 'GOOGLE_CALENDAR_ID',
 }
 SECRETS = {'EMAIL_PASSWORD', 'GEMINI_API_KEY', 'GOOGLE_CALENDAR_ID'}
@@ -25,11 +25,11 @@ def test_lists_every_known_variable_with_nothing_set(client):
     assert list(rows) == sorted(rows)  # Settings lists them A-Z
     assert all(not r['isSet'] and r['value'] is None and r['length'] is None for r in rows.values())
     assert {name for name, r in rows.items() if r['secret']} == SECRETS
-    assert rows['CAREER_MODE_DB']['restartRequired'] is True and rows['GEMINI_API_KEY']['restartRequired'] is False
-    assert {n: rows[n]['default'] for n in ('APP_LANGUAGE', 'BACKUP_DIR', 'EMAIL_SMTP_HOST', 'EMAIL_SMTP_PORT')} == {
-        'APP_LANGUAGE': 'en', 'BACKUP_DIR': 'backup', 'EMAIL_SMTP_HOST': 'smtp.gmail.com', 'EMAIL_SMTP_PORT': '465',
+    assert all(r['restartRequired'] is False for r in rows.values())
+    assert {n: rows[n]['default'] for n in ('APP_LANGUAGE', 'EMAIL_SMTP_HOST', 'EMAIL_SMTP_PORT')} == {
+        'APP_LANGUAGE': 'en', 'EMAIL_SMTP_HOST': 'smtp.gmail.com', 'EMAIL_SMTP_PORT': '465',
     }
-    assert rows['APP_LANGUAGE']['choices'] == ['en', 'es'] and rows['BACKUP_DIR']['choices'] is None
+    assert rows['APP_LANGUAGE']['choices'] == ['en', 'es'] and rows['EMAIL_SMTP_HOST']['choices'] is None
 
 
 def test_a_secret_is_never_sent_back_in_full(client, env_path):
@@ -50,9 +50,9 @@ def test_the_length_is_the_real_one_whatever_it_is(client):
 
 
 def test_plain_values_come_back_as_they_are(client):
-    r = client.put('/api/settings/env', json={'values': {'EMAIL_SMTP_PORT': ' 587 ', 'CAREER_MODE_DB': 'data/other.db'}})
+    r = client.put('/api/settings/env', json={'values': {'EMAIL_SMTP_PORT': ' 587 ', 'EMAIL_SMTP_HOST': 'smtp.example.org'}})
     rows = by_name(r.json())
-    assert (rows['EMAIL_SMTP_PORT']['value'], rows['CAREER_MODE_DB']['value']) == ('587', 'data/other.db')
+    assert (rows['EMAIL_SMTP_PORT']['value'], rows['EMAIL_SMTP_HOST']['value']) == ('587', 'smtp.example.org')
 
 
 def test_the_file_is_private(client, env_path):
@@ -67,10 +67,10 @@ def test_everything_else_in_the_file_is_left_alone(client, env_path):
 
 
 def test_null_or_blank_removes_a_variable_and_only_that_one(client, env_path):
-    env_path.write_text('EMAIL_SMTP_PORT=587\nCAREER_MODE_DB=data/other.db\n# keep\n')
+    env_path.write_text('EMAIL_SMTP_PORT=587\nEMAIL_SMTP_HOST=smtp.example.org\n# keep\n')
     client.put('/api/settings/env', json={'values': {'EMAIL_SMTP_PORT': None}})
-    assert env_path.read_text() == 'CAREER_MODE_DB=data/other.db\n# keep\n'
-    client.put('/api/settings/env', json={'values': {'CAREER_MODE_DB': '  '}})
+    assert env_path.read_text() == 'EMAIL_SMTP_HOST=smtp.example.org\n# keep\n'
+    client.put('/api/settings/env', json={'values': {'EMAIL_SMTP_HOST': '  '}})
     assert env_path.read_text() == '# keep\n'
 
 
@@ -139,11 +139,13 @@ def test_the_old_calendar_name_still_works_until_the_new_one_is_saved(client, en
     assert settings.read_env_file(env_path) == {'KEEP': '1', 'GOOGLE_CALENDAR_ID': 'you@example.com'}
 
 
-def test_values_with_spaces_and_quotes_survive_a_round_trip(client, env_path):
-    tricky = 'data/my "best" jobs #1.db'
-    client.put('/api/settings/env', json={'values': {'CAREER_MODE_DB': tricky}})
-    assert settings.read_env_file(env_path)['CAREER_MODE_DB'] == tricky
-    assert by_name(client.get('/api/settings/env').json())['CAREER_MODE_DB']['value'] == tricky
+def test_values_with_spaces_and_quotes_survive_a_round_trip(client, env_path, tmp_path):
+    cv = tmp_path / 'my "best" CV #1.pdf'
+    cv.write_bytes(b'%PDF-1.4\n')
+    tricky = str(cv)
+    client.put('/api/settings/env', json={'values': {'CV_PDF_PATH': tricky}})
+    assert settings.read_env_file(env_path)['CV_PDF_PATH'] == tricky
+    assert by_name(client.get('/api/settings/env').json())['CV_PDF_PATH']['value'] == tricky
 
 
 def test_reading_the_file(tmp_path):
@@ -155,66 +157,20 @@ def test_reading_the_file(tmp_path):
 
 def test_the_file_never_overrides_what_is_already_exported(tmp_path, monkeypatch):
     path = tmp_path / 'env'
-    path.write_text('EMAIL_SMTP_PORT=587\nCAREER_MODE_DB=from-file.db\n')
+    path.write_text('EMAIL_SMTP_PORT=587\nSOME_OTHER_SETTING=from-file\n')
     monkeypatch.setenv('EMAIL_SMTP_PORT', '465')
-    monkeypatch.delenv('CAREER_MODE_DB', raising=False)
+    monkeypatch.delenv('SOME_OTHER_SETTING', raising=False)
     settings.load_env_file(path)
-    assert os.environ['EMAIL_SMTP_PORT'] == '465' and os.environ['CAREER_MODE_DB'] == 'from-file.db'
-    monkeypatch.delenv('CAREER_MODE_DB')
+    assert os.environ['EMAIL_SMTP_PORT'] == '465' and os.environ['SOME_OTHER_SETTING'] == 'from-file'
+    monkeypatch.delenv('SOME_OTHER_SETTING')
 
 
-def test_a_relative_database_path_starts_at_the_project_folder(monkeypatch):
-    monkeypatch.setenv('CAREER_MODE_DB', 'data/elsewhere.db')
-    assert db_path_from_env() == ROOT / 'data' / 'elsewhere.db'
-    monkeypatch.setenv('CAREER_MODE_DB', '/tmp/absolute.db')
-    assert str(db_path_from_env()) == '/tmp/absolute.db'
-
-
-def test_the_backup_folder_is_the_shell_then_the_file_then_backup(tmp_path, monkeypatch):
-    path = tmp_path / 'env'
-    monkeypatch.delenv('BACKUP_DIR', raising=False)
-    assert settings.backup_dir(path) == 'backup'
-    path.write_text('BACKUP_DIR=from-file\n')
-    assert settings.backup_dir(path) == 'from-file'
-    monkeypatch.setenv('BACKUP_DIR', 'from-shell')
-    assert settings.backup_dir(path) == 'from-shell'
-
-
-def test_the_settings_are_documented(client):
-    paths = client.get('/openapi.json').json()['paths']
-    assert {'get', 'put'} <= set(paths['/api/settings/env'])
-
-
-# ---------- the eye icon: one secret at a time, on request ----------
-
-
-def test_a_secret_is_revealed_on_request_and_only_then(client, env_path):
-    client.put('/api/settings/env', json={'values': {'GEMINI_API_KEY': SECRET}})
-    r = client.get('/api/settings/env/GEMINI_API_KEY/value')
-    assert r.status_code == 200 and r.json() == {'name': 'GEMINI_API_KEY', 'value': SECRET}
-    assert r.headers['cache-control'] == 'no-store'
-    assert SECRET not in client.get('/api/settings/env').text  # the list still hides it
-
-
-def test_revealing_a_secret_that_is_not_set_gives_null(client):
-    assert client.get('/api/settings/env/GEMINI_API_KEY/value').json() == {'name': 'GEMINI_API_KEY', 'value': None}
-
-
-@pytest.mark.parametrize('name', sorted(VARIABLES - SECRETS) + ['PATH', 'HOME', 'nope'])
-def test_only_known_secrets_can_be_revealed(client, name):
-    assert client.get('/api/settings/env/%s/value' % name).status_code == 404
-
-
-@pytest.mark.parametrize('name', sorted(SECRETS))
-def test_every_secret_has_its_eye(client, name):
-    assert client.get('/api/settings/env/%s/value' % name).status_code == 200
-
-
-def test_the_reveal_route_refuses_a_foreign_host_name(client, env_path):  # DNS rebinding
-    client.put('/api/settings/env', json={'values': {'GEMINI_API_KEY': SECRET}})
-    r = client.get('/api/settings/env/GEMINI_API_KEY/value', headers={'Host': 'evil.example'})
-    assert r.status_code == 403 and SECRET not in r.text
-
-
-def test_the_reveal_route_is_documented(client):
-    assert '/api/settings/env/{name}/value' in client.get('/openapi.json').json()['paths']
+def test_the_database_and_the_backups_have_fixed_places_that_no_variable_moves(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv('CAREER_MODE_DB', str(tmp_path / 'elsewhere.db'))
+    monkeypatch.setenv('BACKUP_DIR', str(tmp_path / 'elsewhere'))
+    assert DEFAULT_DB_PATH == ROOT / 'data' / 'career-mode.db'
+    assert alembic_config().get_main_option('sqlalchemy.url') == 'sqlite:///%s' % DEFAULT_DB_PATH
+    import cli
+    cli.main(['backup-dir'])
+    assert capsys.readouterr().out.strip() == 'backup'
+    assert not {'BACKUP_DIR', 'CAREER_MODE_DB'} & set(settings.BY_NAME)

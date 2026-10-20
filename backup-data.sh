@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# Backs up what is yours, to the backup folder (BACKUP_DIR in Settings or .env; `backup`
-# by default):
+# Backs up what is yours, to the backup/ folder:
 #   calendar.csv, companies.csv   the database: the events, the agencies and the clients
 #   profile/                      profile.md, outreach.md (your messages), cv.pdf, photo.* and daily-posts/
 #   profile/profile.pdf           the profile laid out as a document (Drive: upload it, then Open
@@ -67,21 +66,15 @@ for doc in profile outreach; do
 done
 
 # env/env: the latest copy of your .env, with its keys and passwords, so a new computer or a lost file doesn't mean making
-# them all again. One file, replaced every time, outside history/ and outside the comparison below. It is only as private
-# as the backup folder: it is not copied anywhere git could pick it up (a folder inside this repository has to be ignored).
+# them all again. One file, replaced every time, outside history/ and outside the comparison below. backup/ is ignored by
+# git and only as private as your computer.
 rm -f "$BACKUP/env/env"
 if [ -f .env ]; then
-  ignored=0
-  git check-ignore -q "$BACKUP/env/env" 2>/dev/null || ignored=$?  # 0 ignored, 1 inside the repo and not ignored, else outside it
-  if [ "$ignored" = 1 ]; then
-    echo "${YELLOW}⚠️  Skipped .env: $BACKUP is inside this repository and git does not ignore it (add it to .gitignore)${RESET}"
-  else
-    mkdir -p "$BACKUP/env"
-    chmod 700 "$BACKUP/env"
-    cp .env "$BACKUP/env/env"
-    chmod 600 "$BACKUP/env/env"
-    echo "${GREEN}🔑 Copied .env to $BACKUP/env/env (keys and passwords: keep $BACKUP private)${RESET}"
-  fi
+  mkdir -p "$BACKUP/env"
+  chmod 700 "$BACKUP/env"
+  cp .env "$BACKUP/env/env"
+  chmod 600 "$BACKUP/env/env"
+  echo "${GREEN}🔑 Copied .env to $BACKUP/env/env${RESET}"
 fi
 
 # the newest copy (the names sort by date)

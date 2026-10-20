@@ -10,11 +10,11 @@ const { codeHtml, envPayload, fieldHtml, toggleReveal } = await import('../../pu
 
 const key = { name: 'GEMINI_API_KEY', label: 'Gemini API key', description: 'd', secret: true, restartRequired: false, default: null, isSet: true, value: null, length: 12 }
 const port = { name: 'EMAIL_SMTP_PORT', label: 'SMTP port', description: 'd', secret: false, restartRequired: true, default: '465', isSet: true, value: '587', length: null }
-const db = { name: 'CAREER_MODE_DB', label: 'Database file', description: 'd', secret: false, restartRequired: true, default: 'data/career-mode.db', isSet: false, value: null, length: null }
-const vars = [key, port, db]
+const host = { name: 'EMAIL_SMTP_HOST', label: 'SMTP server', description: 'd', secret: false, restartRequired: true, default: 'smtp.gmail.com', isSet: false, value: null, length: null }
+const vars = [key, port, host]
 
 test('nothing is sent when nothing changed', () => {
-  assert.deepEqual(envPayload(vars, { GEMINI_API_KEY: { typed: '' }, EMAIL_SMTP_PORT: { typed: '587' }, CAREER_MODE_DB: { typed: '' } }), {})
+  assert.deepEqual(envPayload(vars, { GEMINI_API_KEY: { typed: '' }, EMAIL_SMTP_PORT: { typed: '587' }, EMAIL_SMTP_HOST: { typed: '' } }), {})
 })
 
 test('a secret left empty is kept, a new one replaces it, and one emptied after looking at it is removed', () => {
@@ -25,9 +25,9 @@ test('a secret left empty is kept, a new one replaces it, and one emptied after 
 })
 
 test('only plain values that changed are sent, and emptying one removes it', () => {
-  assert.deepEqual(envPayload(vars, { EMAIL_SMTP_PORT: { typed: '2525' }, CAREER_MODE_DB: { typed: ' data/other.db ' } }), { EMAIL_SMTP_PORT: '2525', CAREER_MODE_DB: 'data/other.db' })
+  assert.deepEqual(envPayload(vars, { EMAIL_SMTP_PORT: { typed: '2525' }, EMAIL_SMTP_HOST: { typed: ' smtp.example.org ' } }), { EMAIL_SMTP_PORT: '2525', EMAIL_SMTP_HOST: 'smtp.example.org' })
   assert.deepEqual(envPayload(vars, { EMAIL_SMTP_PORT: { typed: '' } }), { EMAIL_SMTP_PORT: null })
-  assert.deepEqual(envPayload([db], { CAREER_MODE_DB: { typed: '' } }), {}) // it was already unset
+  assert.deepEqual(envPayload([host], { EMAIL_SMTP_HOST: { typed: '' } }), {}) // it was already unset
 })
 
 test('a variable the form did not report is left alone, not read as emptied', () => {
@@ -79,7 +79,7 @@ test('only a secret field has an eye, and the field starts hidden', () => {
   assert.match(html, /data-icon="hide"/)
   assert.match(html, /type="password"/)
   assert.doesNotMatch(fieldHtml(port), /data-reveal/)
-  assert.doesNotMatch(fieldHtml(db), /data-reveal/)
+  assert.doesNotMatch(fieldHtml(host), /data-reveal/)
 })
 
 test('the first click loads the real value from the server and shows it', async () => {

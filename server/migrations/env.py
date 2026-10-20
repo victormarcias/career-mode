@@ -7,7 +7,7 @@ from alembic import context
 from sqlalchemy import create_engine
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from app.database import db_path_from_env  # noqa: E402
+from app.database import DEFAULT_DB_PATH  # noqa: E402
 from app.models import Base  # noqa: E402
 
 config = context.config
@@ -19,7 +19,7 @@ target_metadata = Base.metadata
 
 def _url():
     # `alembic` on the command line has no url set: fall back to the app's own database.
-    return config.get_main_option('sqlalchemy.url') or 'sqlite:///%s' % db_path_from_env()
+    return config.get_main_option('sqlalchemy.url') or 'sqlite:///%s' % DEFAULT_DB_PATH
 
 
 def run_migrations_offline():
