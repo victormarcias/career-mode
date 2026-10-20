@@ -69,7 +69,6 @@ done
 # env/env: the latest copy of your .env, with its keys and passwords, so a new computer or a lost file doesn't mean making
 # them all again. One file, replaced every time, outside history/ and outside the comparison below. It is only as private
 # as the backup folder: it is not copied anywhere git could pick it up (a folder inside this repository has to be ignored).
-rm -f "$BACKUP/env/env"
 if [ -f .env ]; then
   ignored=0
   git check-ignore -q "$BACKUP/env/env" 2>/dev/null || ignored=$?  # 0 ignored, 1 inside the repo and not ignored, else outside it

@@ -12,8 +12,11 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 
 MODEL = "gemini-2.5-flash-image"
+REQUEST_TIMEOUT = 120
+PROCESS_TIMEOUT = 130
 PROMPT_PREFIX = (
     "Could you make me an image about this? Please check spelling errors. Minimal text. "
     "Do not write function names or code in the image: describe them in plain words."
@@ -59,17 +62,31 @@ def main():
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent"
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
 
-    result = subprocess.run(
-        [
-            "curl", "-sS", url,
-            "-H", "Content-Type: application/json",
-            "-H", f"x-goog-api-key: {api_key}",
-            "-d", "@-",
-        ],
-        input=json.dumps(payload),
-        capture_output=True,
-        text=True,
-    )
+    if "\r" in api_key or "\n" in api_key:
+        print("Invalid GEMINI_API_KEY: must be a single line.", file=sys.stderr)
+        sys.exit(1)
+
+    # NamedTemporaryFile creates a private (0600) file and removes it on exit,
+    # including exceptions. Keep the credential out of curl's process arguments.
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", prefix="daily-image-", suffix=".headers") as headers:
+            headers.write(f"x-goog-api-key: {api_key}\n")
+            headers.flush()
+            result = subprocess.run(
+                [
+                    "curl", "-sS", "--max-time", str(REQUEST_TIMEOUT), url,
+                    "-H", "Content-Type: application/json",
+                    "-H", f"@{headers.name}",
+                    "-d", "@-",
+                ],
+                input=json.dumps(payload),
+                capture_output=True,
+                text=True,
+                timeout=PROCESS_TIMEOUT,
+            )
+    except subprocess.TimeoutExpired:
+        print("Image generation timed out.", file=sys.stderr)
+        sys.exit(1)
     if result.returncode != 0:
         print(f"curl failed: {result.stderr}", file=sys.stderr)
         sys.exit(1)

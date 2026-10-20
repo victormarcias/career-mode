@@ -62,11 +62,19 @@ restore_profile() {
 
 # the .env of a backup folder (DIR/env/env; the dated copies in history/ don't have one)
 restore_env() {
-  [ -f "$DIR/env/env" ] || return 0
+  local env_source="$DIR/env/env"
+  if [ ! -f "$env_source" ]; then
+    local entry_parent
+    entry_parent="$(dirname "$(cd "$DIR" && pwd -P)")"
+    if [ "$(basename "$entry_parent")" = history ]; then
+      env_source="$(dirname "$entry_parent")/env/env"
+    fi
+  fi
+  [ -f "$env_source" ] || return 0
   if [ -f .env ] && [ "$REPLACE" = 0 ]; then
     echo "${YELLOW}⏭️  Skipped .env: it is already there (--replace overwrites it)${RESET}"
   else
-    cp "$DIR/env/env" .env
+    cp "$env_source" .env
     chmod 600 .env
     echo "${GREEN}🔑 Restored .env: restart the app (./stop.sh, ./run-local.sh) so it reads it${RESET}"
   fi
@@ -74,8 +82,12 @@ restore_env() {
 
 # the posts of the daily post skill (DIR/profile/daily-posts/): same rule, file by file
 restore_daily_posts() {
-  [ -d "$DIR/profile/daily-posts" ] || return 0
+  [ -d "$DIR/profile/daily-posts" ] || [ "$REPLACE" = 1 ] || return 0
+  if [ "$REPLACE" = 1 ]; then
+    rm -rf -- profile/daily-posts
+  fi
   mkdir -p profile/daily-posts
+  [ -d "$DIR/profile/daily-posts" ] || return 0
   restored=0; skipped=0
   for src in "$DIR"/profile/daily-posts/*; do
     [ -f "$src" ] || continue
