@@ -17,6 +17,18 @@ export function isLink(value) {
   }
 }
 
+// What was pasted into the box: every word is a candidate, whatever separates them (new lines, spaces). The links come
+// back once each and in the order they were pasted; what is not a link comes back apart, so it can be told and kept.
+export function parseLinks(text) {
+  const links = []
+  const invalid = []
+  for (const word of text.split(/\s+/).filter(Boolean)) {
+    const list = isLink(word) ? links : invalid
+    if (!list.includes(word)) list.push(word)
+  }
+  return { links, invalid }
+}
+
 // The queued links, oldest first.
 export function queuedLinks(applications) {
   return applications
@@ -75,8 +87,7 @@ export function initPending({ onOpenEvent, getApplications }) {
 
   urlInput.addEventListener('input', () => {
     setFeedback(null)
-    const value = urlInput.value.trim()
-    setNotice(errorEl, !value || isLink(value) ? '' : t('pending.notALink'))
+    setNotice(errorEl, parseLinks(urlInput.value).invalid.length ? t('pending.notALink') : '')
   })
 
   list.addEventListener('click', (e) => {
@@ -85,10 +96,40 @@ export function initPending({ onOpenEvent, getApplications }) {
     if (app) onOpenEvent(app)
   })
 
+  // Queues one link, unless it is already queued or was applied to: which of the four it was.
+  async function queueOne(link) {
+    try {
+      const sameLink = await api.list('events', { jdUrl: link })
+      if (sameLink.length) return sameLink.some((e) => e.event === 'pending') ? 'queuedBefore' : 'applied'
+      await api.create('events', { date: nextBusinessDate(), event: 'pending', jdUrl: link })
+      return 'queued'
+    } catch {
+      return 'failed'
+    }
+  }
+
+  // One link keeps its own short messages; several get a summary of what happened to them.
+  function summary(results, invalidCount) {
+    const count = (outcome) => results.filter((r) => r.outcome === outcome).length
+    const queued = count('queued')
+    const failed = count('failed')
+    if (results.length === 1 && !invalidCount) {
+      const text = { queued: 'pending.queued', queuedBefore: 'pending.alreadyQueued', applied: 'pending.alreadyApplied', failed: 'pending.failed' }
+      return { kind: queued ? 'success' : 'error', text: t(text[results[0].outcome]) }
+    }
+    const parts = []
+    if (queued) parts.push(t(queued === 1 ? 'pending.queuedOne' : 'pending.queuedMany', { count: queued }))
+    if (count('queuedBefore')) parts.push(t('pending.skipQueued', { count: count('queuedBefore') }))
+    if (count('applied')) parts.push(t('pending.skipApplied', { count: count('applied') }))
+    if (invalidCount) parts.push(t('pending.skipInvalid', { count: invalidCount }))
+    if (failed) parts.push(t('pending.failedMany', { count: failed }))
+    return { kind: queued && !failed ? 'success' : 'error', text: parts.join(' ') }
+  }
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault()
-    const value = urlInput.value.trim()
-    if (!isLink(value)) {
+    const { links, invalid } = parseLinks(urlInput.value)
+    if (!links.length) {
       setNotice(errorEl, t('pending.notALink'))
       return
     }
@@ -97,24 +138,18 @@ export function initPending({ onOpenEvent, getApplications }) {
     setFeedback('loading', t('pending.checking'))
 
     try {
-      const sameLink = await api.list('events', { jdUrl: value })
-      if (sameLink.length) {
-        const alreadyPending = sameLink.some((e) => e.event === 'pending')
-        setFeedback('error', alreadyPending ? t('pending.alreadyQueued') : t('pending.alreadyApplied'))
-        return
+      const results = []
+      for (const link of links) {
+        setFeedback('loading', t('pending.queuing'))
+        results.push({ link, outcome: await queueOne(link) })
       }
-
-      setFeedback('loading', t('pending.queuing'))
-      await api.create('events', {
-        date: nextBusinessDate(),
-        event: 'pending',
-        jdUrl: value,
-      })
-      form.reset()
-      setFeedback('success', t('pending.queued'))
+      // What could not be queued stays in the box to be fixed or tried again; with nothing left it is emptied.
+      const left = [...invalid, ...results.filter((r) => r.outcome === 'failed').map((r) => r.link)]
+      if (left.length) urlInput.value = left.join('\n')
+      else form.reset()
+      const { kind, text } = summary(results, invalid.length)
+      setFeedback(kind, text)
       urlInput.focus()
-    } catch {
-      setFeedback('error', t('pending.failed'))
     } finally {
       submitBtn.disabled = false
     }

@@ -117,17 +117,17 @@
 
             <div id="pending-list" class="mb-6 rounded-2xl border border-gray-800 bg-gray-900 p-2"></div>
 
-            <h2 class="text-base font-medium text-gray-100" data-i18n="pending.queueTitle">Queue application link</h2>
-            <p class="mb-3 text-sm text-gray-500" data-i18n-html="pending.queueHelp">Add link to the queue to apply in bulk later using
+            <h2 class="text-base font-medium text-gray-100" data-i18n="pending.queueTitle">Queue application links</h2>
+            <p class="mb-3 text-sm text-gray-500" data-i18n-html="pending.queueHelp">Add the links to the queue, one per line, to apply in bulk later using
               <code class="code">/apply-pending</code>
             </p>
 
             <form id="apply-form" class="space-y-3">
               <div class="flex items-start gap-2">
-                <input type="text" id="apply-url" placeholder="JD Post link" data-i18n-placeholder="pending.placeholder"
-                  autocomplete="off"
-                  class="min-w-0 flex-1 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"
-                  required />
+                <textarea id="apply-url" rows="4" placeholder="JD Post links, one per line" data-i18n-placeholder="pending.placeholder"
+                  autocomplete="off" spellcheck="false"
+                  class="min-w-0 flex-1 resize-y rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"
+                  required></textarea>
                 <button type="submit" id="apply-form-submit"
                   class="rounded-full bg-gray-100 px-5 py-2 text-sm font-medium text-gray-900 hover:bg-white disabled:opacity-50" data-i18n="pending.queue">Queue</button>
               </div>
