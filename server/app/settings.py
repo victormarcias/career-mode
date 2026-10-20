@@ -18,7 +18,7 @@ from .database import ROOT
 ENV_PATH = ROOT / '.env'
 MAX_CV_BYTES = 1 * 1024 * 1024
 DEFAULT_PORT = '8333'
-DEFAULT_BACKUP_DIR = 'backup'  # PORT is read from .env or the shell, but it is not one of the settings the page lists
+BACKUP_DIR = 'backup'  # always this folder, inside the project: git ignores it. Like PORT, it is not a setting the page lists
 
 
 @dataclass(frozen=True)
@@ -40,22 +40,6 @@ ENV_VARS = [  # in alphabetical order, which is how Settings lists them
         'The language of the app: `en` (English) or `es` (Spanish). It applies when the page reloads.',
         default='en',
         choices=('en', 'es'),
-    ),
-    EnvVar(
-        'BACKUP_DIR',
-        'Backup folder',
-        'Where `./backup-data.sh` writes the backups (the calendar and companies, and your profile, messages, CV and '
-        'photo), and where `./restore-backup.sh` reads them from by default. A relative path starts at the project '
-        'folder. Point it somewhere git does not see, or a folder you sync.',
-        default='backup',
-    ),
-    EnvVar(
-        'CAREER_MODE_DB',
-        'Database file',
-        'The SQLite file with all your data. A relative path starts at the project folder. '
-        'A path that does not exist yet means an empty database, so your data stays in the old file.',
-        default='data/career-mode.db',
-        restart_required=True,
     ),
     EnvVar(
         'CV_PDF_PATH',
@@ -208,11 +192,6 @@ def get(name: str, path: Path = ENV_PATH) -> Optional[str]:
     """What the file holds for `name`, or for the name it used to have."""
     stored = read_env_file(path)
     return stored.get(name) or stored.get(LEGACY_NAMES.get(name, '')) or None
-
-
-def backup_dir(path: Path = ENV_PATH) -> str:
-    """The folder for the backups: BACKUP_DIR from the shell or .env, else `backup`. A relative one starts at the project folder."""
-    return os.path.expanduser(os.environ.get('BACKUP_DIR') or get('BACKUP_DIR', path) or DEFAULT_BACKUP_DIR)
 
 
 def reveal(name: str, path: Path = ENV_PATH) -> Optional[str]:

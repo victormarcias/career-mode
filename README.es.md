@@ -71,7 +71,7 @@ Los mensajes que más mandás (aplicación, cover letter, respuesta de rechazo y
 </p>
 
 ### Ajustes
-Todo lo que necesitan la app y los skills, en una sola lista: idioma (English o español), cuenta de correo, CV, Google Calendar, foto y carpetas de backup. Las claves y contraseñas quedan ocultas hasta que tocás el ojo.
+Todo lo que necesitan la app y los skills, en una sola lista: idioma (English o español), cuenta de correo, CV, Google Calendar y foto. Las claves y contraseñas quedan ocultas hasta que tocás el ojo.
 
 <p align="center">
   <img src="docs/screenshots/es/settings.png" alt="Settings" width="560">
@@ -93,16 +93,17 @@ En `.claude/skills/`, cada uno con su README:
 - `reply-recruiter`: responde a un recruiter que escribió primero
 - `submit-profile`: llena portales de candidatos con tu perfil
 - `write-daily-post`: escribe el post diario y su imagen
+- `commit`: commitea tus cambios en la rama actual, corto y a tu nombre
 
 ## Backups
 
 ```bash
-./backup-data.sh                    # calendario, empresas, perfil, CV, foto
+./backup-data.sh                    # calendario, empresas, perfil, CV, foto, profile.pdf
 ./restore-backup.sh                 # carga el backup de vuelta
 ./restore-backup.sh <carpeta> --replace
 ```
 
-Van a `backup/` (o `BACKUP_DIR`), que git ignora. `.env` queda afuera a propósito: tiene tus claves.
+Van a `backup/`, que git ignora. También guarda una copia de tu `.env` (`backup/env/env`, legible solo por vos) con tus claves y contraseñas: mantené esa carpeta privada, sin sincronizar ni compartir.
 
 ## Tests
 

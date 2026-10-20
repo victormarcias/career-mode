@@ -17,7 +17,7 @@ from sqlalchemy.exc import IntegrityError
 from starlette.datastructures import Headers, MutableHeaders
 
 from . import crud, google_calendar, mailer, profile_photo, snapshot
-from .database import ROOT, db_path_from_env, make_engine, migrate, session_factory
+from .database import DEFAULT_DB_PATH, ROOT, make_engine, migrate, session_factory
 from .settings import ENV_PATH
 from .routes import agencies, calendar, clients, events, mail, settings as settings_routes
 from .schemas import Snapshot
@@ -63,7 +63,7 @@ class LocalOnly:
 
 
 def create_app(db_path=None, allowed_hosts=LOCAL_HOSTS, env_path=None, profile_dir=None) -> FastAPI:
-    db_path = Path(db_path) if db_path else db_path_from_env()
+    db_path = Path(db_path) if db_path else DEFAULT_DB_PATH
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):

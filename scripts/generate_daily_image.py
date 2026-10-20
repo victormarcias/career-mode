@@ -14,7 +14,10 @@ import subprocess
 import sys
 
 MODEL = "gemini-2.5-flash-image"
-PROMPT_PREFIX = "Could you make me an image about this?"
+PROMPT_PREFIX = (
+    "Could you make me an image about this? Please check spelling errors. Minimal text. "
+    "Do not write function names or code in the image: describe them in plain words."
+)
 
 
 def load_env(path):

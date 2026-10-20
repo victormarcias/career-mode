@@ -10,6 +10,7 @@ everything else, so your own files never leave this computer.
 | `outreach.md` | Your messages, shown in Outreach → Messages. Yours. |
 | `cv.pdf` | Your CV, copied here by `/setup` (the `CV_PDF_PATH` setting points to it). The skills attach and upload it, and `/read-cv` reads it. Yours. |
 | `photo.png` (or `.jpg`) | Your profile picture, uploaded in Settings. The skills upload it to forms that ask for one. Yours. |
+| `daily-posts/` | The posts `/write-daily-post` writes, each as `daily-post-YYYYMMDD.txt` with its image (`.png`) next to it, and `log.csv`, the date of each one and whether it went well (`ok`, or `error` when the image was discarded). The first line of each `.txt` is its topic. Yours. |
 | `profile.example.md`, `outreach.example.md` | The same two files to start from: an invented person (Juan Perez) for the profile, and the six messages with a placeholder where each text goes. They ship with the repo. |
 
 `./run-local.sh` makes `profile.md` and `outreach.md` from the examples the
@@ -154,9 +155,15 @@ good backup: paste `profile.md` into one (Google Docs, Claude Docs...), or ask
 the AI to create it from the file. To restore, give the AI the document and ask
 it to rewrite `profile.md` from it, comparing with the current one first.
 
+`./backup-data.sh` makes that document for you: `backup/profile/profile.pdf`, your profile
+laid out with its headings, bullets and links (it needs Chrome or Chromium to
+print it). Upload it to Google Drive and choose *Open with Google Docs*.
+
 The document holds your birthdate, phone and salary range, so keep it private:
 never share it with "anyone with the link".
 
 The same goes for `outreach.md` (and any other file of yours you put
-here): git ignores them all, so back them up the same way. To restore
-`outreach.md`, give the AI the document again.
+here): git ignores them all, so back them up the same way. The backup also
+makes `backup/profile/outreach.pdf`, your messages laid out to read. `/setup`
+offers the backup's `outreach.md` when it asks for your messages. For any other
+file, give the AI the document again.
