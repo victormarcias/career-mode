@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """Command line for the career-mode database.
 
-    python server/cli.py export [DIR]            write DIR/calendar.csv and DIR/companies.csv (default: BACKUP_DIR, or backup)
+    python server/cli.py export [DIR]            write DIR/calendar.csv and DIR/companies.csv (default: backup)
     python server/cli.py import DIR [--replace]  load those files; also reads the old JSON backups (agencies.json,
                                                  clients.json, events.json, and the Firestore applications.json).
                                                  --replace empties the database first
     python server/cli.py stats                   how many rows each table has
-    python server/cli.py backup-dir              print the backup folder (BACKUP_DIR in .env or the shell, else backup)
-    python server/cli.py profile-pdf [FILE]      a PDF of profile/profile.md to open in Google Docs (default: BACKUP_DIR/profile/profile.pdf);
+    python server/cli.py backup-dir              print the backup folder, which is always backup
+    python server/cli.py profile-pdf [FILE]      a PDF of profile/profile.md to open in Google Docs (default: backup/profile/profile.pdf);
                                                  needs Chrome or Chromium to print it
-    python server/cli.py outreach-pdf [FILE]     the same for profile/outreach.md, your messages (default: BACKUP_DIR/profile/outreach.pdf)
+    python server/cli.py outreach-pdf [FILE]     the same for profile/outreach.md, your messages (default: backup/profile/outreach.pdf)
 
 Add `--db FILE` to use another database than data/career-mode.db. The CSV files are the
 exchange format: a snapshot to keep, move to another computer or seed a new install.
@@ -25,9 +25,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from sqlalchemy import func, select  # noqa: E402
 
 from app import models, snapshot  # noqa: E402
-from app.database import ROOT, db_path_from_env, make_engine, migrate, session_factory  # noqa: E402
+from app.database import DEFAULT_DB_PATH, ROOT, make_engine, migrate, session_factory  # noqa: E402
 from app.profile_pdf import render_pdf  # noqa: E402
-from app.settings import backup_dir  # noqa: E402
+from app.settings import BACKUP_DIR  # noqa: E402
 
 FILES = ('agencies', 'clients', 'events')
 PROFILE_DIR = ROOT / 'profile'
@@ -74,16 +74,16 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('command', choices=('export', 'import', 'stats', 'backup-dir', 'profile-pdf', 'outreach-pdf'))
     parser.add_argument('directory', nargs='?')
-    parser.add_argument('--db', default=str(db_path_from_env()))
+    parser.add_argument('--db', default=str(DEFAULT_DB_PATH))
     parser.add_argument('--replace', action='store_true')
     args = parser.parse_args(argv)
 
     if args.command == 'backup-dir':  # for the scripts: no database involved
-        print(backup_dir())
+        print(BACKUP_DIR)
         return
     if args.command in ('profile-pdf', 'outreach-pdf'):  # no database involved either
         name = args.command.split('-')[0]
-        print(markdown_pdf(name, args.directory or os.path.join(backup_dir(), 'profile', name + '.pdf')))
+        print(markdown_pdf(name, args.directory or os.path.join(BACKUP_DIR, 'profile', name + '.pdf')))
         return
     migrate(args.db)
     engine = make_engine(args.db)
@@ -92,7 +92,7 @@ def main(argv=None):
             for model in (models.Agency, models.AgencyRecruiter, models.Client, models.Event):
                 print('%-18s %d' % (model.__tablename__, session.scalar(select(func.count()).select_from(model))))
         elif args.command == 'export':
-            directory = args.directory or backup_dir()
+            directory = args.directory or BACKUP_DIR
             os.makedirs(directory, exist_ok=True)
             for name, text in snapshot.export_csv(session).items():
                 path = os.path.join(directory, snapshot.CSV_FILES[name])

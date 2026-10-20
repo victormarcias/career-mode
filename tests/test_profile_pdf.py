@@ -191,7 +191,7 @@ def test_the_cli_makes_the_messages_pdf_and_the_profile_pdf_by_default_in_the_pr
     (tmp_path / 'profile' / 'outreach.md').write_text('# Outreach — Ana Invented\n\n## 📝 A Message\n')
     (tmp_path / 'profile' / 'profile.md').write_text('# Profile — Ana Invented\n')
     monkeypatch.setattr(cli, 'PROFILE_DIR', tmp_path / 'profile')
-    monkeypatch.setattr(cli, 'backup_dir', lambda: str(tmp_path / 'backup'))
+    monkeypatch.setattr(cli, 'BACKUP_DIR', str(tmp_path / 'backup'))
     monkeypatch.setenv('CAREER_MODE_BROWSER', str(fake_browser[0]))
     html_log = Path(str(fake_browser[1]) + '.html')
     cli.main(['outreach-pdf'])

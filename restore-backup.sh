@@ -6,7 +6,7 @@
 #   ./restore-backup.sh DIR --replace            empty the database and overwrite the profile files
 #                                                first (asks to confirm; -y skips)
 #
-# The backup folder is BACKUP_DIR (Settings or .env; `backup` by default). DIR has
+# The backup folder is backup/. DIR has
 # calendar.csv and companies.csv (the older JSON backups work too) and, from the newer
 # backups, a profile/ folder (profile.md, outreach.md, cv.pdf, photo.*, daily-posts/). Without --replace
 # nothing is overwritten: what is already in the database or in profile/ is skipped and
