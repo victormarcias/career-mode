@@ -50,7 +50,7 @@ Todas las agencias y clientes con los que trataste, en un solo lugar: sitio web,
 </p>
 
 ### Seguimiento
-Muestra cuántos días lleva abierta cada aplicación, contados desde su primer evento, para ver cuáles necesitan un empujón. Ordená por más antiguas, más nuevas o por nombre.
+Muestra cuántos días lleva abierta cada aplicación, contados desde tu última aplicación, para ver cuáles necesitan un empujón. Ordená por más antiguas, más nuevas o por nombre.
 
 <p align="center">
   <img src="docs/screenshots/es/follow-up.png" alt="Follow Up" width="560">

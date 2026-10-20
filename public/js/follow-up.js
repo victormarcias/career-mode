@@ -5,9 +5,8 @@ import { archiveCompany } from './entity-edit.js'
 import { agencyBodyHtml, clientBodyHtml, isClientArchived, kindTagHtml } from './companies.js'
 
 // A manual "no news, I'm archiving this by hand" review — the user picks a
-// staleness threshold, gets back the active agencies and clients whose most
-// recent event of any kind is at least that old, and archives whichever ones
-// he confirms. Nothing here is reactive (no live refresh): it's a one-shot
+// staleness threshold, gets back the active agencies and clients whose last
+// application is at least that old, and archives whichever ones he confirms. Nothing here is reactive (no live refresh): it's a one-shot
 // report fetched on demand, not a live view.
 
 let wired = false
@@ -36,22 +35,25 @@ function spinnerHtml() {
   return '<div class="flex justify-center py-10"><div class="h-6 w-6 animate-spin rounded-full border-2 border-gray-700 border-t-gray-300"></div></div>'
 }
 
-// The days are counted from the day of the entity's first event, whatever its type: that is when the process with
-// it began.
-function firstEventDate(matches) {
-  const dates = matches.map((a) => a.date)
-  return dates.length ? dates.reduce((min, d) => (d < min ? d : min)) : null
+// The days are counted from the day of the entity's LAST application: that is the one still waiting for an answer.
+// A recruiter's message that started the conversation (a passive message) counts as an application here. With none
+// of them (only interviews or notes, say) it falls back to the last event of any kind, so the company still shows up.
+const APPLICATION_TYPES = ['application', 'passive_message']
+
+export function lastApplicationDate(matches) {
+  const latest = (list) => (list.length ? list.map((a) => a.date).reduce((max, d) => (d > max ? d : max)) : null)
+  return latest(matches.filter((a) => APPLICATION_TYPES.includes(a.event))) ?? latest(matches)
 }
 
-function computeStale(minDays, { agenciesMap, clientsMap, applications }) {
+export function computeStale(minDays, { agenciesMap, clientsMap, applications }) {
   const results = []
 
   for (const agency of agenciesMap.values()) {
     if (agency.status === 'archived') continue
     const matches = applications.filter((app) => app.agencyId === agency.id)
-    const startedOn = firstEventDate(matches)
-    if (!startedOn) continue
-    const days = daysSince(startedOn)
+    const lastOn = lastApplicationDate(matches)
+    if (!lastOn) continue
+    const days = daysSince(lastOn)
     if (days >= minDays) results.push({ kind: 'agency', entity: agency, days, matches })
   }
 
@@ -60,9 +62,9 @@ function computeStale(minDays, { agenciesMap, clientsMap, applications }) {
   // archived can still be sitting here active.
   for (const client of clientsMap.values()) {
     const matches = applications.filter((app) => app.clientId === client.id)
-    const startedOn = firstEventDate(matches)
-    if (!startedOn || isClientArchived(matches)) continue
-    const days = daysSince(startedOn)
+    const lastOn = lastApplicationDate(matches)
+    if (!lastOn || isClientArchived(matches)) continue
+    const days = daysSince(lastOn)
     if (days >= minDays) {
       const via = agenciesMap.get(client.viaAgencyId)
       results.push({ kind: 'client', entity: client, days, matches, via })
