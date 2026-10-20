@@ -69,6 +69,7 @@ done
 # env/env: the latest copy of your .env, with its keys and passwords, so a new computer or a lost file doesn't mean making
 # them all again. One file, replaced every time, outside history/ and outside the comparison below. It is only as private
 # as the backup folder: it is not copied anywhere git could pick it up (a folder inside this repository has to be ignored).
+rm -f "$BACKUP/env/env"
 if [ -f .env ]; then
   ignored=0
   git check-ignore -q "$BACKUP/env/env" 2>/dev/null || ignored=$?  # 0 ignored, 1 inside the repo and not ignored, else outside it
@@ -85,8 +86,7 @@ fi
 
 # the newest copy (the names sort by date)
 LAST="$(ls -1d "$BACKUP"/history/*/ 2>/dev/null | sort | tail -n 1 || true)"
-# Return success when CSVs and profile files match $1 (a history path with a trailing slash), ignoring generated PDFs.
-unchanged() {
+unchanged() {  # $1: a copy in history/ (with its trailing slash)
   diff -q "$BACKUP/calendar.csv" "$1calendar.csv" >/dev/null \
     && diff -q "$BACKUP/companies.csv" "$1companies.csv" >/dev/null \
     && diff -rq -x profile.pdf -x outreach.pdf "$BACKUP/profile" "$1profile" >/dev/null 2>&1

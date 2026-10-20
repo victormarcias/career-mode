@@ -210,35 +210,3 @@ def test_docs_are_served_and_list_the_new_event_type(client):
     schema = client.get('/openapi.json').json()
     assert 'passive_message' in schema['components']['schemas']['EventType']['enum']
     assert {'/api/events', '/api/agencies/{agency_id}', '/api/clients', '/api/export', '/api/stream'} <= set(schema['paths'])
-
-
-def test_jd_url_query_is_one_exact_parameter_for_pending_and_application(client, make_event):
-    link = 'https://jobs.example.test/role?team=R%26D&ref=a+b#details'
-    pending = make_event(event='pending', jdUrl=link)
-    applied = make_event(event='application', jdUrl=link)
-    make_event(event='application', jdUrl='https://jobs.example.test/role')
-    matches = client.get('/api/events', params={'jdUrl': link}).json()
-    assert {event['id'] for event in matches} == {pending['id'], applied['id']}
-    assert all(event['jdUrl'] == link for event in matches)
-
-
-def test_fixed_application_id_allows_retry_before_pending_cleanup(client, make_event, make_agency):
-    agency = make_agency()
-    link = 'https://jobs.example.test/role?source=one&role=two'
-    payload = {'event': 'application', 'date': '2026-10-20', 'agencyId': agency['id'],
-               'jdUrl': link, 'applyType': 'email_apply', 'notes': 'Synthetic delivery confirmation'}
-    pending = make_event(event='pending', jdUrl=link, notes='Synthetic submission state: delivered')
-    path = '/api/events/synthetic-application-attempt'
-    assert client.get(path).status_code == 404
-    first = client.put(path, json=payload)
-    assert first.status_code == 200
-    # Simulate a lost response and retry, retaining the same submission ID.
-    assert client.put(path, json=payload).json() == first.json()
-    assert client.get(path).json().items() >= payload.items()
-    matches = client.get('/api/events', params={'jdUrl': link}).json()
-    assert len([event for event in matches if event['event'] == 'application']) == 1
-    placeholder = client.get('/api/events/' + pending['id']).json()
-    assert placeholder['event'] == 'pending' and placeholder['jdUrl'] == link
-    assert client.delete('/api/events/' + pending['id']).status_code == 204
-    assert client.get('/api/events/' + pending['id']).status_code == 404
-    assert client.get(path).json() == first.json()

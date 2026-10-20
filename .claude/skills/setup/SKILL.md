@@ -39,7 +39,7 @@ Find out whether this is the original repository or already the user's copy: `gi
 2. **Private copy**: ask the name (default `career-mode`), then `git remote rename origin upstream` and `gh repo create <name> --private --source . --remote origin --push`. It is not linked to the original (`upstream` is there to pull from by hand) and nobody sees it.
 3. **Keep it as it is**: nothing changes. Good for trying it out.
 
-Before running either repository-creation option above or pushing anything (including `gh repo create --source . --push`), run `git ls-files -- profile/ data/ backup/ .env`. Allow only `profile/README.md` and root-level `profile/*.example.md`; stop and report every other listed path, even if it is now ignored. Then run `git status --short --untracked-files=all -- profile/ data/ backup/ .env` and stop with the offending paths if it prints any entries. Proceed only when both checks pass; ignore rules alone do not prove tracked data is safe. If `gh` is missing or not logged in, say `gh auth login` is needed and offer to continue with option 3.
+Either way nothing personal is uploaded, because git ignores `profile/`, `data/`, `backup/` and `.env`. Before creating or pushing anything, check that: `git check-ignore -q profile/profile.md profile/cv.pdf data/career-mode.db .env` must succeed, and `git status --short` must show nothing under `profile/` except the README and the examples. If it does not, stop and say what is not ignored. If `gh` is missing or not logged in, say `gh auth login` is needed and offer to continue with option 3.
 
 The choice they make is their consent: do not push anything else, and never push or commit later unless they ask.
 

@@ -71,7 +71,6 @@ def markdown_pdf(name, out):
 
 
 def main(argv=None):
-    """Parse argv and run a database, backup-directory, or Markdown PDF command."""
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('command', choices=('export', 'import', 'stats', 'backup-dir', 'profile-pdf', 'outreach-pdf'))
     parser.add_argument('directory', nargs='?')
