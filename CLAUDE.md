@@ -1,6 +1,6 @@
 # career-mode — repo rules
 
-Rules for this repo only; the user's own cross-repo preferences live in their own global instructions. How to run the app and the structure are in `README.md`; the data model is `server/app/models.py`. `README.es.md` is its Spanish version: when one changes, change the other in the same edit. Each skill has a README next to its `SKILL.md`.
+Rules for this repo only; the user's own cross-repo preferences live in their own global instructions. How to run the app and the structure are in `README.md`; the data model is `server/app/models.py`. `README.es.md` is its Spanish version, and `CHANGELOG.es.md` is the Spanish version of `CHANGELOG.md`: when one changes, change the other in the same edit. Each skill has a README next to its `SKILL.md`.
 
 ## Config
 
