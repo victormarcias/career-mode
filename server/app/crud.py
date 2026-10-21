@@ -253,9 +253,9 @@ def create_event(session: Session, data: EventIn) -> Event:
     return event
 
 
-def _check_passive_message(event_type, agency_id):
-    if event_type == EventType.passive_message.value and not agency_id:
-        raise DomainError(422, 'A passive message needs an agency: say which agency the recruiter works for')
+def _check_passive_message(event_type, agency_id, client_id):
+    if event_type == EventType.passive_message.value and not (agency_id or client_id):
+        raise DomainError(422, 'A passive message needs an agency or a client: say which company the recruiter works for')
 
 
 def update_event(session: Session, event_id: str, patch: EventPatch) -> Event:
@@ -266,7 +266,8 @@ def update_event(session: Session, event_id: str, patch: EventPatch) -> Event:
             raise DomainError(422, '"%s" cannot be empty' % ('event' if key == 'type' else key))
     if 'notes' in columns and columns['notes'] is None:
         columns['notes'] = ''
-    _check_passive_message(columns.get('type', event.type), columns['agency_id'] if 'agency_id' in columns else event.agency_id)
+    _check_passive_message(columns.get('type', event.type), columns['agency_id'] if 'agency_id' in columns else event.agency_id,
+                           columns['client_id'] if 'client_id' in columns else event.client_id)
     # Editing an event never flips its agency's status: the edited one isn't
     # necessarily the agency's latest, so the status could end up wrong.
     for key, value in columns.items():

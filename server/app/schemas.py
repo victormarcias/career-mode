@@ -164,9 +164,9 @@ class EventIn(CamelModel):
     _time = field_validator('time')(_check_time)
 
     @model_validator(mode='after')
-    def _passive_message_needs_an_agency(self):
-        if self.event == EventType.passive_message and not self.agency_id:
-            raise ValueError('A passive message needs an agency: say which agency the recruiter works for')
+    def _passive_message_needs_a_company(self):
+        if self.event == EventType.passive_message and not (self.agency_id or self.client_id):
+            raise ValueError('A passive message needs an agency or a client: say which company the recruiter works for')
         return self
 
 

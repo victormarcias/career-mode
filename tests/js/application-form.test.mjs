@@ -204,15 +204,23 @@ test('without a recruiter nothing is added for one, and a direct client can have
   assert.equal(direct.calls[1][2].notes, '')
 })
 
-test('a passive one logs a passive message with an agency and no link or apply type', async () => {
+test('a passive one logs a passive message with an agency or a client, and no link or apply type', async () => {
   const client = fakeApi()
   await saveApplication({ ...complete, type: 'passive', link: 'https://ignored.example' }, { agencies: [], clients: [], now }, client)
   const event = client.calls[1][2]
   assert.deepEqual([event.event, event.agencyId, event.clientId, event.jdUrl, event.applyType], ['passive_message', 'made-northwind-staffing', null, null, null])
 
   const direct = fakeApi()
-  await assert.rejects(saveApplication({ ...complete, type: 'passive', agency: false }, { agencies: [], clients: [], now }, direct), /needs an agency/)
-  assert.deepEqual(direct.calls, [])
+  await saveApplication({ ...complete, type: 'passive', agency: false }, { agencies: [], clients: [], now }, direct)
+  const passive = direct.calls[1][2]
+  assert.deepEqual([passive.event, passive.agencyId, passive.clientId], ['passive_message', null, 'made-northwind-staffing'])
+})
+
+test('a name that already is the other tag is refused, so a company is never made twice', async () => {
+  const client = fakeApi()
+  const lists = { agencies: [{ id: 'northwind-staffing', name: 'Northwind Staffing' }], clients: [], now }
+  await assert.rejects(saveApplication({ ...complete, agency: false }, lists, client), /"Northwind Staffing" is already an agency/)
+  assert.deepEqual(client.calls, [])
 })
 
 test('an incomplete form writes nothing', async () => {
@@ -227,6 +235,6 @@ test('the company field says whether saving creates it, as an agency or as a dir
   assert.equal(applicationCompanyHint({ company: 'Newco', agency: true }, lists), 'Will create the new agency "Newco".')
   assert.equal(applicationCompanyHint({ company: 'Newco', agency: false }, lists), 'Will create the new client "Newco".')
   assert.equal(applicationCompanyHint({ company: 'Solo Co', agency: false }, lists), '')
-  assert.equal(applicationCompanyHint({ company: 'Acme', agency: false }, lists), 'Will create the new client "Acme".') // an agency is not a client
+  assert.equal(applicationCompanyHint({ company: 'Acme', agency: false }, lists), '"Acme" is already an agency.') // an agency is not a client
   assert.equal(applicationCompanyHint({ company: '  ', agency: true }, lists), '')
 })

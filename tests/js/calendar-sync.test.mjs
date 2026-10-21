@@ -51,27 +51,32 @@ test('the popup lists each event ticked, with the type the server suggested', ()
 
 test('the popup offers the three interviews of the calendar: HR, technical and culture', () => {
   const html = syncRowsHtml([{ ...hr, type: 'culture_interview' }])
-  const options = [...html.matchAll(/<option value="([a-z_]+)"( selected)?>/g)].map((m) => m[1])
+  const options = [...html.matchAll(/<option value="([a-z]+_[a-z_]+)"( selected)?>/g)].map((m) => m[1])
   assert.deepEqual([...options].sort(), ['culture_interview', 'hr_intro', 'tech_interview'])
   assert.match(html, /<option value="culture_interview" selected>/)
 })
 
-test('a new event has an agency and a client field, filled with what the server offered', () => {
-  const html = syncRowsHtml([hr, { ...tech, client: 'Beta' }])
-  assert.equal((html.match(/data-agency="/g) ?? []).length, 2)
-  assert.equal((html.match(/data-client="/g) ?? []).length, 2)
-  assert.match(html, /data-agency="0"[^>]*value="Acme"/)
-  assert.match(html, /data-agency="1"[^>]*value=""/)
-  assert.match(html, /data-client="1"[^>]*value="Beta"/)
+test('a new event has a company with its tag and, for a client, its agency, filled with what the server offered', () => {
+  const html = syncRowsHtml([hr, { ...tech, client: 'Beta', agency: 'Acme' }])
+  for (const field of ['company', 'kind', 'via']) assert.equal((html.match(new RegExp(`data-${field}="`, 'g')) ?? []).length, 2)
+  assert.match(html, /data-company="0"[^>]*value="Acme"/)
+  assert.match(html, /data-company="1"[^>]*value="Beta"/)  // a client is the company, and its agency goes in Via agency
+  assert.match(html, /data-via="0"[^>]*value=""/)
+  assert.match(html, /data-via="1"[^>]*value="Acme"/)
+  assert.match(html, /data-kind="0"[^>]*><option value="agency" selected>Agency<\/option><option value="client">Client<\/option>/)
+  assert.match(html, /data-kind="1"[^>]*><option value="agency">Agency<\/option><option value="client" selected>Client<\/option>/)
+  assert.match(html, /data-via-wrap="0" class="pl-7 hidden"/)  // Via agency is only for a client
+  assert.match(html, /data-via-wrap="1" class="pl-7"/)
+  assert.match(html, /list="company-list"/)
   assert.match(html, /list="agency-list"/)
-  assert.match(html, /list="client-list"/)
+  assert.doesNotMatch(html, /client-list/)
 })
 
 test('a moved event shows its company without fields, and keeps its type fixed', () => {
   const html = syncRowsHtml([{ ...moved, client: 'Beta' }])
   assert.match(html, /moved in Google/)
   assert.match(html, /Company: Acme → Beta \(stays as it is\)/)
-  assert.doesNotMatch(html, /data-agency|data-client/)
+  assert.doesNotMatch(html, /data-company|data-kind|data-via/)
   assert.equal((html.match(/<select[^>]* disabled/g) ?? []).length, 1)
 })
 

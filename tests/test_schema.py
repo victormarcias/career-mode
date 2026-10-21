@@ -44,12 +44,11 @@ def test_valid_values_are_accepted(sql):
     event(sql, time='09:30', apply_type='web_form')
 
 
-def test_a_passive_message_needs_an_agency(sql):
+def test_a_passive_message_needs_an_agency_or_a_client(sql):
     with pytest.raises(IntegrityError):
         event(sql, type='passive_message')
-    with pytest.raises(IntegrityError):
-        event(sql, type='passive_message', client_id='big')  # a client alone is not enough
-    event(sql, type='passive_message', agency_id='acme')
+    event(sql, type='passive_message', client_id='big')  # a company that hires directly has no agency
+    event(sql, id='e2', type='passive_message', agency_id='acme')
 
 
 def test_a_company_with_events_cannot_be_deleted(sql):

@@ -1,7 +1,10 @@
 import { api, subscribe } from './api.js'
 import { EVENT_TYPES, EVENT_LABELS, EVENT_COLORS, EVENT_COLOR_HIGHLIGHT } from './events.js'
 import { startOfWeek, addDays, formTime, toISODate, formatDayLabel, formatWeekNumber, formatWeekRange, currentOrNextBusinessWeekStart } from './dates.js'
-import { companyHint, escapeHtml, pendingLabel, resolveCompany, setNotice, slideTransition } from './dom-utils.js'
+import {
+  companyFromNames, companyHint, companyMatches, companyNames, escapeHtml, kindConflict, kindConflictText, kindFor, pendingLabel,
+  resolveCompany, setNotice, slideTransition,
+} from './dom-utils.js'
 import { renderOutreach, detectApplyType } from './outreach.js'
 import { initPending, renderPending } from './pending.js'
 import { initEntityEditForm } from './entity-edit.js'
@@ -45,9 +48,10 @@ function initApp() {
   document.getElementById('filter-archived-btn').addEventListener('click', () => setStatusFilter('archived'))
   document.getElementById('f-event').addEventListener('change', updateTypeFields)
   document.getElementById('f-apply-type').addEventListener('change', updateTypeFields)
-  document.getElementById('f-client').addEventListener('input', pickClient)
-  document.getElementById('f-client').addEventListener('change', pickClient)
-  document.getElementById('f-agency').addEventListener('input', updateCompanyHint)
+  document.getElementById('f-company').addEventListener('input', pickCompany)
+  document.getElementById('f-company').addEventListener('change', pickCompany)
+  document.getElementById('f-kind').addEventListener('change', updateKind)
+  document.getElementById('f-via').addEventListener('input', updateCompanyHint)
   // Pressed once it opens the report, pressed again it folds it away.
   document.getElementById('weekly-report-btn').addEventListener('click', () => {
     if (isWeeklyReportOpen()) hideWeeklyReport('right')
@@ -117,12 +121,13 @@ function fillEventSelect(lockedType) {
 }
 
 // The company suggestions come from the lists the page already has, and are only the active companies (a
-// client is active or not by its events, so this runs again when they change).
+// client is active or not by its events, so this runs again when they change). Company has both, each
+// with its tag; Via agency has the agencies.
 function renderDatalists() {
   const names = activeCompanyNames(Array.from(agenciesMap.values()), Array.from(clientsMap.values()), applications)
-  const options = (list) => list.map((name) => `<option value="${escapeHtml(name)}">`).join('')
+  const options = (list, label) => list.map((name) => `<option value="${escapeHtml(name)}"${label ? ` label="${t(label)}"` : ''}>`).join('')
   document.getElementById('agency-list').innerHTML = options(names.agencies)
-  document.getElementById('client-list').innerHTML = options(names.clients)
+  document.getElementById('company-list').innerHTML = options(names.agencies, 'form.agency') + options(names.clients, 'form.client')
 }
 
 // ---------- Router ----------
@@ -411,16 +416,10 @@ function eventFormTitle() {
   return `${editingCompany} → ${name}`
 }
 
-// A passive message is a recruiter reaching out, so its agency is the one that has to be filled in.
-function updateAgencyLabel() {
-  document.getElementById('f-agency').placeholder = currentEvent() === 'passive_message' ? t('form.agencyRequired') : t('form.agency')
-}
-
 // The Application link belongs to an application being edited (or a queued link), not to any other
 // event, and a passive message has none. An application of type Web must have it.
 function updateTypeFields() {
   document.getElementById('event-form-title').textContent = eventFormTitle()
-  updateAgencyLabel()
   const hasLink = pendingEdit || (typeDrivenEdit && currentEvent() !== 'passive_message')
   document.getElementById('f-jd-wrap').classList.toggle('hidden', !hasLink)
   const web = typeDrivenEdit && document.getElementById('f-apply-type').value === 'web_form'
@@ -429,26 +428,38 @@ function updateTypeFields() {
   document.getElementById('f-jd-req').classList.toggle('hidden', !web)
 }
 
-// Choosing a client that exists fills in its agency, or empties the field when it has none.
-// Choosing an agency leaves the client alone.
-// Says under the company fields which of the typed names are new, so a typo doesn't quietly create a company.
+// Says under the company which of the typed names are new, so a typo doesn't quietly create a company, and when
+// the name already is the other tag.
 function updateCompanyHint() {
   setNotice(
     document.getElementById('f-company-hint'),
     companyHint(
       Array.from(agenciesMap.values()),
       Array.from(clientsMap.values()),
-      document.getElementById('f-agency').value,
-      document.getElementById('f-client').value,
+      document.getElementById('f-company').value,
+      document.getElementById('f-kind').value,
+      document.getElementById('f-via').value,
     ),
   )
 }
 
-function pickClient() {
-  const typed = document.getElementById('f-client').value.trim().toLowerCase()
-  const client = Array.from(clientsMap.values()).find((c) => (c.name ?? '').trim().toLowerCase() === typed)
-  if (client) document.getElementById('f-agency').value = (client.viaAgencyId && agenciesMap.get(client.viaAgencyId)?.name) || ''
+// The agency a client comes through is asked only for a client.
+function updateKind() {
+  document.getElementById('f-via').classList.toggle('hidden', document.getElementById('f-kind').value !== 'client')
   updateCompanyHint()
+}
+
+// Typing the name of a company that exists is picking it: its tag follows, and a client brings the agency
+// it comes through, or empties the field when it has none.
+function pickCompany() {
+  const agencies = Array.from(agenciesMap.values())
+  const clients = Array.from(clientsMap.values())
+  const name = document.getElementById('f-company').value
+  const kind = document.getElementById('f-kind')
+  kind.value = kindFor(agencies, clients, name, kind.value)
+  const client = kind.value === 'client' ? companyMatches(agencies, clients, name).client : null
+  if (client) document.getElementById('f-via').value = agenciesMap.get(clientsMap.get(client.id)?.viaAgencyId)?.name ?? ''
+  updateKind()
 }
 
 // The Type select of an application being edited. An application with no type yet shows a blank one.
@@ -477,8 +488,10 @@ function openForm(app = null) {
   pendingEdit = app?.event === 'pending'
   document.getElementById('f-company-wrap').classList.toggle('hidden', pendingEdit)
 
-  document.getElementById('f-agency').value = (app?.agencyId && agenciesMap.get(app.agencyId)?.name) || ''
-  document.getElementById('f-client').value = (app?.clientId && clientsMap.get(app.clientId)?.name) || ''
+  const company = companyFromNames((app?.agencyId && agenciesMap.get(app.agencyId)?.name) || '', (app?.clientId && clientsMap.get(app.clientId)?.name) || '')
+  document.getElementById('f-company').value = company.name
+  document.getElementById('f-kind').value = company.kind
+  document.getElementById('f-via').value = company.via
 
   // An application or a passive message is edited by its Type, and has its recruiter, which is the
   // first line of its notes.
@@ -493,7 +506,7 @@ function openForm(app = null) {
   // A link is given when an application is logged (+ Application); this form only edits it.
   document.getElementById('f-jd').value = app?.jdUrl ?? ''
   updateTypeFields()
-  updateCompanyHint()
+  updateKind()
   setNotice(document.getElementById('form-error'), '')
 
   const overlay = document.getElementById('form-overlay')
@@ -543,11 +556,16 @@ async function handleFormSubmit(e) {
       closeForm()
       return
     }
-    const agencyName = document.getElementById('f-agency').value.trim()
-    const clientName = document.getElementById('f-client').value.trim()
-    // Every event but a new application (its own form) belongs to a company: an agency, a client or both.
-    if (!agencyName && !clientName) throw new Error(t('form.errPickCompany'))
-    if (event === 'passive_message' && !agencyName) throw new Error(t('form.errPassiveAgency'))
+    const name = document.getElementById('f-company').value.trim()
+    const kind = document.getElementById('f-kind').value
+    // Every event but a new application (its own form) belongs to a company: an agency, or a client with the
+    // agency it comes through when it has one.
+    if (!name) throw new Error(t('form.errPickCompany'))
+    const agencies = Array.from(agenciesMap.values())
+    const clients = Array.from(clientsMap.values())
+    const conflict = kindConflict(agencies, clients, name, kind)
+    if (conflict) throw new Error(kindConflictText(name, conflict))
+    const { agency: agencyName, client: clientName } = companyNames({ name, kind, via: document.getElementById('f-via').value })
     let notes = document.getElementById('f-notes').value.trim()
     if (typeDrivenEdit) notes = buildNotes(parseRecruiters(document.getElementById('f-recruiter').value), notes)
 
@@ -556,8 +574,6 @@ async function handleFormSubmit(e) {
     // server's rule now, so there is no status to write here.
     let agencyId = null
     let clientId = null
-    const agencies = Array.from(agenciesMap.values())
-    const clients = Array.from(clientsMap.values())
 
     if (agencyName) {
       const agency = resolveCompany(agencies, agencyName)
@@ -566,9 +582,12 @@ async function handleFormSubmit(e) {
     if (clientName) {
       // With an agency the client is (re)pointed to it; without one the client is direct.
       const client = resolveCompany(clients, clientName)
-      clientId = client.isNew
-        ? (await api.create('clients', agencyId ? { name: client.name, viaAgencyId: agencyId } : { name: client.name })).id
-        : (await api.patch('clients', client.id, { viaAgencyId: agencyId })).id
+      if (client.isNew) {
+        clientId = (await api.create('clients', agencyId ? { name: client.name, viaAgencyId: agencyId } : { name: client.name })).id
+      } else {
+        clientId = client.id
+        if ((clientsMap.get(client.id)?.viaAgencyId ?? null) !== agencyId) await api.patch('clients', client.id, { viaAgencyId: agencyId })
+      }
     }
 
     const payload = { date, time, event, agencyId, clientId, notes }

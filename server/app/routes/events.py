@@ -26,7 +26,7 @@ def list_events(
 @router.post('', response_model=EventOut, status_code=201, summary='Create an event',
              description=(
                  'A new event sets its agency\'s status: a closing one (rejection, red_flag, on_hold, offer, archive) '
-                 'archives it, any other reactivates it. A `passive_message` must have an `agencyId`.'
+                 'archives it, any other reactivates it. A `passive_message` must have an `agencyId` or a `clientId`.'
              ))
 def create_event(data: EventIn, session: SessionDep):
     return crud.create_event(session, data)

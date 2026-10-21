@@ -6,6 +6,14 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
 
 [English](CHANGELOG.md)
 
+## [Unreleased]
+
+### Cambiado
+
+- **Empresa en cada evento nuevo:** el formulario de Update, el de New application y la sincronización con Google Calendar piden una sola Empresa, con una etiqueta Agency (por defecto) o Client al lado. Un client tiene un campo opcional A través de una agency. Al escribir el nombre de una empresa que ya existe se elige esa, y su etiqueta la sigue. Un nombre que ya existe con la otra etiqueta se rechaza, así no se crea una empresa dos veces.
+- **Mensajes pasivos:** un mensaje pasivo necesita una agency o un client, así que el recruiter de una empresa que contrata directo se registra en el client. Las bases de datos existentes se migran al arrancar.
+- **`/reply-recruiter`:** registra al empleador directo como client, y a una agency como agency.
+
 ## [0.1.1] - 2026-10-20
 
 ### Añadido
@@ -56,5 +64,6 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
 
 Primera versión.
 
+[Unreleased]: https://github.com/victormarcias/career-mode/compare/0.1.1...HEAD
 [0.1.1]: https://github.com/victormarcias/career-mode/compare/0.1...0.1.1
 [0.1]: https://github.com/victormarcias/career-mode/releases/tag/0.1

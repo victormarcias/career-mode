@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 [Español](CHANGELOG.es.md)
 
+## [Unreleased]
+
+### Changed
+
+- **Company in every new event:** the Update form, the New application form and the Google Calendar sync ask for one Company, with an Agency (default) or Client tag next to it. A client has an optional Via agency. Typing the name of a company that exists picks it, and its tag follows. A name that already exists with the other tag is refused, so a company is not created twice.
+- **Passive messages:** a passive message needs an agency or a client, so a recruiter of a company that hires directly is logged against the client. Existing databases are migrated on start.
+- **`/reply-recruiter`:** logs a direct employer as a client, and an agency as an agency.
+
 ## [0.1.1] - 2026-10-20
 
 ### Added
@@ -56,5 +64,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 Initial release.
 
+[Unreleased]: https://github.com/victormarcias/career-mode/compare/0.1.1...HEAD
 [0.1.1]: https://github.com/victormarcias/career-mode/compare/0.1...0.1.1
 [0.1]: https://github.com/victormarcias/career-mode/releases/tag/0.1

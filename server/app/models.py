@@ -2,7 +2,7 @@
 
 Agencies, clients and events reference each other with real foreign keys, so
 the database itself refuses a dangling reference, a duplicate company name or a
-passive message with no agency. Alembic reads `Base.metadata` from here; after
+passive message with no company. Alembic reads `Base.metadata` from here; after
 changing a model, run `alembic revision --autogenerate -m "what changed"` from
 the server/ folder (see CLAUDE.md).
 """
@@ -32,7 +32,7 @@ class EventType(str, Enum):
     change the two together."""
 
     application = 'application'
-    passive_message = 'passive_message'  # a recruiter reached out first: always tied to an agency
+    passive_message = 'passive_message'  # a recruiter reached out first: tied to an agency or a client
     note = 'note'
     tech_filter = 'tech_filter'
     hr_intro = 'hr_intro'
@@ -132,8 +132,8 @@ class Event(Base):
         CheckConstraint("time IS NULL OR time GLOB '[0-2][0-9]:[0-5][0-9]'", name='time_format'),
         CheckConstraint(_in('type', EVENT_TYPES), name='type_valid'),
         CheckConstraint('apply_type IS NULL OR ' + _in('apply_type', [a.value for a in ApplyType]), name='apply_type_valid'),
-        # a recruiter reaching out is always tied to the agency they work for
-        CheckConstraint("type <> 'passive_message' OR agency_id IS NOT NULL", name='passive_message_has_agency'),
+        # a recruiter reaching out is tied to the agency they work for, or to the client that hires directly
+        CheckConstraint("type <> 'passive_message' OR agency_id IS NOT NULL OR client_id IS NOT NULL", name='passive_message_has_company'),
     )
 
     # What the API calls them (the front end has always said `event` and `companyLabel`).

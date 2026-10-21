@@ -1,11 +1,11 @@
 import { api } from './api.js'
 import { currentTime, toISODate } from './dates.js'
-import { companyHint, resolveCompany, setNotice } from './dom-utils.js'
+import { companyHint, kindConflict, kindConflictText, kindFor, resolveCompany, setNotice } from './dom-utils.js'
 import { t } from './i18n.js'
 
 // The form for an application sent by hand to a company that is new to the app: it asks for
 // the company's LinkedIn page and the recruiter's profile, and creates the company (an agency,
-// or a direct client when "Agency" is unticked) together with the event. The date and time of
+// or a direct client, by its Agency or Client tag) together with the event. The date and time of
 // the event are the moment the form is saved, not something to type.
 
 // The LinkedIn fields take the whole link, as copied from the browser's address bar. One pasted
@@ -15,8 +15,8 @@ export function linkedinUrl(value) {
   return /^(www\.)?linkedin\.com\//i.test(link) ? `https://www.${link.replace(/^www\./i, '')}` : link
 }
 
-// What the form logs: a recruiter who wrote first ("passive": a passive_message event, which always
-// has an agency), or an application sent by email or through a web form.
+// What the form logs: a recruiter who wrote first ("passive": a passive_message event), or an
+// application sent by email or through a web form.
 const TYPES = ['email_apply', 'passive', 'web_form']
 
 // The path of a linkedin.com URL, or null when it isn't one.
@@ -40,7 +40,6 @@ export const isRecruiterProfile = (value) => /^\/in\/[^/]+/.test(linkedinPath(va
 // but a link that is given has to be the right kind of address.
 export function validateApplication(fields) {
   if (!TYPES.includes(fields.type)) return t('app.errType')
-  if (fields.type === 'passive' && !fields.agency) return t('form.errPassiveAgency')
   if (fields.type === 'web_form' && !fields.link.trim()) return t('form.errLinkRequired')
   if (!fields.company.trim()) return t('app.errCompany')
   const home = linkedinUrl(fields.companyHome)
@@ -80,6 +79,8 @@ export function splitRecruiters(notes) {
 export async function saveApplication(fields, { agencies, clients, now = new Date() }, client = api) {
   const problem = validateApplication(fields)
   if (problem) throw new Error(problem)
+  const conflict = kindConflict(agencies, clients, fields.company, fields.agency ? 'agency' : 'client')
+  if (conflict) throw new Error(kindConflictText(fields.company, conflict))
 
   const recruiters = parseRecruiters(fields.recruiters)
   const website = fields.website.trim() || null
@@ -115,9 +116,10 @@ export async function saveApplication(fields, { agencies, clients, now = new Dat
   })
 }
 
-// What the form says under the company name: whether saving will create it, as an agency or as a direct client.
+// What the form says under the company name: whether saving will create it, as an agency or as a direct client,
+// or that the name is already the other tag.
 export function applicationCompanyHint({ company, agency }, { agencies, clients }) {
-  return companyHint(agencies, clients, agency ? company : '', agency ? '' : company)
+  return companyHint(agencies, clients, company, agency ? 'agency' : 'client')
 }
 
 // ---------- The form itself ----------
@@ -151,26 +153,21 @@ export function initApplicationForm({ getAgencies, getClients }) {
     }, 150)
   }
 
-  // A passive message always has an agency, so that box is ticked and locked for it, and it has no link.
+  // A passive message has no link.
   function syncType() {
     const passive = field('type').value === 'passive'
-    if (passive) field('agency').checked = true
-    field('agency').disabled = passive
     document.getElementById('app-link-wrap').classList.toggle('hidden', passive)
     // The Application link is required for a web application, and optional for an email one.
     const web = field('type').value === 'web_form'
     field('link').required = web
     document.getElementById('app-link-optional').classList.toggle('hidden', web)
     document.getElementById('app-link-req').classList.toggle('hidden', !web)
-    updateCompanyList()
+    syncKind()
   }
 
-  // The suggestions are the agencies, or the clients once "Agency" is unticked.
-  function updateCompanyList() {
-    const agency = field('agency').checked
-    field('company').setAttribute('list', agency ? 'agency-list' : 'client-list')
-    document.getElementById('app-company-text').textContent = agency ? `🏢 ${t('form.company')}` : `🏢 ${t('app.companyDirect')}`
-    // Company Home is only required for an agency.
+  // Company Home is only required for an agency.
+  function syncKind() {
+    const agency = field('kind').value === 'agency'
     field('home').required = agency
     document.getElementById('app-home-optional').classList.toggle('hidden', agency)
     document.getElementById('app-home-req').classList.toggle('hidden', !agency)
@@ -181,7 +178,7 @@ export function initApplicationForm({ getAgencies, getClients }) {
   function updateCompanyHint() {
     setNotice(
       document.getElementById('app-company-hint'),
-      applicationCompanyHint({ company: field('company').value, agency: field('agency').checked }, { agencies: getAgencies(), clients: getClients() }),
+      applicationCompanyHint({ company: field('company').value, agency: field('kind').value === 'agency' }, { agencies: getAgencies(), clients: getClients() }),
     )
   }
 
@@ -190,8 +187,14 @@ export function initApplicationForm({ getAgencies, getClients }) {
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) close()
   })
-  field('agency').addEventListener('change', updateCompanyList)
-  field('company').addEventListener('input', updateCompanyHint)
+  field('kind').addEventListener('change', syncKind)
+  // Typing the name of a company that exists is picking it: its tag follows.
+  const pickCompany = () => {
+    field('kind').value = kindFor(getAgencies(), getClients(), field('company').value, field('kind').value)
+    syncKind()
+  }
+  field('company').addEventListener('input', pickCompany)
+  field('company').addEventListener('change', pickCompany)
   field('type').addEventListener('change', syncType)
 
   form.addEventListener('submit', async (e) => {
@@ -206,7 +209,7 @@ export function initApplicationForm({ getAgencies, getClients }) {
           company: field('company').value,
           companyHome: field('home').value,
           recruiters: field('recruiter').value,
-          agency: field('agency').checked,
+          agency: field('kind').value === 'agency',
           website: field('website').value,
           notes: field('notes').value,
           link: field('link').value,

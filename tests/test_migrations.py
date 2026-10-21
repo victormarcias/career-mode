@@ -99,3 +99,34 @@ def test_the_data_survives_the_whole_way_down_and_up_again(path):
     assert events_of(path)['ai1'][0] == 'note'  # what became a note stays a note
     migrate(path)
     assert len(events_of(path)) == 5
+
+
+# ---------- 0003: a passive message needs an agency or a client ----------
+
+
+def two_companies(path):
+    conn = sqlite3.connect(path)
+    conn.execute("INSERT INTO agencies (id, name) VALUES ('acme', 'Acme')")
+    conn.execute("INSERT INTO clients (id, name) VALUES ('big', 'Big')")
+    conn.commit()
+    return conn
+
+
+def test_after_it_a_passive_message_may_have_only_a_client(path):
+    migrate(path)
+    conn = two_companies(path)
+    conn.execute("INSERT INTO events (id, date, type, client_id) VALUES ('p1', '2026-10-02', 'passive_message', 'big')")
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute("INSERT INTO events (id, date, type) VALUES ('p2', '2026-10-02', 'passive_message')")
+    conn.close()
+
+
+def test_going_down_turns_the_passive_messages_with_no_agency_into_notes(path):
+    migrate(path)
+    conn = two_companies(path)
+    conn.execute("INSERT INTO events (id, date, type, client_id) VALUES ('p1', '2026-10-02', 'passive_message', 'big')")
+    conn.execute("INSERT INTO events (id, date, type, agency_id) VALUES ('p2', '2026-10-02', 'passive_message', 'acme')")
+    conn.commit()
+    conn.close()
+    command.downgrade(alembic_config(path), '0002')
+    assert events_of(path) == {'p1': ('note', ''), 'p2': ('passive_message', '')}

@@ -17,7 +17,8 @@ Rules for this repo only; the user's own cross-repo preferences live in their ow
 
 - The database is SQLite, with Alembic migrations. Change `server/app/models.py` and run `alembic revision --autogenerate` (from the `server/` folder: `../.venv/bin/alembic revision --autogenerate -m "what changed"`; read the generated file before committing). `public/js/events.js` mirrors the event types and the closing events: change them together.
 - `events`, `agencies` and `clients` are the tables, linked with real foreign keys. Clients have no stored status: whether one is archived is derived from its latest closing event. Closing events (Rejection, Red Flag, On-hold, Offer, archive) are decided by the server (`CLOSING_EVENTS` in `models.py`): creating one archives the agency and any other new event reactivates it, so just create the event with the right type.
-- An event's company name is derived from its agency or client, never stored. A `passive_message` event always has an agency.
+- An event's company name is derived from its agency or client, never stored. A `passive_message` event has an agency or a client (a recruiter of a company that hires directly is logged against its client).
+- Every form that takes a company asks for one name with an Agency (default) or Client tag, and a client may have its agency in Via agency. A name that exists with the other tag is refused, never duplicated.
 - An application's recruiter and link belong on the event, never on the agency or client profile.
 - Skills and scripts read and write through the API (`http://localhost:8333`, docs at `/docs`; `./run-local.sh` starts the server), never by opening the SQLite file directly: the API applies the rules above.
 

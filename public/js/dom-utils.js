@@ -24,16 +24,62 @@ export function resolveCompany(items, name) {
   return found ? { id: found.id, name: found.name ?? wanted, isNew: false } : { id: slugify(wanted), name: wanted, isNew: true }
 }
 
-// What a form says about the company it is about to save: which of the typed names the app doesn't have yet
-// and will create. Empty when every name is already there. `agencies` and `clients` are {id, name} lists.
-export function companyHint(agencies, clients, agencyName, clientName) {
-  const agency = (agencyName ?? '').trim()
-  const client = (clientName ?? '').trim()
-  const newAgency = agency && resolveCompany(agencies, agency).isNew
-  const newClient = client && resolveCompany(clients, client).isNew
-  if (newAgency && newClient) return t('hint.both', { agency, client })
+// A form takes one company: a name and a tag, Agency or Client. `agencies` and `clients` are {id, name} lists.
+// The company a typed name already is, in each list: `{agency, client}`, each an existing {id, name} or null.
+export function companyMatches(agencies, clients, name) {
+  const wanted = (name ?? '').trim()
+  const find = (items) => {
+    const found = wanted ? resolveCompany(items, wanted) : null
+    return found && !found.isNew ? found : null
+  }
+  return { agency: find(agencies), client: find(clients) }
+}
+
+// The tag a typed name goes by: the one it already has when it exists as only one of them, else `current`.
+// Typing the name of an existing company is picking it, so its tag follows.
+export function kindFor(agencies, clients, name, current) {
+  const { agency, client } = companyMatches(agencies, clients, name)
+  if (agency && !client) return 'agency'
+  if (client && !agency) return 'client'
+  return current
+}
+
+// The tag a name has when it exists only with the other one than `kind`, else null: saving it would make a
+// second company with the same name.
+export function kindConflict(agencies, clients, name, kind) {
+  const matches = companyMatches(agencies, clients, name)
+  const other = kind === 'agency' ? 'client' : 'agency'
+  return !matches[kind] && matches[other] ? other : null
+}
+
+// The sentence that says a name is already the other kind.
+export function kindConflictText(name, existing) {
+  return t(existing === 'agency' ? 'hint.isAgency' : 'hint.isClient', { name: name.trim() })
+}
+
+// The agency and client names a company with its tag stands for (the way the API and the events have them): an
+// agency is the agency alone, a client has its agency `via` when it comes through one.
+export function companyNames({ name, kind, via }) {
+  return kind === 'client' ? { agency: (via ?? '').trim(), client: (name ?? '').trim() } : { agency: (name ?? '').trim(), client: '' }
+}
+
+// The other way round: the company, tag and via agency of an event's agency and client names.
+export function companyFromNames(agencyName, clientName) {
+  return clientName ? { name: clientName, kind: 'client', via: agencyName ?? '' } : { name: agencyName ?? '', kind: 'agency', via: '' }
+}
+
+// What a form says about the company it is about to save: which names the app doesn't have yet and will
+// create, or that the name is already the other tag. Empty when every name is already there.
+export function companyHint(agencies, clients, name, kind, via = '') {
+  const company = (name ?? '').trim()
+  const conflict = kindConflict(agencies, clients, company, kind)
+  if (conflict) return kindConflictText(company, conflict)
+  const agency = kind === 'client' ? (via ?? '').trim() : company
+  const newCompany = company && !companyMatches(agencies, clients, company)[kind]
+  const newAgency = kind === 'client' && agency && !companyMatches(agencies, clients, agency).agency
+  if (newCompany && newAgency) return t('hint.both', { agency, client: company })
+  if (newCompany) return t(kind === 'agency' ? 'hint.agency' : 'hint.client', { name: company })
   if (newAgency) return t('hint.agency', { name: agency })
-  if (newClient) return t('hint.client', { name: client })
   return ''
 }
 

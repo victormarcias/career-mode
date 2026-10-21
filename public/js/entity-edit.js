@@ -79,7 +79,7 @@ function fieldHtml(spec, value) {
 function viaAgencyFieldHtml(viaAgencyName) {
   return `
     <div>
-      <label for="edit-f-via-agency" class="mb-1 block text-xs text-gray-500">🤝 ${t('app.agency')} <span class="text-gray-600">${t('edit.viaAgencyHint')}</span></label>
+      <label for="edit-f-via-agency" class="mb-1 block text-xs text-gray-500">🤝 ${t('form.agency')} <span class="text-gray-600">${t('edit.viaAgencyHint')}</span></label>
       <input type="text" id="edit-f-via-agency" list="agency-list" autocomplete="off" value="${attr(viaAgencyName || '')}" class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" />
     </div>
   `

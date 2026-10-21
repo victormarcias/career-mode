@@ -146,21 +146,23 @@ def test_blank_time_and_links_become_null(make_event):
     assert (e['time'], e['jdUrl'], e['applyType']) == (None, None, None)
 
 
-def test_passive_message_requires_an_agency(client, make_agency, make_client, make_event):
+def test_passive_message_requires_an_agency_or_a_client(client, make_agency, make_client, make_event):
     make_agency('Acme')
     make_client('Direct Co')
     r = client.post('/api/events', json={'date': '2026-10-08', 'event': 'passive_message'})
-    assert r.status_code == 422 and 'needs an agency' in str(r.json()['detail'])
-    assert client.post('/api/events', json={'date': '2026-10-08', 'event': 'passive_message', 'clientId': 'direct-co'}).status_code == 422
+    assert r.status_code == 422 and 'needs an agency or a client' in str(r.json()['detail'])
+    assert make_event(event='passive_message', clientId='direct-co')['event'] == 'passive_message'
     assert make_event(event='passive_message', agencyId='acme')['event'] == 'passive_message'
 
 
-def test_the_agency_requirement_also_holds_when_editing(client, make_agency, make_event):
+def test_the_company_requirement_also_holds_when_editing(client, make_agency, make_client, make_event):
     make_agency('Acme')
+    make_client('Direct Co')
     passive = make_event(event='passive_message', agencyId='acme')
     assert client.patch('/api/events/' + passive['id'], json={'agencyId': None}).status_code == 422
+    assert client.patch('/api/events/' + passive['id'], json={'agencyId': None, 'clientId': 'direct-co'}).status_code == 200
     note = make_event(event='note')
-    assert client.patch('/api/events/' + note['id'], json={'event': 'passive_message'}).status_code == 422  # no agency on it
+    assert client.patch('/api/events/' + note['id'], json={'event': 'passive_message'}).status_code == 422  # no company on it
     assert client.put('/api/events/' + passive['id'], json={'date': '2026-10-08', 'event': 'passive_message'}).status_code == 422
     assert client.patch('/api/events/' + note['id'], json={'event': 'passive_message', 'agencyId': 'acme'}).status_code == 200
 
