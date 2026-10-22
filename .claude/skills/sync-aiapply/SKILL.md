@@ -29,7 +29,7 @@ For each positive notification:
 1. **Does it exist already?** Through the local API at `http://localhost:8333` (docs at `/docs`; if a request can't connect, `./run-local.sh` starts the server), with `curl -s -H 'Content-Type: application/json'`. Find the company by name (ignoring case) in `GET /api/companies`; when it exists, `GET /api/events?companyId=<id>` and look for an `application` event whose notes start with `Recruiter: AIApply.io`. One found means the application is already logged (a second reply of the same company is the same application): skip it and say so, with the subject of the new reply. Never create it twice, and never touch an existing event.
 2. **Read the message.** `get_message` with `FULL_CONTENT`, only for the ones that are new: the link needs the HTML. The result is large, so it is often saved to a file instead of shown: then read it with a short script (`python3`, `json` and `re`) that prints only what is needed, never the whole file. It has: the **company** and the **role** (an invitation says "for the <role> role"; an assessment says "the position <role>"; a follow-up has the role in the subject of the company's own message, such as "Desafío Profesional: <role> - <Company>"), who it is **From** (the recruiter's name, when it is a person), and the **application's link**: the `email_id` of the "Open this email" button, as in `https://aiapply.co/app/inbox?email_id=<number>`. Take only `email_id`, never the tracking parameters (`utm_...`). When the role cannot be told, write "Position not given".
 3. **Is its link there already?** `GET /api/events?jdUrl=<the link>` (quote the URL; it matches the text exactly). Any event found means it is logged: skip it.
-4. **The company.** Reuse the one that exists, whichever `companyType` it has: a company is an agency or a client, never both, so never create it as the other. If it is new, decide what it is from its own website (WebSearch or WebFetch about what it does; never its page on a Job Board Platform): a staffing, recruiting, consulting or software-services company that places people with clients is an **agency**; an employer that hires for itself is a **client**. When it can't be told, it is a **client**, and the summary says so. Create it with `POST /api/companies` and a real profile, not a bare name: `name`, `companyType` (`agency` or `client`) and `notes` (what it does, in one line), and no `viaCompanyId`; the `website` only when it was confirmed, never guessed. The server makes the `id`.
+4. **The company.** Find it or create it as `/apply-pending` step 4 says, with no `viaCompanyId`.
 
 ## 3. Log it
 
@@ -41,8 +41,8 @@ For each positive notification:
 - `jdUrl`: the link of step 2, `https://aiapply.co/app/inbox?email_id=<number>`.
 - `notes`, in this order: the first line `Recruiter: AIApply.io`, then `Position: <role>`, that AIApply applied for the user, and the positive reply: what it was (an interview invitation, an assessment, a follow-up), its subject, the day and who wrote it, with what it asks when the text says so (a video, a test, questions).
 
-There is no company label to fill in, and the server decides the agency's status by itself: just create the event.
+There is no company label to fill in: just create the event.
 
 ## 4. Finish
 
-Say in chat, briefly: how many positive notifications were found and logged (company, position, agency or client, and the time), which were already there, and how many were left out. Nothing is sent and nothing is committed.
+Say in chat, briefly: how many positive notifications were found and logged (company, position, type and time), which were already there, and how many were left out. Nothing is sent and nothing is committed.

@@ -7,6 +7,6 @@ Fills in and submits a job application on a company's own portal or web form (Wo
 - **When stuck:** leaves the form open in Chrome, filled as far as it got, in front, and says exactly what is left for the user to click or type; it carries on when they say it is done.
 - **Reports back:** submitted (once the confirmation shows) or stopped and why, so the caller logs the application only when it went out.
 - **Touches:** the connected Chrome session (the Google account named in the profile). Nothing in the database.
-- **Called by:** [apply-pending](../apply-pending/README.md), which also logs the application and creates any new agency or client.
+- **Called by:** [apply-pending](../apply-pending/README.md), which also logs the application and creates any new company.
 
 Instructions: [SKILL.md](SKILL.md).

@@ -21,4 +21,4 @@ Open the form's link in a new tab of the connected Chrome and leave the user's o
 
 **Report back** to the caller: submitted (with what the confirmation said), or stopped and why (captcha, account, video, red flag, a question the profile doesn't answer). `/apply-pending` logs the application in the Calendar only when it went out, so a form left half-filled is reported as stopped, never as done.
 
-This is the delivery step only — if a new Agency/Client needs a profile or the application needs to be logged in the Calendar, that's `/apply-pending`'s job, not this one's.
+This is the delivery step only — if a new company needs a profile or the application needs to be logged in the Calendar, that's `/apply-pending`'s job, not this one's.
