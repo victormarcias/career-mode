@@ -5,7 +5,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 const { companyHint, findCompany, setNotice, typeConflict, typeFor } = await import('../../public/js/dom-utils.js')
-const { activeCompanies } = await import('../../public/js/companies.js')
+const { activeCompanies, companyCounts, matchesSearch } = await import('../../public/js/companies.js')
 
 const companies = [
   { id: 'acme', name: 'Acme', companyType: 'agency' },
@@ -57,6 +57,20 @@ test('the company fields suggest only the active companies', () => {
   ]
   assert.deepEqual(activeCompanies(list).map((c) => c.name), ['Acme', 'Open Co'])
   assert.deepEqual(activeCompanies([]), [])
+})
+
+test('the tabs count the active and the archived companies', () => {
+  const list = [{ status: 'active' }, { status: 'archived' }, { status: 'active' }, { status: 'archived' }, { status: 'archived' }]
+  assert.deepEqual(companyCounts(list), { active: 2, archived: 3 })
+  assert.deepEqual(companyCounts([]), { active: 0, archived: 0 })
+})
+
+test('the search keeps the names that have what is typed, ignoring case and accents', () => {
+  assert.ok(matchesSearch('Hire Hangar', 'hang'))
+  assert.ok(matchesSearch('Café & Co', 'CAFE'))
+  assert.ok(matchesSearch('Silver.dev', ' silver '))
+  assert.ok(matchesSearch('Acme', ''))  // nothing typed lists everything
+  assert.ok(!matchesSearch('Acme', 'beta'))
 })
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))

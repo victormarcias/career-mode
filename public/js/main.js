@@ -6,7 +6,7 @@ import { renderOutreach, detectApplyType } from './outreach.js'
 import { initPending, renderPending } from './pending.js'
 import { initEntityEditForm } from './entity-edit.js'
 import { buildNotes, initApplicationForm, parseRecruiters, splitRecruiters } from './application-form.js'
-import { activeCompanies, renderCompanies, setStatusFilter } from './companies.js'
+import { activeCompanies, renderCompanies, setSearch, setStatusFilter } from './companies.js'
 import { generateWeeklyReport, hideWeeklyReport, isWeeklyReportOpen, refreshWeeklyReport } from './weekly-report.js'
 import { initFollowUp, renderFollowUp } from './follow-up.js'
 import { renderSettings } from './settings.js'
@@ -41,6 +41,7 @@ function initApp() {
   document.getElementById('new-event-btn').addEventListener('click', () => openForm())
   document.getElementById('filter-active-btn').addEventListener('click', () => setStatusFilter('active'))
   document.getElementById('filter-archived-btn').addEventListener('click', () => setStatusFilter('archived'))
+  document.getElementById('company-search').addEventListener('input', (e) => setSearch(e.target.value))
   document.getElementById('f-event').addEventListener('change', updateTypeFields)
   document.getElementById('f-apply-type').addEventListener('change', updateTypeFields)
   document.getElementById('f-company').addEventListener('input', pickCompany)

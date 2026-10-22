@@ -162,8 +162,11 @@
           <div class="mx-auto max-w-3xl">
             <header class="mb-4 flex items-center justify-between">
               <div class="flex items-center gap-2">
-                <button type="button" id="filter-active-btn" class="tab-pill" data-i18n="companies.active">🤝 Active</button>
-                <button type="button" id="filter-archived-btn" class="tab-pill" data-i18n="companies.archived">📦 Archived</button>
+                <button type="button" id="filter-active-btn" class="tab-pill">🤝 Active</button>
+                <button type="button" id="filter-archived-btn" class="tab-pill">📦 Archived</button>
+                <input type="search" id="company-search" placeholder="Search company" data-i18n-placeholder="companies.search"
+                  aria-label="Search company" data-i18n-aria-label="companies.search" autocomplete="off"
+                  class="ml-2 w-56 rounded-full border border-gray-700 bg-gray-800 px-4 py-1.5 text-sm text-gray-100" />
               </div>
             </header>
             <div id="companies-content" class="slide-transition"></div>

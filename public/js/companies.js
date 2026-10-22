@@ -13,9 +13,30 @@ let lastDeps = null
 // starts filtered to what's actually relevant, not a mixed active+archived list.
 let statusFilterKey = 'active'
 
+// What is typed in the search box: only the companies whose name has it (ignoring case and accents) are listed.
+let searchText = ''
+
 function matchesStatusFilter(archived) {
   if (statusFilterKey === null) return true
   return archived ? statusFilterKey === 'archived' : statusFilterKey === 'active'
+}
+
+const plain = (text) => (text ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
+
+export function matchesSearch(name, query) {
+  return plain(name).includes(plain(query))
+}
+
+// How many companies are active and how many archived, whatever is typed in the search box.
+export function companyCounts(companies) {
+  const archived = companies.filter((c) => c.status === 'archived').length
+  return { active: companies.length - archived, archived }
+}
+
+// Filtering as the person types: the cards are drawn again, the box is not touched.
+export function setSearch(text) {
+  searchText = text
+  if (lastDeps) renderList(lastOpenId, lastDeps)
 }
 
 // Re-renders in place with a fade (no slide) — a filter change isn't a "moved
@@ -151,17 +172,23 @@ function companyCardHtml(c, applications, companiesMap, isOpen) {
   `
 }
 
-function renderToolbar() {
-  document.getElementById('filter-active-btn').classList.toggle('active', statusFilterKey === 'active')
-  document.getElementById('filter-archived-btn').classList.toggle('active', statusFilterKey === 'archived')
+function renderToolbar(companiesMap) {
+  const counts = companyCounts(Array.from(companiesMap.values()))
+  const active = document.getElementById('filter-active-btn')
+  const archived = document.getElementById('filter-archived-btn')
+  active.textContent = t('companies.active', { count: counts.active })
+  archived.textContent = t('companies.archived', { count: counts.archived })
+  active.classList.toggle('active', statusFilterKey === 'active')
+  archived.classList.toggle('active', statusFilterKey === 'archived')
 }
 
 // Agencies and clients in one list, by name, each tagged with its type.
 function listHtml({ applications, companiesMap }, openId) {
   const cards = Array.from(companiesMap.values())
-    .filter((c) => matchesStatusFilter(c.status === 'archived'))
+    .filter((c) => matchesStatusFilter(c.status === 'archived') && matchesSearch(c.name, searchText))
     .sort((a, b) => a.name.localeCompare(b.name))
     .map((c) => companyCardHtml(c, applications, companiesMap, c.id === openId))
+  if (!cards.length) return `<p class="py-10 text-center text-sm text-gray-500">${t('companies.noResults')}</p>`
   return `<div class="space-y-2">${cards.join('')}</div>`
 }
 
@@ -202,7 +229,7 @@ function wireCards(content, { applications, companiesMap, onOpenEvent }) {
 function renderList(openId, deps, transition = 'auto') {
   lastOpenId = openId
   lastDeps = deps
-  renderToolbar()
+  renderToolbar(deps.companiesMap)
   const content = document.getElementById('companies-content')
 
   const renderContent = () => {
@@ -223,5 +250,9 @@ function renderList(openId, deps, transition = 'auto') {
 // button. A deep link to a company (from a "Via" link) just opens the list with that card
 // already expanded.
 export function renderCompanies(route, deps) {
+  if (route.openCompanyId && searchText) {  // a link to a company has to find it: the search is cleared
+    searchText = ''
+    document.getElementById('company-search').value = ''
+  }
   renderList(route.openCompanyId ?? null, deps)
 }
