@@ -91,6 +91,7 @@ In `.claude/skills/`, each with its own README:
 - `apply-email`: sends an application by email, CV attached
 - `apply-site`: fills a company's application form
 - `reply-recruiter`: answers a recruiter who wrote first
+- `sync-aiapply`: logs the positive replies AIApply.io got from companies
 - `submit-profile`: fills candidate portals from your profile
 - `write-daily-post`: writes the daily post and its image
 - `commit`: commits your changes on the current branch, short and under your name
