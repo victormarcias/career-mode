@@ -8,6 +8,12 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
 
 ## [Unreleased]
 
+### Añadido
+
+- **`/sync-aiapply`:** lee las notificaciones de AIApply.io en Gmail y registra cada respuesta positiva de una empresa (una invitación a entrevista, un assessment, un seguimiento) como una application web, una sola vez, con la empresa como agency o como client.
+- **`/reply-rejected`:** busca los rechazos que las empresas enviaron al Gmail del usuario y responde a cada uno, una sola vez, agradeciendo y diciendo que seguirán en contacto, archiva el mail y registra el rechazo en el Calendar.
+- **`/check-email`:** ordena el Gmail reciente y ejecuta `/sync-aiapply`, `/reply-rejected` y `/reply-recruiter` sobre lo que encuentra.
+
 ### Cambiado
 
 - **Empresa en cada evento nuevo:** el formulario de Update, el de New application y la sincronización con Google Calendar piden una sola Empresa, con una etiqueta Agency (por defecto) o Client al lado. Un client tiene un campo opcional A través de una agency. Al escribir el nombre de una empresa que ya existe se elige esa, y su etiqueta la sigue. Un nombre que ya existe con la otra etiqueta se rechaza, así no se crea una empresa dos veces.

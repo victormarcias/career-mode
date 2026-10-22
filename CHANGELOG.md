@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- **`/sync-aiapply`:** reads the AIApply.io notifications in Gmail and logs each positive reply from a company (an interview invitation, an assessment, a follow-up) as a web application, once, with the company as an agency or a client.
+- **`/reply-rejected`:** finds the rejections companies sent to the user's Gmail and replies to each one, once, thanking them and saying they will stay in touch, archives the email, and logs the rejection in the Calendar.
+- **`/check-email`:** sorts the recent Gmail and runs `/sync-aiapply`, `/reply-rejected` and `/reply-recruiter` on what it finds.
+
 ### Changed
 
 - **Company in every new event:** the Update form, the New application form and the Google Calendar sync ask for one Company, with an Agency (default) or Client tag next to it. A client has an optional Via agency. Typing the name of a company that exists picks it, and its tag follows. A name that already exists with the other tag is refused, so a company is not created twice.
