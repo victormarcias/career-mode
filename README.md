@@ -91,6 +91,8 @@ In `.claude/skills/`, each with its own README:
 - `apply-email`: sends an application by email, CV attached
 - `apply-site`: fills a company's application form
 - `reply-recruiter`: answers a recruiter who wrote first
+- `reply-rejected`: thanks the companies that rejected you, from your Gmail, and logs the rejection
+- `check-email`: sorts your recent Gmail and runs the skills that handle it
 - `submit-profile`: fills candidate portals from your profile
 - `write-daily-post`: writes the daily post and its image
 - `commit`: commits your changes on the current branch, short and under your name
