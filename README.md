@@ -91,6 +91,7 @@ In `.claude/skills/`, each with its own README:
 - `apply-email`: sends an application by email, CV attached
 - `apply-site`: fills a company's application form
 - `reply-recruiter`: answers a recruiter who wrote first
+- `sync-aiapply`: logs the positive replies AIApply.io got from companies
 - `reply-rejected`: thanks the companies that rejected you, from your Gmail, and logs the rejection
 - `check-email`: sorts your recent Gmail and runs the skills that handle it
 - `submit-profile`: fills candidate portals from your profile
