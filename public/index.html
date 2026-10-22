@@ -286,6 +286,14 @@
         <div class="flex gap-2">
           <input type="text" id="f-company" list="company-list" placeholder="Company" data-i18n-placeholder="form.company" autocomplete="off"
             class="min-w-0 flex-1 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" />
+          <a id="f-company-open" href="#" target="_blank" rel="noopener noreferrer" title="Open company page" data-i18n-title="form.openCompany"
+            aria-label="Open company page" data-i18n-aria-label="form.openCompany"
+            class="hidden h-[38px] w-[38px] shrink-0 items-center justify-center rounded-lg border border-gray-700 bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-100">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-5 w-5">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+            </svg>
+          </a>
           <select id="f-company-type" aria-label="Agency or client" data-i18n-aria-label="form.companyType"
             class="select-chevron w-28 shrink-0 appearance-none rounded-lg border border-gray-700 bg-gray-800 py-2 pl-3 pr-9 text-sm text-gray-100">
             <option value="agency" data-i18n="form.agency">Agency</option>
@@ -314,8 +322,18 @@
       <div id="f-jd-wrap" class="hidden">
         <label for="f-jd" class="mb-1 block text-xs text-gray-500">📎 <span data-i18n="form.appLink">Application link</span> <span id="f-jd-optional"
             class="text-gray-600" data-i18n="common.optional">(optional)</span><span id="f-jd-req" class="req hidden">*</span></label>
-        <input type="text" id="f-jd" autocomplete="off"
-          class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" />
+        <div class="flex items-center gap-2">
+          <input type="text" id="f-jd" autocomplete="off"
+            class="min-w-0 flex-1 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" />
+          <a id="f-jd-open" href="#" target="_blank" rel="noopener noreferrer" title="Open link" data-i18n-title="form.openLink"
+            aria-label="Open link" data-i18n-aria-label="form.openLink"
+            class="hidden h-[38px] w-[38px] shrink-0 items-center justify-center rounded-lg border border-gray-700 bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-100">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-5 w-5">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+            </svg>
+          </a>
+        </div>
       </div>
 
       <p id="form-error" class="notice text-xs text-red-400"></p>

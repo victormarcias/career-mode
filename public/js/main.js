@@ -1,7 +1,7 @@
 import { api, subscribe } from './api.js'
 import { EVENT_TYPES, EVENT_LABELS, EVENT_COLORS, EVENT_COLOR_HIGHLIGHT } from './events.js'
 import { startOfWeek, addDays, formTime, toISODate, formatDayLabel, formatWeekNumber, formatWeekRange, currentOrNextBusinessWeekStart } from './dates.js'
-import { companyHint, escapeHtml, findCompany, pendingLabel, setNotice, slideTransition, typeConflict, typeConflictText, typeFor } from './dom-utils.js'
+import { companyHint, companyPageLink, escapeHtml, findCompany, openableLink, pendingLabel, setNotice, slideTransition, typeConflict, typeConflictText, typeFor } from './dom-utils.js'
 import { renderOutreach, detectApplyType } from './outreach.js'
 import { initPending, renderPending } from './pending.js'
 import { initEntityEditForm } from './entity-edit.js'
@@ -44,8 +44,11 @@ function initApp() {
   document.getElementById('company-search').addEventListener('input', (e) => setSearch(e.target.value))
   document.getElementById('f-event').addEventListener('change', updateTypeFields)
   document.getElementById('f-apply-type').addEventListener('change', updateTypeFields)
+  document.getElementById('f-jd').addEventListener('input', updateLinkOpener)
   document.getElementById('f-company').addEventListener('input', pickCompany)
   document.getElementById('f-company').addEventListener('change', pickCompany)
+  document.getElementById('f-company').addEventListener('input', updateCompanyOpener)
+  document.getElementById('f-company').addEventListener('change', updateCompanyOpener)
   document.getElementById('f-company-type').addEventListener('change', updateCompanyType)
   document.getElementById('f-via').addEventListener('input', updateCompanyHint)
   // Pressed once it opens the report, pressed again it folds it away.
@@ -83,6 +86,7 @@ function initApp() {
   })
   subscribe('companies', (rows) => {
     companiesMap = new Map(rows.map((c) => [c.id, c]))
+    updateCompanyOpener()
     companiesLoaded = true
     renderDatalists()
     if (currentSection() === 'companies') handleRoute()
@@ -396,6 +400,25 @@ function eventFormTitle() {
   return `${editingCompany} → ${name}`
 }
 
+// The arrows next to the Application link and the Company open them in another tab; each shows only while it
+// has something to open (the link as typed, or the website of the company typed, else its LinkedIn page).
+function showOpener(id, href) {
+  const opener = document.getElementById(id)
+  if (href) opener.setAttribute('href', href)
+  else opener.removeAttribute('href')
+  opener.classList.toggle('hidden', !href)
+  opener.classList.toggle('flex', Boolean(href))
+}
+
+function updateLinkOpener() {
+  showOpener('f-jd-open', openableLink(document.getElementById('f-jd').value))
+}
+
+function updateCompanyOpener() {
+  const company = findCompany(Array.from(companiesMap.values()), document.getElementById('f-company').value)
+  showOpener('f-company-open', companyPageLink(company))
+}
+
 // The Application link belongs to an application being edited (or a queued link), not to any other
 // event, and a passive message has none. An application of type Web must have it.
 function updateTypeFields() {
@@ -470,6 +493,7 @@ function openForm(app = null) {
   document.getElementById('f-company').value = company?.name ?? ''
   document.getElementById('f-company-type').value = company?.companyType ?? 'agency'
   document.getElementById('f-via').value = (app?.viaCompanyId && companiesMap.get(app.viaCompanyId)?.name) || ''
+  updateCompanyOpener()
 
   // An application or a passive message is edited by its Type, and has its recruiter, which is the
   // first line of its notes.
@@ -483,6 +507,7 @@ function openForm(app = null) {
   document.getElementById('f-notes').value = rest
   // A link is given when an application is logged (+ Application); this form only edits it.
   document.getElementById('f-jd').value = app?.jdUrl ?? ''
+  updateLinkOpener()
   updateTypeFields()
   updateCompanyType()
   setNotice(document.getElementById('form-error'), '')

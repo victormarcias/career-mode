@@ -68,6 +68,19 @@ export function companyHint(companies, name, companyType, via = '') {
   return ''
 }
 
+// Where an application link points when it is opened, or null when it is not something to open: a web address
+// as it is, and a bare email address as a mailto: link. Anything else (a script, a file, plain text) is not opened.
+export function openableLink(value) {
+  const link = (value ?? '').trim()
+  if (/^(https?:\/\/|mailto:)\S+$/i.test(link)) return link
+  return /^[^\s@/:]+@[^\s@/:]+\.[^\s@/:]+$/.test(link) ? `mailto:${link}` : null
+}
+
+// Where the arrow next to a company goes: its website, else its LinkedIn page, else nowhere.
+export function companyPageLink(company) {
+  return openableLink(company?.website) ?? openableLink(company?.linkedin)
+}
+
 const NOTICE_MS = 200 // as long as the fold in style.css (.notice)
 
 // Shows a notice line (a hint, an error, a status) with `text`, or folds it away when `text` is empty. The line

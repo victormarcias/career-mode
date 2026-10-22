@@ -95,6 +95,8 @@
   "form.recruiters": "Recruiters (una URL por línea)",
   "form.notes": "Notas",
   "form.appLink": "Link de la aplicación",
+  "form.openLink": "Abrir link",
+  "form.openCompany": "Abrir página de la empresa",
   "app.title": "Nueva aplicación",
   "app.type": "Tipo",
   "app.choose": "Elige",

@@ -4,7 +4,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-const { companyHint, findCompany, setNotice, typeConflict, typeFor } = await import('../../public/js/dom-utils.js')
+const { companyHint, companyPageLink, findCompany, openableLink, setNotice, typeConflict, typeFor } = await import('../../public/js/dom-utils.js')
 const { activeCompanies, companyCounts, matchesSearch } = await import('../../public/js/companies.js')
 
 const companies = [
@@ -71,6 +71,24 @@ test('the search keeps the names that have what is typed, ignoring case and acce
   assert.ok(matchesSearch('Silver.dev', ' silver '))
   assert.ok(matchesSearch('Acme', ''))  // nothing typed lists everything
   assert.ok(!matchesSearch('Acme', 'beta'))
+})
+
+test('an application link is opened as a web address or as an email, and nothing else is', () => {
+  assert.equal(openableLink(' https://jobs.example/x?id=1 '), 'https://jobs.example/x?id=1')
+  assert.equal(openableLink('http://jobs.example'), 'http://jobs.example')
+  assert.equal(openableLink('jobs@example.com'), 'mailto:jobs@example.com')
+  assert.equal(openableLink('mailto:jobs@example.com'), 'mailto:jobs@example.com')
+  for (const nothing of ['', '   ', null, undefined, 'javascript:alert(1)', 'data:text/html,hi', 'file:///etc/passwd', 'jobs.example/x', 'https://a b', 'two words']) {
+    assert.equal(openableLink(nothing), null, String(nothing))
+  }
+})
+
+test('the arrow next to a company goes to its website, else to its LinkedIn page, else nowhere', () => {
+  assert.equal(companyPageLink({ website: 'https://acme.example', linkedin: 'https://www.linkedin.com/company/acme' }), 'https://acme.example')
+  assert.equal(companyPageLink({ website: null, linkedin: 'https://www.linkedin.com/company/acme' }), 'https://www.linkedin.com/company/acme')
+  assert.equal(companyPageLink({ website: 'not a link', linkedin: 'https://www.linkedin.com/company/acme' }), 'https://www.linkedin.com/company/acme')
+  assert.equal(companyPageLink({ website: null, linkedin: null }), null)
+  assert.equal(companyPageLink(null), null)
 })
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
