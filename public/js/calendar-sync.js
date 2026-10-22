@@ -1,7 +1,7 @@
 import { calendar, settings } from './api.js'
 import { addDays, toISODate } from './dates.js'
 import { EVENT_LABELS } from './events.js'
-import { companyHint, escapeHtml, setNotice } from './dom-utils.js'
+import { companyHint, escapeHtml, findCompany, setNotice, typeConflict, typeConflictText, typeFor } from './dom-utils.js'
 import { t } from './i18n.js'
 
 // What an event of the calendar can be logged as (the server accepts only these two).
@@ -38,28 +38,41 @@ export function applySyncState(button, configured) {
 
 const SELECT_CLASS =
   'select-chevron w-44 shrink-0 appearance-none rounded-lg border border-gray-700 bg-gray-800 py-1.5 pl-3 pr-8 text-sm text-gray-100'
+const TYPE_CLASS =
+  'select-chevron w-28 shrink-0 appearance-none rounded-lg border border-gray-700 bg-gray-800 py-1.5 pl-3 pr-8 text-sm text-gray-100'
 const INPUT_CLASS = 'min-w-0 flex-1 rounded-lg border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-100'
 
 const typeOptions = (selected) =>
   SYNC_TYPES.map((type) => `<option value="${type}"${type === selected ? ' selected' : ''}>${EVENT_LABELS[type].emoji} ${EVENT_LABELS[type].label}</option>`).join('')
 
+// The fields of the company of a new event: its name, its tag and, for a client, the agency it comes via.
+function companyFieldsHtml(i, item) {
+  const company = { name: item.company ?? '', companyType: item.companyType ?? 'agency', via: item.via ?? '' }
+  const option = (value, label) => `<option value="${value}"${company.companyType === value ? ' selected' : ''}>${t(label)}</option>`
+  return `<div class="flex gap-2 pl-7">
+            <input type="text" data-company="${i}" list="company-list" autocomplete="off" placeholder="${t('form.company')}" aria-label="${escapeHtml(t('sync.companyOf', { summary: item.summary }))}"
+              value="${escapeHtml(company.name)}" class="${INPUT_CLASS}" />
+            <select data-company-type="${i}" aria-label="${escapeHtml(t('sync.companyTypeOf', { summary: item.summary }))}" class="${TYPE_CLASS}">${option('agency', 'form.agency')}${option('client', 'form.client')}</select>
+          </div>
+          <div data-via-wrap="${i}" class="pl-7${company.companyType === 'client' ? '' : ' hidden'}">
+            <input type="text" data-via="${i}" list="agency-list" autocomplete="off" placeholder="${t('form.via')}" aria-label="${escapeHtml(t('sync.viaOf', { summary: item.summary }))}"
+              value="${escapeHtml(company.via)}" class="w-full ${INPUT_CLASS.replace('flex-1 ', '')}" />
+          </div>
+          <p data-hint="${i}" class="notice pl-7 text-xs text-amber-400"></p>`
+}
+
 // One row per event the sync would add (or move): a checkbox, when and what, the type to log it as and, for a new
-// event, its company, with the same two fields as the Update form (an agency, a client, or both). `item.type` is
-// the server's suggestion ("tech" in the title picks Technical interview, "culture" Culture Interview), `item.agency` and `item.client` its offer.
+// event, its company, with the same fields as the Update form (the company, its Agency or Client tag and, for a
+// client, the agency it comes via). `item.type` is the server's suggestion ("tech" in the title picks Technical
+// interview, "culture" Culture Interview), `item.company`, `item.companyType` and `item.via` its offer.
 // A name the app does not have yet is created when the event is added, so an event can be the first of its company.
 export function syncRowsHtml(items) {
   return items
     .map((item, i) => {
       const moved = item.action === 'moved'
       const company = moved
-        ? `<p class="pl-7 text-xs text-gray-500">${t('sync.companyStays', { company: [item.agency, item.client].filter(Boolean).map(escapeHtml).join(' → ') || t('sync.none') })}</p>`
-        : `<div class="flex gap-2 pl-7">
-            <input type="text" data-agency="${i}" list="agency-list" autocomplete="off" placeholder="${t('form.agency')}" aria-label="${escapeHtml(t('sync.agencyOf', { summary: item.summary }))}"
-              value="${escapeHtml(item.agency ?? '')}" class="${INPUT_CLASS}" />
-            <input type="text" data-client="${i}" list="client-list" autocomplete="off" placeholder="${t('form.client')}" aria-label="${escapeHtml(t('sync.clientOf', { summary: item.summary }))}"
-              value="${escapeHtml(item.client ?? '')}" class="${INPUT_CLASS}" />
-          </div>
-          <p data-hint="${i}" class="notice pl-7 text-xs text-amber-400"></p>`
+        ? `<p class="pl-7 text-xs text-gray-500">${t('sync.companyStays', { company: [item.via, item.company].filter(Boolean).map(escapeHtml).join(' → ') || t('sync.none') })}</p>`
+        : companyFieldsHtml(i, item)
       return `
         <li class="space-y-2 rounded-xl border border-gray-800 bg-gray-950/40 px-3 py-2">
           <div class="flex items-center gap-3">
@@ -84,27 +97,29 @@ export function confirmLabel(count) {
 }
 
 // What to send for the popup as it stands: the ticked rows, each with its type and, when it is new, its company.
-// `state` is [{checked, type, agency, client}], in the order of `items`.
+// `state` is [{checked, type, company, companyType, via}], in the order of `items`.
 export function syncPayload(items, state) {
   return items.flatMap((item, i) => {
     const s = state[i]
     if (!s?.checked) return []
     if (item.action === 'moved') return [{ key: item.key, type: s.type }]
-    return [{ key: item.key, type: s.type, agency: s.agency?.trim() || null, client: s.client?.trim() || null }]
+    const company = s.company?.trim() || null
+    return [{ key: item.key, type: s.type, company, companyType: company ? s.companyType : null, via: s.companyType === 'client' ? s.via?.trim() || null : null }]
   })
 }
 
-// The first ticked new event that has neither an agency nor a client, or null. Every event belongs to a company.
+// The first ticked new event that has no company, or null. Every event belongs to a company.
 export function firstWithoutCompany(items, state) {
-  return items.find((item, i) => state[i]?.checked && item.action === 'new' && !state[i].agency?.trim() && !state[i].client?.trim()) ?? null
+  return items.find((item, i) => state[i]?.checked && item.action === 'new' && !state[i].company?.trim()) ?? null
 }
 
 function readState(form, items) {
   return items.map((_, i) => ({
     checked: form.querySelector(`[data-row="${i}"]`).checked,
     type: form.querySelector(`[data-type="${i}"]`).value,
-    agency: form.querySelector(`[data-agency="${i}"]`)?.value ?? '',
-    client: form.querySelector(`[data-client="${i}"]`)?.value ?? '',
+    company: form.querySelector(`[data-company="${i}"]`)?.value ?? '',
+    companyType: form.querySelector(`[data-company-type="${i}"]`)?.value ?? 'agency',
+    via: form.querySelector(`[data-via="${i}"]`)?.value ?? '',
   }))
 }
 
@@ -120,7 +135,7 @@ export async function refreshSyncButton() {
   }
 }
 
-export function initCalendarSync({ getWeekStart, getAgencies, getClients }) {
+export function initCalendarSync({ getWeekStart, getCompanies }) {
   const button = document.getElementById('sync-calendar-btn')
   const status = document.getElementById('sync-status')
   const overlay = document.getElementById('sync-overlay')
@@ -165,17 +180,24 @@ export function initCalendarSync({ getWeekStart, getAgencies, getClients }) {
     confirm.disabled = count === 0
     pending.items.forEach((_, i) => {
       const hint = form.querySelector(`[data-hint="${i}"]`)
-      if (hint) setNotice(hint, companyHint(getAgencies(), getClients(), state[i].agency, state[i].client))
+      if (hint) setNotice(hint, companyHint(getCompanies(), state[i].company, state[i].companyType, state[i].via))
     })
   }
-  // A client the app knows that came through an agency fills the agency in, like the Update form does.
-  const fillAgencyOfClient = (input) => {
-    const row = input.dataset.client
-    const agencyInput = form.querySelector(`[data-agency="${row}"]`)
-    const typed = input.value.trim().toLowerCase()
-    const known = getClients().find((c) => (c.name ?? '').trim().toLowerCase() === typed)
-    const agency = known?.viaAgencyId && getAgencies().find((a) => a.id === known.viaAgencyId)
-    if (agency && agencyInput && !agencyInput.value.trim()) agencyInput.value = agency.name
+  // Typing the name of a company the app knows is picking it, like in the Update form: its type follows, and a
+  // client that came through an agency fills the agency in. The agency field is only for a client.
+  const showVia = (row) => {
+    const typeInput = form.querySelector(`[data-company-type="${row}"]`)
+    form.querySelector(`[data-via-wrap="${row}"]`).classList.toggle('hidden', typeInput.value !== 'client')
+  }
+  const pickCompany = (row) => {
+    const typeInput = form.querySelector(`[data-company-type="${row}"]`)
+    const viaInput = form.querySelector(`[data-via="${row}"]`)
+    const name = form.querySelector(`[data-company="${row}"]`).value
+    typeInput.value = typeFor(getCompanies(), name, typeInput.value)
+    const known = typeInput.value === 'client' ? findCompany(getCompanies(), name) : null
+    const agency = known?.viaCompanyId && getCompanies().find((c) => c.id === known.viaCompanyId)
+    if (agency && !viaInput.value.trim()) viaInput.value = agency.name
+    showVia(row)
   }
 
   button.addEventListener('click', async () => {
@@ -202,10 +224,15 @@ export function initCalendarSync({ getWeekStart, getAgencies, getClients }) {
     }
   })
 
-  list.addEventListener('input', () => pending && refreshConfirm())
+  list.addEventListener('input', (e) => {
+    if (!pending) return
+    if (e.target.dataset?.company !== undefined) pickCompany(e.target.dataset.company)
+    refreshConfirm()
+  })
   list.addEventListener('change', (e) => {
     if (!pending) return
-    if (e.target.dataset?.client !== undefined) fillAgencyOfClient(e.target)
+    if (e.target.dataset?.company !== undefined) pickCompany(e.target.dataset.company)
+    if (e.target.dataset?.companyType !== undefined) showVia(e.target.dataset.companyType)
     showError('')
     refreshConfirm()
   })
@@ -220,6 +247,10 @@ export function initCalendarSync({ getWeekStart, getAgencies, getClients }) {
     const state = readState(form, items)
     const missing = firstWithoutCompany(items, state)
     if (missing) return showError(t('sync.errPickCompany', { summary: missing.summary }))
+    for (const [i, item] of items.entries()) {
+      const conflict = state[i].checked && item.action === 'new' && typeConflict(getCompanies(), state[i].company, state[i].companyType)
+      if (conflict) return showError(typeConflictText(state[i].company, conflict))
+    }
     showError('')
     confirm.disabled = true
     try {

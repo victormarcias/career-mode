@@ -14,6 +14,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **`/reply-rejected`:** finds the rejections companies sent to the user's Gmail and replies to each one, once, thanking them and saying they will stay in touch, archives the email, and logs the rejection in the Calendar.
 - **`/check-email`:** sorts the recent Gmail and runs `/sync-aiapply`, `/reply-rejected` and `/reply-recruiter` on what it finds.
 
+### Changed
+
+- **Company in every new event:** the Update form, the New application form and the Google Calendar sync ask for one Company, with an Agency (default) or Client tag next to it. A client has an optional Via agency. Typing the name of a company that exists picks it, and its tag follows. A name that already exists with the other tag is refused, so a company is not created twice.
+- **Passive messages:** a passive message needs an agency or a client, so a recruiter of a company that hires directly is logged against the client. Existing databases are migrated on start.
+- **`/reply-recruiter`:** logs a direct employer as a client, and an agency as an agency.
+- **One company, one API:** agencies and clients are one list of companies, each an agency or a client (`companyType`), with its name unique whichever it is: the same name can no longer be made twice, by the API or by a form. An event has a `companyId` (its client, or its agency when there is no client) and a `viaCompanyId` (the agency a client came through). A company's status is derived from its events instead of stored. The Companies page, Follow Up, the forms, the Google Calendar sync, the backups (`companies.csv` has a `company_type` column, and the older backup files still load) and the skills use it. Existing databases are migrated on start.
+
+### Removed
+
+- `/api/agencies` and `/api/clients`: use `/api/companies`, with `?companyType=agency` or `client` to keep one kind, and `?companyId=` on `/api/events` in place of `?agencyId=` and `?clientId=`.
+
 ## [0.1.1] - 2026-10-20
 
 ### Added

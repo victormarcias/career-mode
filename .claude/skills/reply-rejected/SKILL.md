@@ -48,12 +48,12 @@ Through the local API at `http://localhost:8333` (docs at `/docs`; if a request 
 
 **The rule: nothing is logged that has no process in the Calendar already**, whether the process is new or archived. A rejection closes an application that exists; it never starts one, and it never creates a company. This holds for the rejections from a company and for AIApply's.
 
-1. **The company.** Find it by name (ignoring case) in `GET /api/agencies` and `GET /api/clients`; the name comes from the sender, the subject or the text of the rejection. No company with that name: nothing is logged.
-2. **Its process.** Take its latest `application` (or `passive_message`) event, `GET /api/events?agencyId=<id>` or `?clientId=<id>`, archived company or not. **No such event: nothing is logged**, even if the company exists. Otherwise use the same `agencyId` and `clientId` as that event, so an application that came through an agency is closed with both.
+1. **The company.** Find it by name (ignoring case) in `GET /api/companies`; the name comes from the sender, the subject or the text of the rejection. No company with that name: nothing is logged.
+2. **Its process.** Take its latest `application` (or `passive_message`) event, `GET /api/events?companyId=<id>`, archived company or not. **No such event: nothing is logged**, even if the company exists. Otherwise use the same `companyId` and `viaCompanyId` as that event.
 
 What is not logged is only mentioned in the summary, with the company and the reason ("not in the Calendar" or "no application").
 3. **Not twice.** If the company already has a `rejection` event on that day or later, it is logged: skip it.
-4. `POST /api/events` with `event`: `rejection`, `date` and `time`: the day and the time (`HH:MM`, the user's time zone) the rejection email arrived, and `notes`: the reason when the email gives one, in a short line, else **"Other candidates."**, never "No reason given.". The server archives the company by itself: a closing event does that. The rejection stays in the Calendar on its day; archiving only moves the company out of the Active filter and out of Follow Up.
+4. `POST /api/events` with `event`: `rejection`, `date` and `time`: the day and the time (`HH:MM`, the user's time zone) the rejection email arrived, and `notes`: the reason when the email gives one, in a short line, else **"Other candidates."**, never "No reason given.". The company is archived by itself: a closing event as its latest one does that. The rejection stays in the Calendar on its day; archiving only moves the company out of the Active filter and out of Follow Up.
 
 Do it for every rejection that reaches this step, also when it could not be answered.
 

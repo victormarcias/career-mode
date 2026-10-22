@@ -1,11 +1,11 @@
 import { api } from './api.js'
 import { currentTime, toISODate } from './dates.js'
-import { companyHint, resolveCompany, setNotice } from './dom-utils.js'
+import { companyHint, findCompany, setNotice, typeConflict, typeConflictText, typeFor } from './dom-utils.js'
 import { t } from './i18n.js'
 
 // The form for an application sent by hand to a company that is new to the app: it asks for
 // the company's LinkedIn page and the recruiter's profile, and creates the company (an agency,
-// or a direct client when "Agency" is unticked) together with the event. The date and time of
+// or a direct client, by its Agency or Client tag) together with the event. The date and time of
 // the event are the moment the form is saved, not something to type.
 
 // The LinkedIn fields take the whole link, as copied from the browser's address bar. One pasted
@@ -15,8 +15,8 @@ export function linkedinUrl(value) {
   return /^(www\.)?linkedin\.com\//i.test(link) ? `https://www.${link.replace(/^www\./i, '')}` : link
 }
 
-// What the form logs: a recruiter who wrote first ("passive": a passive_message event, which always
-// has an agency), or an application sent by email or through a web form.
+// What the form logs: a recruiter who wrote first ("passive": a passive_message event), or an
+// application sent by email or through a web form.
 const TYPES = ['email_apply', 'passive', 'web_form']
 
 // The path of a linkedin.com URL, or null when it isn't one.
@@ -40,7 +40,6 @@ export const isRecruiterProfile = (value) => /^\/in\/[^/]+/.test(linkedinPath(va
 // but a link that is given has to be the right kind of address.
 export function validateApplication(fields) {
   if (!TYPES.includes(fields.type)) return t('app.errType')
-  if (fields.type === 'passive' && !fields.agency) return t('form.errPassiveAgency')
   if (fields.type === 'web_form' && !fields.link.trim()) return t('form.errLinkRequired')
   if (!fields.company.trim()) return t('app.errCompany')
   const home = linkedinUrl(fields.companyHome)
@@ -77,29 +76,24 @@ export function splitRecruiters(notes) {
 
 // Creates what is new and returns the event. An existing company is found by name (ignoring case)
 // and reused as it is, except that an agency gets the recruiters that are missing added to its list.
-export async function saveApplication(fields, { agencies, clients, now = new Date() }, client = api) {
+export async function saveApplication(fields, { companies, now = new Date() }, client = api) {
   const problem = validateApplication(fields)
   if (problem) throw new Error(problem)
+  const companyType = fields.agency ? 'agency' : 'client'
+  const conflict = typeConflict(companies, fields.company, companyType)
+  if (conflict) throw new Error(typeConflictText(fields.company, conflict))
 
   const recruiters = parseRecruiters(fields.recruiters)
   const website = fields.website.trim() || null
-  const profile = { name: fields.company.trim(), website, linkedin: linkedinUrl(fields.companyHome) || null }
-  let agencyId = null
-  let clientId = null
-
-  if (fields.agency) {
-    const found = resolveCompany(agencies, fields.company)
-    if (found.isNew) {
-      agencyId = (await client.create('agencies', { ...profile, recruiters })).id
-    } else {
-      agencyId = found.id
-      const known = agencies.find((a) => a.id === found.id)?.recruiters ?? []
-      const missing = recruiters.filter((r) => !known.includes(r))
-      if (missing.length) await client.patch('agencies', agencyId, { recruiters: [...known, ...missing] })
-    }
+  const profile = { name: fields.company.trim(), companyType, website, linkedin: linkedinUrl(fields.companyHome) || null }
+  let companyId
+  const found = findCompany(companies, fields.company)
+  if (!found) {
+    companyId = (await client.create('companies', fields.agency ? { ...profile, recruiters } : profile)).id
   } else {
-    const found = resolveCompany(clients, fields.company)
-    clientId = found.isNew ? (await client.create('clients', { ...profile, viaAgencyId: null })).id : found.id
+    companyId = found.id
+    const missing = fields.agency ? recruiters.filter((r) => !(found.recruiters ?? []).includes(r)) : []
+    if (missing.length) await client.patch('companies', companyId, { recruiters: [...(found.recruiters ?? []), ...missing] })
   }
 
   const passive = fields.type === 'passive'
@@ -107,22 +101,22 @@ export async function saveApplication(fields, { agencies, clients, now = new Dat
     date: toISODate(now),
     time: currentTime(now),
     event: passive ? 'passive_message' : 'application',
-    agencyId,
-    clientId,
+    companyId,
     notes: buildNotes(recruiters, fields.notes),
     jdUrl: passive ? null : fields.link.trim() || null,
     applyType: passive ? null : fields.type,
   })
 }
 
-// What the form says under the company name: whether saving will create it, as an agency or as a direct client.
-export function applicationCompanyHint({ company, agency }, { agencies, clients }) {
-  return companyHint(agencies, clients, agency ? company : '', agency ? '' : company)
+// What the form says under the company name: whether saving will create it, as an agency or as a direct client,
+// or that the name is already the other tag.
+export function applicationCompanyHint({ company, agency }, { companies }) {
+  return companyHint(companies, company, agency ? 'agency' : 'client')
 }
 
 // ---------- The form itself ----------
 
-export function initApplicationForm({ getAgencies, getClients }) {
+export function initApplicationForm({ getCompanies }) {
   const overlay = document.getElementById('app-overlay')
   const form = document.getElementById('app-form')
   const errorEl = document.getElementById('app-error')
@@ -151,26 +145,21 @@ export function initApplicationForm({ getAgencies, getClients }) {
     }, 150)
   }
 
-  // A passive message always has an agency, so that box is ticked and locked for it, and it has no link.
+  // A passive message has no link.
   function syncType() {
     const passive = field('type').value === 'passive'
-    if (passive) field('agency').checked = true
-    field('agency').disabled = passive
     document.getElementById('app-link-wrap').classList.toggle('hidden', passive)
     // The Application link is required for a web application, and optional for an email one.
     const web = field('type').value === 'web_form'
     field('link').required = web
     document.getElementById('app-link-optional').classList.toggle('hidden', web)
     document.getElementById('app-link-req').classList.toggle('hidden', !web)
-    updateCompanyList()
+    syncCompanyType()
   }
 
-  // The suggestions are the agencies, or the clients once "Agency" is unticked.
-  function updateCompanyList() {
-    const agency = field('agency').checked
-    field('company').setAttribute('list', agency ? 'agency-list' : 'client-list')
-    document.getElementById('app-company-text').textContent = agency ? `🏢 ${t('form.company')}` : `🏢 ${t('app.companyDirect')}`
-    // Company Home is only required for an agency.
+  // Company Home is only required for an agency.
+  function syncCompanyType() {
+    const agency = field('company-type').value === 'agency'
     field('home').required = agency
     document.getElementById('app-home-optional').classList.toggle('hidden', agency)
     document.getElementById('app-home-req').classList.toggle('hidden', !agency)
@@ -181,7 +170,7 @@ export function initApplicationForm({ getAgencies, getClients }) {
   function updateCompanyHint() {
     setNotice(
       document.getElementById('app-company-hint'),
-      applicationCompanyHint({ company: field('company').value, agency: field('agency').checked }, { agencies: getAgencies(), clients: getClients() }),
+      applicationCompanyHint({ company: field('company').value, agency: field('company-type').value === 'agency' }, { companies: getCompanies() }),
     )
   }
 
@@ -190,8 +179,14 @@ export function initApplicationForm({ getAgencies, getClients }) {
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) close()
   })
-  field('agency').addEventListener('change', updateCompanyList)
-  field('company').addEventListener('input', updateCompanyHint)
+  field('company-type').addEventListener('change', syncCompanyType)
+  // Typing the name of a company that exists is picking it: its tag follows.
+  const pickCompany = () => {
+    field('company-type').value = typeFor(getCompanies(), field('company').value, field('company-type').value)
+    syncCompanyType()
+  }
+  field('company').addEventListener('input', pickCompany)
+  field('company').addEventListener('change', pickCompany)
   field('type').addEventListener('change', syncType)
 
   form.addEventListener('submit', async (e) => {
@@ -206,12 +201,12 @@ export function initApplicationForm({ getAgencies, getClients }) {
           company: field('company').value,
           companyHome: field('home').value,
           recruiters: field('recruiter').value,
-          agency: field('agency').checked,
+          agency: field('company-type').value === 'agency',
           website: field('website').value,
           notes: field('notes').value,
           link: field('link').value,
         },
-        { agencies: getAgencies(), clients: getClients() },
+        { companies: getCompanies() },
       )
       close()
     } catch (err) {

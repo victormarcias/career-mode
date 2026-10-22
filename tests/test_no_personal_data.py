@@ -2,6 +2,8 @@
 
 The check reads the real profile.md, when there is one, and looks for its contact details, name and birthdate in
 every tracked text file. The values come from the profile itself, never from this test, so the test holds none.
+The one thing a tracked file may say is the address of this repository itself (the changelog links to its releases),
+read from the `origin` remote: it is public by definition, and any other link to the same account still counts.
 Without a real profile (a fresh clone, CI) there is nothing to compare and it is skipped.
 """
 import re
@@ -28,6 +30,19 @@ def personal_values(text: str) -> set:
     return {v for v in values if len(v) >= 6}
 
 
+def own_repository_url():
+    """The public address of this repository (https://github.com/<owner>/<name>), or '' when there is no remote."""
+    result = subprocess.run(['git', 'remote', 'get-url', 'origin'], cwd=ROOT, capture_output=True, text=True)
+    url = result.stdout.strip()
+    match = re.fullmatch(r'(?:https://github\.com/|git@github\.com:)([\w.-]+/[\w.-]+?)(?:\.git)?', url)
+    return 'https://github.com/' + match.group(1) if match else ''
+
+
+def without_own_repository(text: str, own: str) -> str:
+    """The text with the repository's own address (and nothing else of the account) taken out."""
+    return re.sub(re.escape(own) + r'(?![\w.-])', '', text, flags=re.IGNORECASE) if own else text
+
+
 def tracked_text_files():
     names = subprocess.run(['git', 'ls-files', '-z'], cwd=ROOT, capture_output=True, check=True).stdout.decode().split('\0')
     for name in filter(None, names):
@@ -52,8 +67,18 @@ def test_the_values_of_a_profile_are_found_by_the_check():
     assert {'Jane Doe', 'jane.doe@example.org', '+1 555 010 0100', '15550100100', '02/03/1990', 'linkedin.com/in/jane-doe'} <= found
 
 
+def test_only_the_address_of_this_repository_is_let_through():
+    own = 'https://github.com/jane-doe/career-mode'
+    text = 'see %s/releases/tag/0.1 and %s/compare/a...b' % (own, own.upper())
+    assert 'github.com/jane-doe' not in without_own_repository(text, own).lower()
+    other = 'https://github.com/jane-doe and https://github.com/jane-doe/other-repo and %s-fork' % own
+    assert without_own_repository(other, own).count('github.com/jane-doe') == 3  # the account, another repo and a fork stay
+    assert without_own_repository(text, '') == text
+
+
 def test_no_tracked_file_holds_the_users_personal_data():
     values = personal_values(real_profile()) - personal_values(EXAMPLE.read_text())
     assert values, 'the profile has no contact details to look for'
-    leaks = [(name, value) for name, text in tracked_text_files() for value in values if value.lower() in text.lower()]
+    own = own_repository_url()
+    leaks = [(name, value) for name, text in tracked_text_files() for value in values if value.lower() in without_own_repository(text, own).lower()]
     assert not leaks, 'personal data in a tracked file (file, value): %s' % [(n, v[:3] + '…') for n, v in leaks]

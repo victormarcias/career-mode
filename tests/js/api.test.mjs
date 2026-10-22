@@ -27,10 +27,10 @@ beforeEach(() => {
 })
 
 test('reads build the URL and skip filters that are not set', async () => {
-  await api.list('events', { jdUrl: 'https://x.test/a b', agencyId: undefined, clientId: null })
+  await api.list('events', { jdUrl: 'https://x.test/a b', companyId: undefined, viaCompanyId: null })
   assert.equal(calls[0].url, '/api/events?jdUrl=https%3A%2F%2Fx.test%2Fa+b')
-  await api.list('agencies')
-  assert.equal(calls[1].url, '/api/agencies')
+  await api.list('companies')
+  assert.equal(calls[1].url, '/api/companies')
 })
 
 test('writes send JSON, encode the id, and 204 comes back as null', async () => {
@@ -40,21 +40,21 @@ test('writes send JSON, encode the id, and 204 comes back as null', async () => 
   assert.equal(calls[0].method, 'DELETE')
 
   responder = () => ({ status: 201, body: { id: 'x' } })
-  assert.deepEqual(await api.create('agencies', { name: 'Acme' }), { id: 'x' })
-  assert.deepEqual(calls.find((c) => c.method === 'POST').body, { name: 'Acme' })
+  assert.deepEqual(await api.create('companies', { name: 'Acme', companyType: 'agency' }), { id: 'x' })
+  assert.deepEqual(calls.find((c) => c.method === 'POST').body, { name: 'Acme', companyType: 'agency' })
 })
 
 test('a refusal becomes a readable message', async () => {
-  responder = () => ({ status: 409, body: { detail: 'This agency still has 3 events. Delete or move them first.' } })
-  await assert.rejects(api.remove('agencies', 'acme'), { message: 'This agency still has 3 events. Delete or move them first.' })
+  responder = () => ({ status: 409, body: { detail: 'This company still has 3 events. Delete or move them first.' } })
+  await assert.rejects(api.remove('companies', 'acme'), { message: 'This company still has 3 events. Delete or move them first.' })
 })
 
 test('a field that did not validate names the field and drops the "Value error" prefix', async () => {
   responder = () => ({
     status: 422,
-    body: { detail: [{ loc: ['body', 'time'], msg: 'Value error, must look like 15:30' }, { loc: ['body'], msg: 'Value error, A passive message needs an agency' }] },
+    body: { detail: [{ loc: ['body', 'time'], msg: 'Value error, must look like 15:30' }, { loc: ['body'], msg: 'Value error, A passive message needs a company' }] },
   })
-  await assert.rejects(api.create('events', {}), { message: 'time: must look like 15:30; A passive message needs an agency' })
+  await assert.rejects(api.create('events', {}), { message: 'time: must look like 15:30; A passive message needs a company' })
 })
 
 test('an unexpected answer still says something useful', async () => {
@@ -73,13 +73,13 @@ test('a server that is down says how to start it', async () => {
 
 test('subscribers get the list now, and again after every write and every "changed" from the server', async () => {
   const seen = []
-  responder = (url) => ({ status: 200, body: url === '/api/agencies' ? [{ id: 'acme' }] : [] })
-  await subscribe('agencies', (rows) => seen.push(rows.length))
+  responder = (url) => ({ status: 200, body: url === '/api/companies' ? [{ id: 'acme' }] : [] })
+  await subscribe('companies', (rows) => seen.push(rows.length))
   assert.deepEqual(seen, [1])
   assert.equal(sources.length, 1)
   assert.equal(sources[0].url, '/api/stream')
 
-  await api.create('agencies', { name: 'Zeta' }) // the write refreshes before it resolves, so the screen is already current
+  await api.create('companies', { name: 'Zeta', companyType: 'client' }) // the write refreshes before it resolves, so the screen is already current
   assert.equal(seen.length, 2)
 
   sources[0].onmessage() // another tab, a skill or the CLI changed something

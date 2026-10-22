@@ -1,12 +1,12 @@
 import { api, subscribe } from './api.js'
 import { EVENT_TYPES, EVENT_LABELS, EVENT_COLORS, EVENT_COLOR_HIGHLIGHT } from './events.js'
 import { startOfWeek, addDays, formTime, toISODate, formatDayLabel, formatWeekNumber, formatWeekRange, currentOrNextBusinessWeekStart } from './dates.js'
-import { companyHint, escapeHtml, pendingLabel, resolveCompany, setNotice, slideTransition } from './dom-utils.js'
+import { companyHint, escapeHtml, findCompany, pendingLabel, setNotice, slideTransition, typeConflict, typeConflictText, typeFor } from './dom-utils.js'
 import { renderOutreach, detectApplyType } from './outreach.js'
 import { initPending, renderPending } from './pending.js'
 import { initEntityEditForm } from './entity-edit.js'
 import { buildNotes, initApplicationForm, parseRecruiters, splitRecruiters } from './application-form.js'
-import { activeCompanyNames, renderCompanies, setStatusFilter } from './companies.js'
+import { activeCompanies, renderCompanies, setStatusFilter } from './companies.js'
 import { generateWeeklyReport, hideWeeklyReport, isWeeklyReportOpen, refreshWeeklyReport } from './weekly-report.js'
 import { initFollowUp, renderFollowUp } from './follow-up.js'
 import { renderSettings } from './settings.js'
@@ -17,12 +17,10 @@ import { initI18n, t } from './i18n.js'
 // ---------- App state ----------
 let weekStart = currentOrNextBusinessWeekStart(new Date())
 let applications = []
-let agenciesMap = new Map()
-let clientsMap = new Map()
+let companiesMap = new Map()
 let appInitialized = false
 let applicationsLoaded = false
-let agenciesLoaded = false
-let clientsLoaded = false
+let companiesLoaded = false
 
 // Groups a day's pills by event type (in EVENT_TYPES' own order) instead of
 // interleaving them by time — an event type not in that list sorts last.
@@ -45,9 +43,10 @@ function initApp() {
   document.getElementById('filter-archived-btn').addEventListener('click', () => setStatusFilter('archived'))
   document.getElementById('f-event').addEventListener('change', updateTypeFields)
   document.getElementById('f-apply-type').addEventListener('change', updateTypeFields)
-  document.getElementById('f-client').addEventListener('input', pickClient)
-  document.getElementById('f-client').addEventListener('change', pickClient)
-  document.getElementById('f-agency').addEventListener('input', updateCompanyHint)
+  document.getElementById('f-company').addEventListener('input', pickCompany)
+  document.getElementById('f-company').addEventListener('change', pickCompany)
+  document.getElementById('f-company-type').addEventListener('change', updateCompanyType)
+  document.getElementById('f-via').addEventListener('input', updateCompanyHint)
   // Pressed once it opens the report, pressed again it folds it away.
   document.getElementById('weekly-report-btn').addEventListener('click', () => {
     if (isWeeklyReportOpen()) hideWeeklyReport('right')
@@ -67,13 +66,9 @@ function initApp() {
   })
   initPending({ getApplications: () => applications, onOpenEvent: (app) => (location.hash = `calendar~${app.id}`) })
   initEntityEditForm()
-  initApplicationForm({ getAgencies: () => Array.from(agenciesMap.values()), getClients: () => Array.from(clientsMap.values()) })
+  initApplicationForm({ getCompanies: () => Array.from(companiesMap.values()) })
   initFollowUp(companiesDeps)
-  initCalendarSync({
-    getWeekStart: () => weekStart,
-    getAgencies: () => Array.from(agenciesMap.values()),
-    getClients: () => Array.from(clientsMap.values()),
-  })
+  initCalendarSync({ getWeekStart: () => weekStart, getCompanies: () => Array.from(companiesMap.values()) })
 
   subscribe('events', (rows) => {
     applications = rows
@@ -85,17 +80,12 @@ function initApp() {
     if (currentSection() === 'companies') handleRoute()
     maybeOpenEvent()
   })
-  subscribe('agencies', (rows) => {
-    agenciesMap = new Map(rows.map((a) => [a.id, a]))
-    agenciesLoaded = true
+  subscribe('companies', (rows) => {
+    companiesMap = new Map(rows.map((c) => [c.id, c]))
+    companiesLoaded = true
     renderDatalists()
     if (currentSection() === 'companies') handleRoute()
-  })
-  subscribe('clients', (rows) => {
-    clientsMap = new Map(rows.map((c) => [c.id, c]))
-    clientsLoaded = true
-    renderDatalists()
-    if (currentSection() === 'companies') handleRoute()
+    if (currentSection() === 'calendar') renderWeek()  // a company's name or type can change what an event says
   })
   window.addEventListener('hashchange', handleRoute)
   handleRoute()
@@ -117,12 +107,14 @@ function fillEventSelect(lockedType) {
 }
 
 // The company suggestions come from the lists the page already has, and are only the active companies (a
-// client is active or not by its events, so this runs again when they change).
+// client is active or not by its events, so this runs again when they change). Company has both, each
+// with its tag; Via agency has the agencies.
 function renderDatalists() {
-  const names = activeCompanyNames(Array.from(agenciesMap.values()), Array.from(clientsMap.values()), applications)
-  const options = (list) => list.map((name) => `<option value="${escapeHtml(name)}">`).join('')
-  document.getElementById('agency-list').innerHTML = options(names.agencies)
-  document.getElementById('client-list').innerHTML = options(names.clients)
+  const active = activeCompanies(Array.from(companiesMap.values()))
+  const options = (list, label) =>
+    list.map((c) => `<option value="${escapeHtml(c.name)}"${label ? ` label="${t(c.companyType === 'agency' ? 'form.agency' : 'form.client')}"` : ''}>`).join('')
+  document.getElementById('agency-list').innerHTML = options(active.filter((c) => c.companyType === 'agency'))
+  document.getElementById('company-list').innerHTML = options(active, true)
 }
 
 // ---------- Router ----------
@@ -134,17 +126,9 @@ function parseHash() {
   if (pathPart === 'outreach' || pathPart.startsWith('outreach/')) {
     return { section: 'outreach', tab: pathPart.slice('outreach/'.length) || null }
   }
-  if (pathPart.startsWith('agencies')) {
-    const rest = pathPart.slice('agencies/'.length) || null
-    if (rest === null || rest === 'clients') {
-      return { section: 'companies', tab: rest || 'agencies' }
-    }
-    return { section: 'companies', openAgencyId: rest }
-  }
-  if (pathPart.startsWith('clients')) {
-    const id = pathPart.slice('clients/'.length) || null
-    return id ? { section: 'companies', openClientId: id } : { section: 'companies', tab: 'clients' }
-  }
+  // `companies/<id>` opens that company's card; the older `agencies/<id>` and `clients/<id>` links still do
+  const company = pathPart.match(/^(?:companies|agencies|clients)(?:\/(.+))?$/)
+  if (company) return { section: 'companies', openCompanyId: company[1] ?? null }
   if (pathPart === 'follow-up') {
     return { section: 'follow-up' }
   }
@@ -176,7 +160,7 @@ function handleRoute() {
   document.getElementById('view-settings').classList.toggle('hidden', section !== 'settings')
   document.getElementById('view-profile').classList.toggle('hidden', section !== 'profile')
 
-  updateSidebarActive(section === 'companies' ? 'agencies' : section)
+  updateSidebarActive(section)
 
   if (section === 'calendar') {
     refreshSyncButton() // the calendar may have been set (or removed) in Settings since the last visit
@@ -200,7 +184,7 @@ function handleRoute() {
 
 function companiesDeps() {
   // An event clicked in a company's timeline or in Follow Up is opened in the Calendar.
-  return { applications, agenciesMap, clientsMap, agenciesLoaded, clientsLoaded, onOpenEvent: (app) => (location.hash = `calendar~${app.id}`) }
+  return { applications, companiesMap, companiesLoaded, onOpenEvent: (app) => (location.hash = `calendar~${app.id}`) }
 }
 
 function updateSidebarActive(section) {
@@ -272,14 +256,15 @@ function navigateWeek(days, direction) {
   )
 }
 
-// companyLabel only ever holds the agency's own name — when there's also a
-// final client, "Agency → Client" is composed live from clientsMap instead of
-// being stored, so it can never drift out of sync with the real agency/client
-// records. A direct event
-// (no agency) has no "→ client" to add — companyLabel already IS the client.
+// The label of an event is "Agency → Client" when it came through an agency, else the company's name: the
+// server derives it (companyLabel), so it can never drift out of sync with the real records.
 function pillLabel(app) {
-  const client = app.agencyId && app.clientId ? clientsMap.get(app.clientId) : null
-  return client ? `${app.companyLabel ?? ''} → ${client.name}` : app.companyLabel ?? ''
+  return app.companyLabel ?? ''
+}
+
+// The pills of one agency light up together: the events of the agency itself and those of its clients that came through it.
+function agencyKey(app) {
+  return app.viaCompanyId || (companiesMap.get(app.companyId)?.companyType === 'agency' ? app.companyId : '')
 }
 
 // Archives are not shown in the Calendar (an archive is how a company is closed, not something that
@@ -346,12 +331,13 @@ function renderWeek() {
           <span class="truncate font-medium">${escapeHtml(pillLabel(app))}</span>
         </div>
       `
-      pill.dataset.agencyId = app.agencyId || ''
+      const group = agencyKey(app)
+      pill.dataset.agencyId = group
       pill.dataset.colorLight = color
       pill.addEventListener('click', () => openForm(app))
-      if (app.agencyId) {
+      if (group) {
         pill.addEventListener('mouseenter', () => {
-          const matches = grid.querySelectorAll(`.event-pill[data-agency-id="${app.agencyId}"]`)
+          const matches = grid.querySelectorAll(`.event-pill[data-agency-id="${group}"]`)
           if (matches.length > 1) {
             matches.forEach((el) => {
               el.classList.add('agency-highlight')
@@ -361,7 +347,7 @@ function renderWeek() {
           }
         })
         pill.addEventListener('mouseleave', () => {
-          grid.querySelectorAll(`.event-pill[data-agency-id="${app.agencyId}"]`).forEach((el) => {
+          grid.querySelectorAll(`.event-pill[data-agency-id="${group}"]`).forEach((el) => {
             el.classList.remove('agency-highlight')
             el.classList.remove(...EVENT_COLOR_HIGHLIGHT.split(' '))
             el.classList.add(...el.dataset.colorLight.split(' '))
@@ -399,9 +385,7 @@ let editingCompany = ''
 
 function companyTitle(app) {
   if (app.event === 'pending') return pendingLabel(app)
-  const client = app.agencyId && app.clientId ? clientsMap.get(app.clientId) : null
-  const company = app.companyLabel || '—'
-  return client ? `${company} (${client.name})` : company
+  return app.companyLabel || '—'
 }
 
 function eventFormTitle() {
@@ -411,16 +395,10 @@ function eventFormTitle() {
   return `${editingCompany} → ${name}`
 }
 
-// A passive message is a recruiter reaching out, so its agency is the one that has to be filled in.
-function updateAgencyLabel() {
-  document.getElementById('f-agency').placeholder = currentEvent() === 'passive_message' ? t('form.agencyRequired') : t('form.agency')
-}
-
 // The Application link belongs to an application being edited (or a queued link), not to any other
 // event, and a passive message has none. An application of type Web must have it.
 function updateTypeFields() {
   document.getElementById('event-form-title').textContent = eventFormTitle()
-  updateAgencyLabel()
   const hasLink = pendingEdit || (typeDrivenEdit && currentEvent() !== 'passive_message')
   document.getElementById('f-jd-wrap').classList.toggle('hidden', !hasLink)
   const web = typeDrivenEdit && document.getElementById('f-apply-type').value === 'web_form'
@@ -429,26 +407,36 @@ function updateTypeFields() {
   document.getElementById('f-jd-req').classList.toggle('hidden', !web)
 }
 
-// Choosing a client that exists fills in its agency, or empties the field when it has none.
-// Choosing an agency leaves the client alone.
-// Says under the company fields which of the typed names are new, so a typo doesn't quietly create a company.
+// Says under the company which of the typed names are new, so a typo doesn't quietly create a company, and when
+// the name already is the other type.
 function updateCompanyHint() {
   setNotice(
     document.getElementById('f-company-hint'),
     companyHint(
-      Array.from(agenciesMap.values()),
-      Array.from(clientsMap.values()),
-      document.getElementById('f-agency').value,
-      document.getElementById('f-client').value,
+      Array.from(companiesMap.values()),
+      document.getElementById('f-company').value,
+      document.getElementById('f-company-type').value,
+      document.getElementById('f-via').value,
     ),
   )
 }
 
-function pickClient() {
-  const typed = document.getElementById('f-client').value.trim().toLowerCase()
-  const client = Array.from(clientsMap.values()).find((c) => (c.name ?? '').trim().toLowerCase() === typed)
-  if (client) document.getElementById('f-agency').value = (client.viaAgencyId && agenciesMap.get(client.viaAgencyId)?.name) || ''
+// The agency a client comes through is asked only for a client.
+function updateCompanyType() {
+  document.getElementById('f-via').classList.toggle('hidden', document.getElementById('f-company-type').value !== 'client')
   updateCompanyHint()
+}
+
+// Typing the name of a company that exists is picking it: its type follows, and a client brings the agency
+// it comes through, or empties the field when it has none.
+function pickCompany() {
+  const companies = Array.from(companiesMap.values())
+  const name = document.getElementById('f-company').value
+  const typeSelect = document.getElementById('f-company-type')
+  typeSelect.value = typeFor(companies, name, typeSelect.value)
+  const company = typeSelect.value === 'client' ? findCompany(companies, name) : null
+  if (company) document.getElementById('f-via').value = companiesMap.get(company.viaCompanyId)?.name ?? ''
+  updateCompanyType()
 }
 
 // The Type select of an application being edited. An application with no type yet shows a blank one.
@@ -477,8 +465,10 @@ function openForm(app = null) {
   pendingEdit = app?.event === 'pending'
   document.getElementById('f-company-wrap').classList.toggle('hidden', pendingEdit)
 
-  document.getElementById('f-agency').value = (app?.agencyId && agenciesMap.get(app.agencyId)?.name) || ''
-  document.getElementById('f-client').value = (app?.clientId && clientsMap.get(app.clientId)?.name) || ''
+  const company = (app?.companyId && companiesMap.get(app.companyId)) || null
+  document.getElementById('f-company').value = company?.name ?? ''
+  document.getElementById('f-company-type').value = company?.companyType ?? 'agency'
+  document.getElementById('f-via').value = (app?.viaCompanyId && companiesMap.get(app.viaCompanyId)?.name) || ''
 
   // An application or a passive message is edited by its Type, and has its recruiter, which is the
   // first line of its notes.
@@ -493,7 +483,7 @@ function openForm(app = null) {
   // A link is given when an application is logged (+ Application); this form only edits it.
   document.getElementById('f-jd').value = app?.jdUrl ?? ''
   updateTypeFields()
-  updateCompanyHint()
+  updateCompanyType()
   setNotice(document.getElementById('form-error'), '')
 
   const overlay = document.getElementById('form-overlay')
@@ -543,35 +533,38 @@ async function handleFormSubmit(e) {
       closeForm()
       return
     }
-    const agencyName = document.getElementById('f-agency').value.trim()
-    const clientName = document.getElementById('f-client').value.trim()
-    // Every event but a new application (its own form) belongs to a company: an agency, a client or both.
-    if (!agencyName && !clientName) throw new Error(t('form.errPickCompany'))
-    if (event === 'passive_message' && !agencyName) throw new Error(t('form.errPassiveAgency'))
+    const name = document.getElementById('f-company').value.trim()
+    const companyType = document.getElementById('f-company-type').value
+    // Every event but a new application (its own form) belongs to a company: an agency, or a client with the
+    // agency it came through when it has one.
+    if (!name) throw new Error(t('form.errPickCompany'))
+    const companies = Array.from(companiesMap.values())
+    const conflict = typeConflict(companies, name, companyType)
+    if (conflict) throw new Error(typeConflictText(name, conflict))
+    const viaName = companyType === 'client' ? document.getElementById('f-via').value.trim() : ''
+    const viaConflict = viaName ? typeConflict(companies, viaName, 'agency') : null
+    if (viaConflict) throw new Error(typeConflictText(viaName, viaConflict))
     let notes = document.getElementById('f-notes').value.trim()
     if (typeDrivenEdit) notes = buildNotes(parseRecruiters(document.getElementById('f-recruiter').value), notes)
 
-    // An existing company is found by name (ignoring case) and reused; only a new
-    // one is created. Whether an event archives or reactivates its agency is the
-    // server's rule now, so there is no status to write here.
-    let agencyId = null
-    let clientId = null
-    const agencies = Array.from(agenciesMap.values())
-    const clients = Array.from(clientsMap.values())
-
-    if (agencyName) {
-      const agency = resolveCompany(agencies, agencyName)
-      agencyId = agency.isNew ? (await api.create('agencies', { name: agency.name })).id : agency.id
+    // An existing company is found by name (ignoring case) and reused; only a new one is created. Whether an
+    // event archives or reactivates its company is derived from its events, so there is no status to write here.
+    let viaCompanyId = null
+    if (viaName) {
+      const via = findCompany(companies, viaName)
+      viaCompanyId = via ? via.id : (await api.create('companies', { name: viaName, companyType: 'agency' })).id
     }
-    if (clientName) {
+    let companyId
+    const existing = findCompany(companies, name)
+    if (existing) {
+      companyId = existing.id
       // With an agency the client is (re)pointed to it; without one the client is direct.
-      const client = resolveCompany(clients, clientName)
-      clientId = client.isNew
-        ? (await api.create('clients', agencyId ? { name: client.name, viaAgencyId: agencyId } : { name: client.name })).id
-        : (await api.patch('clients', client.id, { viaAgencyId: agencyId })).id
+      if (companyType === 'client' && (existing.viaCompanyId ?? null) !== viaCompanyId) await api.patch('companies', existing.id, { viaCompanyId })
+    } else {
+      companyId = (await api.create('companies', viaCompanyId ? { name, companyType, viaCompanyId } : { name, companyType })).id
     }
 
-    const payload = { date, time, event, agencyId, clientId, notes }
+    const payload = { date, time, event, companyId, viaCompanyId, notes }
     if (typeDrivenEdit) {
       // An application's link can be edited; a passive message has none. The Type of an application is
       // its apply type. Any other event leaves both as they are.
@@ -602,7 +595,7 @@ async function handleFormDelete() {
   }
 }
 
-// ---------- Agencies & Clients: see companies.js ----------
+// ---------- Companies (agencies and clients): see companies.js ----------
 
 await initI18n() // the texts are in public/locales; the language is the APP_LANGUAGE setting
 initApp()

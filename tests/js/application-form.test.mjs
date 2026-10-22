@@ -109,16 +109,19 @@ test('the recruiters lead the notes, one line each, and the typed notes follow',
   assert.equal(buildNotes(['https://www.linkedin.com/in/x/', 'https://www.linkedin.com/in/y/'], ' Talent pool form '), 'Recruiter: https://www.linkedin.com/in/x/\nRecruiter: https://www.linkedin.com/in/y/\nTalent pool form')
 })
 
+const agency = (extra = {}) => ({ id: 'northwind-staffing', name: 'Northwind Staffing', companyType: 'agency', recruiters: [], ...extra })
+
 test('a new agency is created with its profile and recruiter, and the event gets the time of saving', async () => {
   const client = fakeApi()
   const typed = { ...complete, companyHome: ' https://www.linkedin.com/company/northwind-staffing/home/ ', recruiters: 'www.linkedin.com/in/jane-recruiter/' }
-  await saveApplication({ ...typed, website: 'https://bajanearshore.com', notes: 'Talent Pool form', link: 'https://forms.example/x' }, { agencies: [], clients: [], now }, client)
+  await saveApplication({ ...typed, website: 'https://bajanearshore.com', notes: 'Talent Pool form', link: 'https://forms.example/x' }, { companies: [], now }, client)
   assert.deepEqual(client.calls, [
     [
       'create',
-      'agencies',
+      'companies',
       {
         name: 'Northwind Staffing',
+        companyType: 'agency',
         website: 'https://bajanearshore.com',
         linkedin: 'https://www.linkedin.com/company/northwind-staffing/home/',
         recruiters: ['https://www.linkedin.com/in/jane-recruiter/'],
@@ -131,8 +134,7 @@ test('a new agency is created with its profile and recruiter, and the event gets
         date: '2026-10-09',
         time: '08:05',
         event: 'application',
-        agencyId: 'made-northwind-staffing',
-        clientId: null,
+        companyId: 'made-northwind-staffing',
         notes: 'Recruiter: https://www.linkedin.com/in/jane-recruiter/\nTalent Pool form',
         jdUrl: 'https://forms.example/x',
         applyType: 'email_apply',
@@ -144,89 +146,92 @@ test('a new agency is created with its profile and recruiter, and the event gets
 test('several recruiters all go on a new agency and on the notes, and only the missing ones are added to an existing agency', async () => {
   const two = 'https://www.linkedin.com/in/one/\nhttps://www.linkedin.com/in/two/'
   const fresh = fakeApi()
-  await saveApplication({ ...complete, recruiters: two }, { agencies: [], clients: [], now }, fresh)
+  await saveApplication({ ...complete, recruiters: two }, { companies: [], now }, fresh)
   assert.deepEqual(fresh.calls[0][2].recruiters, ['https://www.linkedin.com/in/one/', 'https://www.linkedin.com/in/two/'])
   assert.equal(fresh.calls[1][2].notes, 'Recruiter: https://www.linkedin.com/in/one/\nRecruiter: https://www.linkedin.com/in/two/')
 
-  const known = { id: 'northwind-staffing', name: 'Northwind Staffing', recruiters: ['https://www.linkedin.com/in/one/'] }
   const reused = fakeApi()
-  await saveApplication({ ...complete, recruiters: two }, { agencies: [known], clients: [], now }, reused)
-  assert.deepEqual(reused.calls[0].slice(0, 3), ['patch', 'agencies', 'northwind-staffing'])
+  await saveApplication({ ...complete, recruiters: two }, { companies: [agency({ recruiters: ['https://www.linkedin.com/in/one/'] })], now }, reused)
+  assert.deepEqual(reused.calls[0].slice(0, 3), ['patch', 'companies', 'northwind-staffing'])
   assert.deepEqual(reused.calls[0][3], { recruiters: ['https://www.linkedin.com/in/one/', 'https://www.linkedin.com/in/two/'] })
 })
 
 test('an agency that exists (ignoring case) is reused, and the recruiter is added only when missing', async () => {
-  const known = { id: 'northwind-staffing', name: 'Northwind Staffing', recruiters: ['https://www.linkedin.com/in/someone/'] }
+  const known = agency({ recruiters: ['https://www.linkedin.com/in/someone/'] })
   const client = fakeApi()
-  await saveApplication({ ...complete, company: 'northwind STAFFING' }, { agencies: [known], clients: [], now }, client)
-  assert.deepEqual(client.calls.map((c) => c.slice(0, 3)), [['patch', 'agencies', 'northwind-staffing'], ['create', 'events', { ...client.calls[1][2] }]])
+  await saveApplication({ ...complete, company: 'northwind STAFFING' }, { companies: [known], now }, client)
+  assert.deepEqual(client.calls.map((c) => c.slice(0, 3)), [['patch', 'companies', 'northwind-staffing'], ['create', 'events', { ...client.calls[1][2] }]])
   assert.deepEqual(client.calls[0][3], { recruiters: ['https://www.linkedin.com/in/someone/', 'https://www.linkedin.com/in/jane-recruiter/'] })
-  assert.equal(client.calls[1][2].agencyId, 'northwind-staffing')
+  assert.equal(client.calls[1][2].companyId, 'northwind-staffing')
 
   const again = fakeApi()
-  const withRecruiter = { ...known, recruiters: ['https://www.linkedin.com/in/jane-recruiter/'] }
-  await saveApplication(complete, { agencies: [withRecruiter], clients: [], now }, again)
+  await saveApplication(complete, { companies: [{ ...known, recruiters: ['https://www.linkedin.com/in/jane-recruiter/'] }], now }, again)
   assert.deepEqual(again.calls.map((c) => c[1]), ['events'])
 })
 
-test('with "Agency" unticked the company is a direct client, and nothing is written for the agency', async () => {
+test('with "Client" chosen the company is a direct client, and no recruiters go on it', async () => {
   const client = fakeApi()
-  await saveApplication({ ...complete, agency: false, company: 'Acme', type: 'email_apply' }, { agencies: [], clients: [], now }, client)
+  await saveApplication({ ...complete, agency: false, company: 'Acme', type: 'email_apply' }, { companies: [], now }, client)
   assert.deepEqual(client.calls[0], [
     'create',
-    'clients',
-    { name: 'Acme', website: null, linkedin: 'https://www.linkedin.com/company/northwind-staffing/home/', viaAgencyId: null },
+    'companies',
+    { name: 'Acme', companyType: 'client', website: null, linkedin: 'https://www.linkedin.com/company/northwind-staffing/home/' },
   ])
   const event = client.calls[1][2]
-  assert.deepEqual([event.agencyId, event.clientId, event.applyType], [null, 'made-acme', 'email_apply'])
+  assert.deepEqual([event.companyId, 'viaCompanyId' in event, event.applyType], ['made-acme', false, 'email_apply'])
   assert.match(event.notes, /^Recruiter: /)
 
   const existing = fakeApi()
-  await saveApplication({ ...complete, agency: false, company: 'ACME' }, { agencies: [], clients: [{ id: 'acme', name: 'Acme' }], now }, existing)
+  await saveApplication({ ...complete, agency: false, company: 'ACME' }, { companies: [{ id: 'acme', name: 'Acme', companyType: 'client' }], now }, existing)
   assert.deepEqual(existing.calls.map((c) => c[1]), ['events'])
-  assert.equal(existing.calls[0][2].clientId, 'acme')
+  assert.equal(existing.calls[0][2].companyId, 'acme')
 })
 
 test('without a recruiter nothing is added for one, and a direct client can have no LinkedIn at all', async () => {
-  const agency = fakeApi()
-  await saveApplication({ ...complete, recruiters: '', notes: 'n' }, { agencies: [], clients: [], now }, agency)
-  assert.deepEqual(agency.calls[0][2].recruiters, [])
-  assert.equal(agency.calls[1][2].notes, 'n')
+  const fresh = fakeApi()
+  await saveApplication({ ...complete, recruiters: '', notes: 'n' }, { companies: [], now }, fresh)
+  assert.deepEqual(fresh.calls[0][2].recruiters, [])
+  assert.equal(fresh.calls[1][2].notes, 'n')
 
-  const known = { id: 'northwind-staffing', name: 'Northwind Staffing', recruiters: [] }
   const reused = fakeApi()
-  await saveApplication({ ...complete, recruiters: '' }, { agencies: [known], clients: [], now }, reused)
+  await saveApplication({ ...complete, recruiters: '' }, { companies: [agency()], now }, reused)
   assert.deepEqual(reused.calls.map((c) => c[1]), ['events'])
 
   const direct = fakeApi()
-  await saveApplication({ ...complete, agency: false, company: 'Acme', companyHome: '', recruiters: '' }, { agencies: [], clients: [], now }, direct)
-  assert.deepEqual(direct.calls[0], ['create', 'clients', { name: 'Acme', website: null, linkedin: null, viaAgencyId: null }])
+  await saveApplication({ ...complete, agency: false, company: 'Acme', companyHome: '', recruiters: '' }, { companies: [], now }, direct)
+  assert.deepEqual(direct.calls[0], ['create', 'companies', { name: 'Acme', companyType: 'client', website: null, linkedin: null }])
   assert.equal(direct.calls[1][2].notes, '')
 })
 
-test('a passive one logs a passive message with an agency and no link or apply type', async () => {
+test('a passive one logs a passive message with its company, and no link or apply type', async () => {
   const client = fakeApi()
-  await saveApplication({ ...complete, type: 'passive', link: 'https://ignored.example' }, { agencies: [], clients: [], now }, client)
+  await saveApplication({ ...complete, type: 'passive', link: 'https://ignored.example' }, { companies: [], now }, client)
   const event = client.calls[1][2]
-  assert.deepEqual([event.event, event.agencyId, event.clientId, event.jdUrl, event.applyType], ['passive_message', 'made-northwind-staffing', null, null, null])
+  assert.deepEqual([event.event, event.companyId, event.jdUrl, event.applyType], ['passive_message', 'made-northwind-staffing', null, null])
 
   const direct = fakeApi()
-  await assert.rejects(saveApplication({ ...complete, type: 'passive', agency: false }, { agencies: [], clients: [], now }, direct), /needs an agency/)
-  assert.deepEqual(direct.calls, [])
+  await saveApplication({ ...complete, type: 'passive', agency: false }, { companies: [], now }, direct)
+  assert.deepEqual([direct.calls[0][2].companyType, direct.calls[1][2].event, direct.calls[1][2].companyId], ['client', 'passive_message', 'made-northwind-staffing'])
+})
+
+test('a name that already is the other type is refused, so a company is never made twice', async () => {
+  const client = fakeApi()
+  await assert.rejects(saveApplication({ ...complete, agency: false }, { companies: [agency()], now }, client), /"Northwind Staffing" is already an agency/)
+  assert.deepEqual(client.calls, [])
 })
 
 test('an incomplete form writes nothing', async () => {
   const client = fakeApi()
-  await assert.rejects(saveApplication({ ...complete, recruiters: 'https://www.linkedin.com/' }, { agencies: [], clients: [], now }, client), /Each recruiter/)
+  await assert.rejects(saveApplication({ ...complete, recruiters: 'https://www.linkedin.com/' }, { companies: [], now }, client), /Each recruiter/)
   assert.deepEqual(client.calls, [])
 })
 
 test('the company field says whether saving creates it, as an agency or as a direct client', () => {
-  const lists = { agencies: [{ id: 'acme', name: 'Acme' }], clients: [{ id: 'solo', name: 'Solo Co' }] }
+  const lists = { companies: [{ id: 'acme', name: 'Acme', companyType: 'agency' }, { id: 'solo', name: 'Solo Co', companyType: 'client' }] }
   assert.equal(applicationCompanyHint({ company: 'acme', agency: true }, lists), '')
   assert.equal(applicationCompanyHint({ company: 'Newco', agency: true }, lists), 'Will create the new agency "Newco".')
   assert.equal(applicationCompanyHint({ company: 'Newco', agency: false }, lists), 'Will create the new client "Newco".')
   assert.equal(applicationCompanyHint({ company: 'Solo Co', agency: false }, lists), '')
-  assert.equal(applicationCompanyHint({ company: 'Acme', agency: false }, lists), 'Will create the new client "Acme".') // an agency is not a client
+  assert.equal(applicationCompanyHint({ company: 'Acme', agency: false }, lists), '"Acme" is already an agency.') // an agency is not a client
   assert.equal(applicationCompanyHint({ company: '  ', agency: true }, lists), '')
 })

@@ -82,109 +82,70 @@ function timelineHtml(matches) {
 
 // The Agency/Client tag next to a company's name. Exported so Check
 // Applications shows the very same one.
-export function kindTagHtml(kind) {
-  const isAgency = kind === 'agency'
+export function companyTypeTagHtml(companyType) {
+  const isAgency = companyType === 'agency'
   return `<span class="rounded-full px-2 py-0.5 text-[10px] ${isAgency ? 'bg-blue-950 text-blue-300' : 'bg-violet-950 text-violet-300'}">${isAgency ? t('companies.agency') : t('companies.client')}</span>`
 }
 
-// Exported for follow-up.js, which reuses this exact card body
-// (Website/LinkedIn/Recruiters/Application/Timeline) inside its own
-// expandable results list — "the same card as Companies", not a rebuild.
-export function agencyBodyHtml(a, matches) {
-  const recruiters = a.recruiters?.length
-    ? a.recruiters.map((url) => `<a href="${url}" target="_blank" rel="noreferrer" class="block text-blue-400 underline hover:text-blue-300">${url}</a>`).join('')
-    : `<p class="text-gray-500">${t('companies.noRecruiters')}</p>`
+// The events a company is in: its own, and those of the clients that came through it (when it is an agency).
+export function eventsOf(applications, company) {
+  return applications.filter((app) => app.companyId === company.id || app.viaCompanyId === company.id)
+}
 
+const linkHtml = (url) => `<a href="${url}" target="_blank" rel="noreferrer" class="break-all text-blue-400 underline hover:text-blue-300">${url}</a>`
+
+// Exported for follow-up.js, which reuses this exact card body inside its own expandable results list: "the same
+// card as Companies", not a rebuild. `via` is the agency a client came through, when it has one.
+export function companyBodyHtml(c, matches, via) {
+  const recruiters = c.recruiters?.length
+    ? c.recruiters.map((url) => `<a href="${url}" target="_blank" rel="noreferrer" class="block text-blue-400 underline hover:text-blue-300">${url}</a>`).join('')
+    : `<p class="text-gray-500">${t('companies.noRecruiters')}</p>`
+  const application = t('companies.application')
   return `
-    <p class="mb-4 text-sm leading-relaxed text-gray-300">${escapeHtml(a.type) || '—'}</p>
+    ${c.companyType === 'client' ? `<p class="mb-3 text-sm text-gray-500">${via ? `${t('companies.via')} <a href="#companies/${via.id}" class="text-blue-400 underline hover:text-blue-300">${escapeHtml(via.name)}</a>` : t('companies.viaDirect')}</p>` : ''}
+    ${c.notes ? `<p class="mb-4 whitespace-pre-wrap text-sm leading-relaxed text-gray-300">${renderNotes(c.notes)}</p>` : ''}
     <div class="mb-6 space-y-1 text-sm">
-      <div><span class="text-gray-500">${t('companies.website')}:</span> ${a.website ? `<a href="${a.website}" target="_blank" rel="noreferrer" class="break-all text-blue-400 underline hover:text-blue-300">${a.website}</a>` : '—'}</div>
-      <div><span class="text-gray-500">LinkedIn:</span> ${a.linkedin ? `<a href="${a.linkedin}" target="_blank" rel="noreferrer" class="break-all text-blue-400 underline hover:text-blue-300">${a.linkedin}</a>` : '—'}</div>
+      <div><span class="text-gray-500">${t('companies.website')}:</span> ${c.website ? linkHtml(c.website) : '—'}</div>
+      <div><span class="text-gray-500">LinkedIn:</span> ${c.linkedin ? linkHtml(c.linkedin) : '—'}</div>
     </div>
     <h2 class="mb-2 text-sm font-medium text-gray-400">${t('companies.recruiters')}</h2>
     <div class="mb-6 space-y-1 text-sm">${recruiters}</div>
     ${
-      a.applicationLink
-        ? `<a href="${applicationLinkHref(a.applicationLink)}" target="_blank" rel="noreferrer" class="mb-6 inline-block rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white">${t('companies.application')} →</a>`
-        : `<span class="mb-6 inline-block cursor-not-allowed rounded-full bg-gray-800 px-4 py-2 text-sm font-medium text-gray-500">${t('companies.application')} →</span>`
+      c.applicationLink
+        ? `<a href="${applicationLinkHref(c.applicationLink)}" target="_blank" rel="noreferrer" class="mb-6 inline-block rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white">${application} →</a>`
+        : `<span class="mb-6 inline-block cursor-not-allowed rounded-full bg-gray-800 px-4 py-2 text-sm font-medium text-gray-500">${application} →</span>`
     }
     <h2 class="mb-2 mt-4 text-sm font-medium text-gray-400">${t('companies.timeline', { count: matches.length })}</h2>
     <div class="space-y-2">${timelineHtml(matches)}</div>
   `
 }
 
-function agencyCardHtml(a, applications, isOpen) {
-  const matches = applications.filter((app) => app.agencyId === a.id)
+// The names the company fields suggest: only the active companies, since one that is closed is not who a new
+// event is about. A closed one can still be typed in (and a new event reactivates it).
+export function activeCompanies(companies) {
+  return companies.filter((c) => c.status !== 'archived')
+}
+
+function companyCardHtml(c, applications, companiesMap, isOpen) {
+  const matches = eventsOf(applications, c)
+  const via = companiesMap.get(c.viaCompanyId)
+  const archived = c.status === 'archived'
   return `
-    <div class="capsule" data-key="agency:${a.id}" data-open="${isOpen}">
-      <div class="capsule-header">
-        <button type="button" class="capsule-summary" aria-expanded="${isOpen}">
-          <div class="flex w-full items-center gap-2">
-            <span>🏢</span>
-            <span class="font-medium text-gray-100">${escapeHtml(a.name)}</span>
-            ${kindTagHtml('agency')}
-            <span class="ml-auto rounded-full px-2 py-0.5 text-[10px] ${a.status === 'archived' ? 'bg-gray-800 text-red-400' : 'bg-gray-800 text-emerald-400'}">${a.status === 'archived' ? t('companies.statusArchived') : t('companies.statusActive')}</span>
-          </div>
-        </button>
-        <button type="button" class="capsule-edit-btn agency-edit-btn rounded-full bg-gray-100 px-4 py-1 text-sm font-medium text-gray-900 hover:bg-white" data-id="${a.id}">${t('common.edit')}</button>
-      </div>
-      <div class="capsule-body-wrap">
-        <div class="capsule-body">${agencyBodyHtml(a, matches)}</div>
-      </div>
-    </div>
-  `
-}
-
-// Exported for follow-up.js (same reuse as agencyBodyHtml above).
-export function clientBodyHtml(c, matches, via) {
-  return `
-    <p class="mb-3 text-sm text-gray-500">${via ? `${t('companies.via')} <a href="#agencies/${via.id}" class="text-blue-400 underline hover:text-blue-300">${escapeHtml(via.name)}</a>` : t('companies.viaDirect')}</p>
-    <div class="mb-6 space-y-1 text-sm">
-      <div><span class="text-gray-500">${t('companies.website')}:</span> ${c.website ? `<a href="${c.website}" target="_blank" rel="noreferrer" class="break-all text-blue-400 underline hover:text-blue-300">${c.website}</a>` : '—'}</div>
-      <div><span class="text-gray-500">LinkedIn:</span> ${c.linkedin ? `<a href="${c.linkedin}" target="_blank" rel="noreferrer" class="break-all text-blue-400 underline hover:text-blue-300">${c.linkedin}</a>` : '—'}</div>
-    </div>
-    ${c.notes ? `<h2 class="mb-2 text-sm font-medium text-gray-400">${t('form.notes')}</h2><p class="mb-6 whitespace-pre-wrap text-sm text-gray-300">${renderNotes(c.notes)}</p>` : ''}
-    <h2 class="mb-2 mt-4 text-sm font-medium text-gray-400">${t('companies.timeline', { count: matches.length })}</h2>
-    <div class="space-y-2">${timelineHtml(matches)}</div>
-  `
-}
-
-// Clients have no stored status (unlike agencies) — same tie-break rule,
-// derived live from their own Timeline's true latest event.
-export function isClientArchived(matches) {
-  const latest = matches.slice().sort(byDateTimeDesc)[0]
-  return latest ? isClosingEvent(latest.event) : false
-}
-
-// The names the company fields suggest: only the active agencies and clients, since one that is closed is not
-// who a new event is about. A closed one can still be typed in (and a new event reactivates it).
-export function activeCompanyNames(agencies, clients, events) {
-  return {
-    agencies: agencies.filter((a) => a.status !== 'archived').map((a) => a.name),
-    clients: clients.filter((c) => !isClientArchived(events.filter((e) => e.clientId === c.id))).map((c) => c.name),
-  }
-}
-
-function clientCardHtml(c, applications, agenciesMap, isOpen) {
-  const matches = applications.filter((app) => app.clientId === c.id)
-  const via = agenciesMap.get(c.viaAgencyId)
-  const archived = isClientArchived(matches)
-  return `
-    <div class="capsule" data-key="client:${c.id}" data-open="${isOpen}">
+    <div class="capsule" data-key="${c.id}" data-open="${isOpen}">
       <div class="capsule-header">
         <button type="button" class="capsule-summary" aria-expanded="${isOpen}">
           <div class="flex w-full items-center gap-2">
             <span>🏢</span>
             <span class="font-medium text-gray-100">${escapeHtml(c.name)}</span>
-            ${kindTagHtml('client')}
+            ${companyTypeTagHtml(c.companyType)}
             ${via ? `<span class="text-xs text-gray-500">${t('companies.viaLower')} ${escapeHtml(via.name)}</span>` : ''}
             <span class="ml-auto rounded-full px-2 py-0.5 text-[10px] ${archived ? 'bg-gray-800 text-red-400' : 'bg-gray-800 text-emerald-400'}">${archived ? t('companies.statusArchived') : t('companies.statusActive')}</span>
           </div>
         </button>
-        <button type="button" class="capsule-edit-btn client-edit-btn rounded-full bg-gray-100 px-4 py-1 text-sm font-medium text-gray-900 hover:bg-white" data-id="${c.id}">${t('common.edit')}</button>
+        <button type="button" class="capsule-edit-btn company-edit-btn rounded-full bg-gray-100 px-4 py-1 text-sm font-medium text-gray-900 hover:bg-white" data-id="${c.id}">${t('common.edit')}</button>
       </div>
       <div class="capsule-body-wrap">
-        <div class="capsule-body">${clientBodyHtml(c, matches, via)}</div>
+        <div class="capsule-body">${companyBodyHtml(c, matches, via)}</div>
       </div>
     </div>
   `
@@ -195,38 +156,22 @@ function renderToolbar() {
   document.getElementById('filter-archived-btn').classList.toggle('active', statusFilterKey === 'archived')
 }
 
-// Agencies and clients in one list, by name, each tagged with its kind.
-function listHtml({ applications, agenciesMap, clientsMap }, openKey) {
-  const agencies = Array.from(agenciesMap.values()).map((a) => ({ kind: 'agency', entity: a, archived: a.status === 'archived' }))
-  const clients = Array.from(clientsMap.values()).map((c) => ({
-    kind: 'client',
-    entity: c,
-    archived: isClientArchived(applications.filter((app) => app.clientId === c.id)),
-  }))
-  const cards = [...agencies, ...clients]
-    .filter((e) => matchesStatusFilter(e.archived))
-    .sort((a, b) => a.entity.name.localeCompare(b.entity.name))
-    .map((e) => {
-      const isOpen = `${e.kind}:${e.entity.id}` === openKey
-      return e.kind === 'agency' ? agencyCardHtml(e.entity, applications, isOpen) : clientCardHtml(e.entity, applications, agenciesMap, isOpen)
-    })
+// Agencies and clients in one list, by name, each tagged with its type.
+function listHtml({ applications, companiesMap }, openId) {
+  const cards = Array.from(companiesMap.values())
+    .filter((c) => matchesStatusFilter(c.status === 'archived'))
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((c) => companyCardHtml(c, applications, companiesMap, c.id === openId))
   return `<div class="space-y-2">${cards.join('')}</div>`
 }
 
-function wireCards(content, { applications, agenciesMap, clientsMap, onOpenEvent }) {
+function wireCards(content, { applications, companiesMap, onOpenEvent }) {
   wireAccordion(content)
 
-  content.querySelectorAll('.agency-edit-btn').forEach((btn) => {
+  content.querySelectorAll('.company-edit-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      const agency = agenciesMap.get(btn.dataset.id)
-      openEntityEdit('agency', btn.dataset.id, agency, undefined, agency.status === 'archived')
-    })
-  })
-  content.querySelectorAll('.client-edit-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const client = clientsMap.get(btn.dataset.id)
-      const archived = isClientArchived(applications.filter((app) => app.clientId === client.id))
-      openEntityEdit('client', btn.dataset.id, client, agenciesMap.get(client.viaAgencyId)?.name, archived)
+      const company = companiesMap.get(btn.dataset.id)
+      openEntityEdit(company, companiesMap.get(company.viaCompanyId)?.name, company.status === 'archived')
     })
   })
   content.querySelectorAll('a[href^="#"]').forEach((a) => {
@@ -254,19 +199,18 @@ function wireCards(content, { applications, agenciesMap, clientsMap, onOpenEvent
   })
 }
 
-function renderList(openKey, deps, transition = 'auto') {
-  lastOpenId = openKey
+function renderList(openId, deps, transition = 'auto') {
+  lastOpenId = openId
   lastDeps = deps
   renderToolbar()
   const content = document.getElementById('companies-content')
-  const loaded = deps.agenciesLoaded && deps.clientsLoaded
 
   const renderContent = () => {
-    content.innerHTML = loaded ? listHtml(deps, openKey) : spinnerHtml()
-    if (!loaded) return
+    content.innerHTML = deps.companiesLoaded ? listHtml(deps, openId) : spinnerHtml()
+    if (!deps.companiesLoaded) return
     wireCards(content, deps)
-    if (openKey) {
-      const opened = content.querySelector(`.capsule[data-key="${openKey}"]`)
+    if (openId) {
+      const opened = content.querySelector(`.capsule[data-key="${openId}"]`)
       if (opened) opened.scrollIntoView({ block: 'start' })
     }
   }
@@ -276,11 +220,8 @@ function renderList(openKey, deps, transition = 'auto') {
 }
 
 // Companies live entirely inline as an accordion — no separate detail page/back
-// button. A deep link to a specific agency/client (from a calendar event's
-// "Agency"/"Client" link, or a "Via" link) just opens the list with that card
+// button. A deep link to a company (from a "Via" link) just opens the list with that card
 // already expanded.
 export function renderCompanies(route, deps) {
-  const { openAgencyId, openClientId } = route
-  const openKey = openAgencyId ? `agency:${openAgencyId}` : openClientId ? `client:${openClientId}` : null
-  renderList(openKey, deps)
+  renderList(route.openCompanyId ?? null, deps)
 }

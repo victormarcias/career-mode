@@ -1,6 +1,6 @@
 """Request and response shapes (Pydantic).
 
-The JSON uses the camelCase names the front end has always used (`agencyId`,
+The JSON uses the camelCase names the front end has always used (`companyId`,
 `jdUrl`, ...); the Python side uses snake_case. FastAPI turns these models into
 the interactive docs at /docs.
 """
@@ -11,7 +11,7 @@ from typing import Annotated, Optional
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, StringConstraints, field_validator, model_validator
 from pydantic.alias_generators import to_camel
 
-from .models import AgencyStatus, ApplyType, EventType
+from .models import ApplyType, CompanyStatus, CompanyType, EventType
 
 
 class CamelModel(BaseModel):
@@ -35,97 +35,74 @@ OptionalText = Annotated[Optional[str], BeforeValidator(_blank_to_none)]
 Name = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
 
-# ---------- Agencies ----------
+# ---------- Companies ----------
 
 
-class AgencyFields(CamelModel):
-    type: Annotated[str, BeforeValidator(lambda v: (v or '').strip() if isinstance(v, str) or v is None else v)] = ''
+def _recruiter_urls(value):
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return [u.strip() for u in value if isinstance(u, str) and u.strip()]
+    return value
+
+
+class CompanyFields(CamelModel):
+    notes: Annotated[str, BeforeValidator(lambda v: (v or '').strip() if isinstance(v, str) or v is None else v)] = Field(
+        default='', description='What the company does, in a line, and anything useful')
     website: OptionalText = None
     linkedin: OptionalText = None
     application_link: OptionalText = None
-    recruiters: list[str] = Field(default_factory=list, description="LinkedIn profile links, in the order entered")
+    recruiters: list[str] = Field(default_factory=list, description='LinkedIn profile links, in the order entered')
+    via_company_id: OptionalText = Field(
+        default=None, description='For a client: the agency it came through; empty = applied directly. Only a client has one')
 
     @field_validator('recruiters', mode='before')
     @classmethod
     def _recruiters(cls, value):
-        if value is None:
-            return []
-        if isinstance(value, list):
-            return [u.strip() for u in value if isinstance(u, str) and u.strip()]
-        return value
+        return _recruiter_urls(value)
 
 
-class AgencyIn(AgencyFields):
+class CompanyIn(CompanyFields):
     """Create (POST) or replace (PUT)."""
 
     name: Name
-    # The old Firestore data stored "no status" as null: that means active.
-    status: Annotated[AgencyStatus, BeforeValidator(lambda v: v or 'active')] = AgencyStatus.active
+    company_type: CompanyType = Field(description='agency or client: a company is one or the other, and its name is unique either way')
 
 
-class AgencyPatch(CamelModel):
+class CompanyPatch(CamelModel):
     """Update (PATCH): only the fields sent are changed."""
 
     name: Optional[Name] = None
-    type: Optional[str] = None
+    company_type: Optional[CompanyType] = None
+    notes: Optional[str] = None
     website: OptionalText = None
     linkedin: OptionalText = None
     application_link: OptionalText = None
     recruiters: Optional[list[str]] = None
-    status: Optional[AgencyStatus] = None
+    via_company_id: OptionalText = None
 
     @field_validator('recruiters', mode='before')
     @classmethod
     def _recruiters(cls, value):
-        if isinstance(value, list):
-            return [u.strip() for u in value if isinstance(u, str) and u.strip()]
-        return value
+        return _recruiter_urls(value) if isinstance(value, list) else value
 
 
-class AgencyOut(CamelModel):
+class CompanyOut(CamelModel):
     id: str
     name: str
-    type: str
+    company_type: CompanyType
+    notes: str
     website: Optional[str]
     linkedin: Optional[str]
     application_link: Optional[str]
     recruiters: list[str]
-    status: AgencyStatus
+    via_company_id: Optional[str]
+    status: CompanyStatus = Field(description='Derived, never stored: archived when the latest event of the company (or of a client that came through it) closes its process')
 
     @field_validator('recruiters', mode='before')
     @classmethod
     def _urls(cls, value):
         return [r.url if hasattr(r, 'url') else r for r in value]
-
-
-# ---------- Clients ----------
-
-
-class ClientIn(CamelModel):
-    """Create (POST) or replace (PUT)."""
-
-    name: Name
-    website: OptionalText = None
-    linkedin: OptionalText = None
-    notes: Annotated[str, BeforeValidator(lambda v: (v or '').strip() if isinstance(v, str) or v is None else v)] = ''
-    via_agency_id: OptionalText = Field(default=None, description='The agency this client came through; empty = applied directly')
-
-
-class ClientPatch(CamelModel):
-    name: Optional[Name] = None
-    website: OptionalText = None
-    linkedin: OptionalText = None
-    notes: Optional[str] = None
-    via_agency_id: OptionalText = None
-
-
-class ClientOut(CamelModel):
-    id: str
-    name: str
-    website: Optional[str]
-    linkedin: Optional[str]
-    notes: str
-    via_agency_id: Optional[str]
 
 
 # ---------- Events ----------
@@ -153,8 +130,8 @@ class EventIn(CamelModel):
     date: str = Field(description='2026-10-08')
     time: OptionalText = Field(default=None, description='15:30, or empty when there is no set time')
     event: EventType
-    agency_id: OptionalText = None
-    client_id: OptionalText = None
+    company_id: OptionalText = Field(default=None, description='The company the event is about: the client, or the agency when there is no client')
+    via_company_id: OptionalText = Field(default=None, description='The agency a client\'s application came through, when there is one')
     notes: Annotated[str, BeforeValidator(lambda v: (v or '').strip() if isinstance(v, str) or v is None else v)] = ''
     jd_url: OptionalText = Field(default=None, description='Application link: a JD Post link or an email address')
     apply_type: Annotated[Optional[ApplyType], BeforeValidator(_blank_to_none)] = None
@@ -164,9 +141,9 @@ class EventIn(CamelModel):
     _time = field_validator('time')(_check_time)
 
     @model_validator(mode='after')
-    def _passive_message_needs_an_agency(self):
-        if self.event == EventType.passive_message and not self.agency_id:
-            raise ValueError('A passive message needs an agency: say which agency the recruiter works for')
+    def _passive_message_needs_a_company(self):
+        if self.event == EventType.passive_message and not self.company_id:
+            raise ValueError('A passive message needs a company: say which one the recruiter works for')
         return self
 
 
@@ -174,8 +151,8 @@ class EventPatch(CamelModel):
     date: Optional[str] = None
     time: OptionalText = None
     event: Optional[EventType] = None
-    agency_id: OptionalText = None
-    client_id: OptionalText = None
+    company_id: OptionalText = None
+    via_company_id: OptionalText = None
     notes: Optional[str] = None
     jd_url: OptionalText = None
     apply_type: Annotated[Optional[ApplyType], BeforeValidator(_blank_to_none)] = None
@@ -197,9 +174,9 @@ class EventOut(CamelModel):
     date: str
     time: Optional[str]
     event: EventType
-    agency_id: Optional[str]
-    client_id: Optional[str]
-    company_label: str = Field(description="The agency's name, else the direct client's, else '—'. Derived, never stored.")
+    company_id: Optional[str]
+    via_company_id: Optional[str]
+    company_label: str = Field(description="'Agency → Client' when the event came through an agency, else the company's name, else '—'. Derived, never stored.")
     notes: str
     jd_url: Optional[str]
     apply_type: Optional[ApplyType]
@@ -207,6 +184,5 @@ class EventOut(CamelModel):
 
 
 class Snapshot(CamelModel):
-    agencies: list[AgencyOut]
-    clients: list[ClientOut]
+    companies: list[CompanyOut]
     events: list[EventOut]

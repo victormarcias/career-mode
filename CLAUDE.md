@@ -16,9 +16,10 @@ Rules for this repo only; the user's own cross-repo preferences live in their ow
 ## Data
 
 - The database is SQLite, with Alembic migrations. Change `server/app/models.py` and run `alembic revision --autogenerate` (from the `server/` folder: `../.venv/bin/alembic revision --autogenerate -m "what changed"`; read the generated file before committing). `public/js/events.js` mirrors the event types and the closing events: change them together.
-- `events`, `agencies` and `clients` are the tables, linked with real foreign keys. Clients have no stored status: whether one is archived is derived from its latest closing event. Closing events (Rejection, Red Flag, On-hold, Offer, archive) are decided by the server (`CLOSING_EVENTS` in `models.py`): creating one archives the agency and any other new event reactivates it, so just create the event with the right type.
-- An event's company name is derived from its agency or client, never stored. A `passive_message` event always has an agency.
-- An application's recruiter and link belong on the event, never on the agency or client profile.
+- `events` and `companies` are the tables, linked with real foreign keys. A company is an agency or a client (`companyType`), in one table, so its name is unique whichever it is. A company has no stored status: it is archived when its latest event closes the process, and active again with any later one, derived by the server (`company_status` in `server/app/crud.py`). Closing events (Rejection, Red Flag, On-hold, Offer, archive) are decided by the server (`CLOSING_EVENTS` in `models.py`), so just create the event with the right type.
+- An event has a `companyId` (its client, or its agency when there is no client) and, for a client that came through an agency, a `viaCompanyId`. Its label (`companyLabel`: the company's name, or "Agency → Client") is derived from them, never stored. A `passive_message` event always has a company.
+- Every form that takes a company asks for one name with an Agency (default) or Client type, and a client may have its agency in Via agency. A name that exists with the other type is refused, never duplicated: the server refuses it too (409), through the one `/api/companies`.
+- An application's recruiter and link belong on the event, never on the company profile.
 - Skills and scripts read and write through the API (`http://localhost:8333`, docs at `/docs`; `./run-local.sh` starts the server), never by opening the SQLite file directly: the API applies the rules above.
 
 ## Checks

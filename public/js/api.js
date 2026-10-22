@@ -3,7 +3,7 @@
 
 import { t } from './i18n.js'
 
-const COLLECTIONS = ['events', 'agencies', 'clients']
+const COLLECTIONS = ['events', 'companies']
 
 // The server answers errors as {"detail": "message"} (a refusal) or {"detail": [...]}
 // (a field that didn't validate). Either way, turn it into one sentence for the UI.
