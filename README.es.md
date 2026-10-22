@@ -92,7 +92,7 @@ En `.claude/skills/`, cada uno con su README:
 - `apply-site`: completa el formulario de postulación de una empresa
 - `reply-recruiter`: responde a un recruiter que escribió primero
 - `sync-aiapply`: registra las respuestas positivas que AIApply.io recibió de empresas
-- `reply-rejected`: agradece a las empresas que te rechazaron, desde tu Gmail, y registra el rechazo
+- `reply-rejected`: agradece a las empresas que te rechazaron, desde tu Gmail, archiva el mail y registra el rechazo
 - `check-email`: ordena tu Gmail reciente y ejecuta los skills que se ocupan de cada cosa
 - `submit-profile`: completa portales de candidatos con tu perfil
 - `write-daily-post`: escribe el post diario y su imagen
