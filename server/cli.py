@@ -29,7 +29,7 @@ from app.database import DEFAULT_DB_PATH, ROOT, make_engine, migrate, session_fa
 from app.profile_pdf import render_pdf  # noqa: E402
 from app.settings import BACKUP_DIR  # noqa: E402
 
-FILES = ('agencies', 'clients', 'events')
+FILES = ('companies', 'agencies', 'clients', 'events')
 PROFILE_DIR = ROOT / 'profile'
 
 
@@ -89,7 +89,7 @@ def main(argv=None):
     engine = make_engine(args.db)
     with session_factory(engine)() as session:
         if args.command == 'stats':
-            for model in (models.Agency, models.AgencyRecruiter, models.Client, models.Event):
+            for model in (models.Company, models.CompanyRecruiter, models.Event):
                 print('%-18s %d' % (model.__tablename__, session.scalar(select(func.count()).select_from(model))))
         elif args.command == 'export':
             directory = args.directory or BACKUP_DIR
@@ -105,7 +105,7 @@ def main(argv=None):
             data, read_warnings = read_snapshot(args.directory)
             report = snapshot.import_snapshot(session, data, replace=args.replace)
             report['warnings'] = read_warnings + report['warnings']
-            print('Imported %(agencies)d agencies, %(clients)d clients, %(events)d events.' % report)
+            print('Imported %(companies)d companies, %(events)d events.' % report)
             for line in report['warnings']:
                 print('  warning:', line)
             for line in report['skipped']:

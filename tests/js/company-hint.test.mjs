@@ -4,76 +4,59 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-const { companyFromNames, companyHint, companyNames, kindConflict, kindFor, setNotice } = await import('../../public/js/dom-utils.js')
-const { activeCompanyNames } = await import('../../public/js/companies.js')
+const { companyHint, findCompany, setNotice, typeConflict, typeFor } = await import('../../public/js/dom-utils.js')
+const { activeCompanies } = await import('../../public/js/companies.js')
 
-const agencies = [{ id: 'acme', name: 'Acme' }]
-const clients = [{ id: 'beta', name: 'Beta' }]
+const companies = [
+  { id: 'acme', name: 'Acme', companyType: 'agency' },
+  { id: 'beta', name: 'Beta', companyType: 'client' },
+]
 
 test('the hint says which companies would be created, and nothing when they all exist', () => {
-  assert.equal(companyHint(agencies, clients, 'ACME', 'agency'), '') // found ignoring case
-  assert.equal(companyHint(agencies, clients, 'beta', 'client'), '')
-  assert.equal(companyHint(agencies, clients, 'Newco', 'agency'), 'Will create the new agency "Newco".')
-  assert.equal(companyHint(agencies, clients, 'Gamma', 'client'), 'Will create the new client "Gamma".')
-  assert.equal(companyHint(agencies, clients, 'Gamma', 'client', 'Acme'), 'Will create the new client "Gamma".') // its agency exists
-  assert.equal(companyHint(agencies, clients, 'Beta', 'client', 'Newco'), 'Will create the new agency "Newco".')
-  assert.equal(companyHint(agencies, clients, 'Gamma', 'client', 'Newco'), 'Will create the new agency "Newco" and the new client "Gamma".')
-  assert.equal(companyHint(agencies, clients, '', 'agency'), '')
+  assert.equal(companyHint(companies, 'ACME', 'agency'), '') // found ignoring case
+  assert.equal(companyHint(companies, 'beta', 'client'), '')
+  assert.equal(companyHint(companies, 'Newco', 'agency'), 'Will create the new agency "Newco".')
+  assert.equal(companyHint(companies, 'Gamma', 'client'), 'Will create the new client "Gamma".')
+  assert.equal(companyHint(companies, 'Gamma', 'client', 'Acme'), 'Will create the new client "Gamma".') // its agency exists
+  assert.equal(companyHint(companies, 'Beta', 'client', 'Newco'), 'Will create the new agency "Newco".')
+  assert.equal(companyHint(companies, 'Gamma', 'client', 'Newco'), 'Will create the new agency "Newco" and the new client "Gamma".')
+  assert.equal(companyHint(companies, 'Newco', 'agency', 'ignored'), 'Will create the new agency "Newco".') // an agency has no via
+  assert.equal(companyHint(companies, '', 'agency'), '')
 })
 
-test('a name that is already the other tag is said, not made twice', () => {
-  assert.equal(companyHint(agencies, clients, 'Acme', 'client'), '"Acme" is already an agency.')
-  assert.equal(companyHint(agencies, clients, 'Beta', 'agency'), '"Beta" is already a client.')
-  assert.equal(kindConflict(agencies, clients, 'Acme', 'client'), 'agency')
-  assert.equal(kindConflict(agencies, clients, 'Acme', 'agency'), null)
-  assert.equal(kindConflict(agencies, clients, 'Newco', 'client'), null)
-  // a name that is both, from before, is not a conflict for either tag, and the tag stays as it is
-  const both = [{ id: 'galgo', name: 'Galgo' }]
-  assert.equal(kindConflict(both, both, 'Galgo', 'client'), null)
-  assert.equal(kindFor(both, both, 'Galgo', 'client'), 'client')
+test('a name that is already the other type is said, not made twice', () => {
+  assert.equal(companyHint(companies, 'Acme', 'client'), '"Acme" is already an agency.')
+  assert.equal(companyHint(companies, 'Beta', 'agency'), '"Beta" is already a client.')
+  assert.equal(companyHint(companies, 'Gamma', 'client', 'Beta'), '"Beta" is already a client.') // the agency it came through has to be one
+  assert.equal(typeConflict(companies, 'Acme', 'client'), 'agency')
+  assert.equal(typeConflict(companies, 'Acme', 'agency'), null)
+  assert.equal(typeConflict(companies, 'Newco', 'client'), null)
+  assert.equal(typeConflict(companies, '', 'client'), null)
 })
 
-test('the tag follows the name of a company that exists, and stays for one that does not', () => {
-  assert.equal(kindFor(agencies, clients, 'acme', 'client'), 'agency')
-  assert.equal(kindFor(agencies, clients, 'BETA', 'agency'), 'client')
-  assert.equal(kindFor(agencies, clients, 'Newco', 'client'), 'client')
-  assert.equal(kindFor(agencies, clients, '', 'agency'), 'agency')
+test('the type follows the name of a company that exists, and stays for one that does not', () => {
+  assert.equal(typeFor(companies, 'acme', 'client'), 'agency')
+  assert.equal(typeFor(companies, 'BETA', 'agency'), 'client')
+  assert.equal(typeFor(companies, 'Newco', 'client'), 'client')
+  assert.equal(typeFor(companies, '', 'agency'), 'agency')
 })
 
-test('a company with its tag stands for an agency and a client name, and back', () => {
-  assert.deepEqual(companyNames({ name: ' Acme ', kind: 'agency', via: 'ignored' }), { agency: 'Acme', client: '' })
-  assert.deepEqual(companyNames({ name: 'Beta', kind: 'client', via: ' Acme ' }), { agency: 'Acme', client: 'Beta' })
-  assert.deepEqual(companyNames({ name: 'Beta', kind: 'client', via: '' }), { agency: '', client: 'Beta' })
-  assert.deepEqual(companyFromNames('Acme', ''), { name: 'Acme', kind: 'agency', via: '' })
-  assert.deepEqual(companyFromNames('Acme', 'Beta'), { name: 'Beta', kind: 'client', via: 'Acme' })
-  assert.deepEqual(companyFromNames('', 'Beta'), { name: 'Beta', kind: 'client', via: '' })
+test('a company is found by its name ignoring case, or by the id its slug gives, whatever its type', () => {
+  assert.equal(findCompany(companies, ' beta ').id, 'beta')
+  assert.equal(findCompany(companies, 'Newco'), null)
+  assert.equal(findCompany([{ id: 'cwssg', name: 'CW Strategic Solutions Group', companyType: 'agency' }], 'CW Strategic Solutions Group').id, 'cwssg')
+  assert.equal(findCompany([{ id: 'acme-inc', name: 'ACME, Inc.', companyType: 'agency' }], 'Acme Inc').id, 'acme-inc')
 })
 
-test('a name matches by its id too, not only by its name', () => {
-  assert.equal(companyHint([{ id: 'cwssg', name: 'CW Strategic Solutions Group' }], [], 'CW Strategic Solutions Group', 'agency'), '')
-  assert.equal(companyHint([{ id: 'acme-inc', name: 'ACME, Inc.' }], [], 'Acme Inc', 'agency'), '')
-})
-
-test('the company fields suggest only the active agencies and clients', () => {
-  const agencies = [
-    { id: 'acme', name: 'Acme', status: 'active' },
-    { id: 'old', name: 'Old Agency', status: 'archived' },
+test('the company fields suggest only the active companies', () => {
+  const list = [
+    { id: 'acme', name: 'Acme', companyType: 'agency', status: 'active' },
+    { id: 'old', name: 'Old Agency', companyType: 'agency', status: 'archived' },
+    { id: 'open', name: 'Open Co', companyType: 'client', status: 'active' },
+    { id: 'closed', name: 'Closed Co', companyType: 'client', status: 'archived' },
   ]
-  const clients = [
-    { id: 'open', name: 'Open Co' }, // its latest event does not close it
-    { id: 'closed', name: 'Closed Co' }, // its latest event is a rejection
-    { id: 'back', name: 'Back Co' }, // was rejected, then came back
-    { id: 'fresh', name: 'Fresh Co' }, // no events yet
-  ]
-  const events = [
-    { id: '1', clientId: 'open', event: 'hr_intro', date: '2026-10-01', time: '10:00' },
-    { id: '2', clientId: 'closed', event: 'hr_intro', date: '2026-10-01', time: '10:00' },
-    { id: '3', clientId: 'closed', event: 'rejection', date: '2026-10-05', time: '10:00' },
-    { id: '4', clientId: 'back', event: 'rejection', date: '2026-10-02', time: '10:00' },
-    { id: '5', clientId: 'back', event: 'hr_intro', date: '2026-10-08', time: '10:00' },
-  ]
-  assert.deepEqual(activeCompanyNames(agencies, clients, events), { agencies: ['Acme'], clients: ['Open Co', 'Back Co', 'Fresh Co'] })
-  assert.deepEqual(activeCompanyNames([], [], []), { agencies: [], clients: [] })
+  assert.deepEqual(activeCompanies(list).map((c) => c.name), ['Acme', 'Open Co'])
+  assert.deepEqual(activeCompanies([]), [])
 })
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))

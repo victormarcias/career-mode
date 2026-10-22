@@ -1,6 +1,6 @@
 import { t } from './i18n.js'
 
-// Agency/client ids are the slugified name. The server builds them the same way
+// Company ids are the slugified name. The server builds them the same way
 // (server/app/crud.py), so this is only for matching a typed name against an id.
 function slugify(text) {
   return text
@@ -12,7 +12,7 @@ function slugify(text) {
     .replace(/(^-|-$)/g, '')
 }
 
-// Finds the existing agency/client a typed name refers to: by name (ignoring case
+// Finds the existing company a typed name refers to: by name (ignoring case
 // and surrounding spaces) first, then by the id slugify() would give it. Looking
 // only at the slug misses a company whose id was set some other way (e.g. "cwssg" for
 // "CW Strategic Solutions Group"), and creating a second one for it. `items` are
@@ -24,61 +24,46 @@ export function resolveCompany(items, name) {
   return found ? { id: found.id, name: found.name ?? wanted, isNew: false } : { id: slugify(wanted), name: wanted, isNew: true }
 }
 
-// A form takes one company: a name and a tag, Agency or Client. `agencies` and `clients` are {id, name} lists.
-// The company a typed name already is, in each list: `{agency, client}`, each an existing {id, name} or null.
-export function companyMatches(agencies, clients, name) {
+// A form takes one company: a name and its type, Agency or Client. `companies` is the list of {id, name, companyType}.
+// The company a typed name already is, whatever its type, or null: by name (ignoring case), else by the id its slug gives.
+export function findCompany(companies, name) {
   const wanted = (name ?? '').trim()
-  const find = (items) => {
-    const found = wanted ? resolveCompany(items, wanted) : null
-    return found && !found.isNew ? found : null
-  }
-  return { agency: find(agencies), client: find(clients) }
+  if (!wanted) return null
+  const found = resolveCompany(companies, wanted)
+  return found.isNew ? null : companies.find((c) => c.id === found.id)
 }
 
-// The tag a typed name goes by: the one it already has when it exists as only one of them, else `current`.
-// Typing the name of an existing company is picking it, so its tag follows.
-export function kindFor(agencies, clients, name, current) {
-  const { agency, client } = companyMatches(agencies, clients, name)
-  if (agency && !client) return 'agency'
-  if (client && !agency) return 'client'
-  return current
+// The type a typed name goes by: the type of the company it names when it exists, else `current`.
+// Typing the name of an existing company is picking it, so its type follows.
+export function typeFor(companies, name, current) {
+  return findCompany(companies, name)?.companyType ?? current
 }
 
-// The tag a name has when it exists only with the other one than `kind`, else null: saving it would make a
-// second company with the same name.
-export function kindConflict(agencies, clients, name, kind) {
-  const matches = companyMatches(agencies, clients, name)
-  const other = kind === 'agency' ? 'client' : 'agency'
-  return !matches[kind] && matches[other] ? other : null
+// The type the company a name names has when it is not `companyType`, else null: saving it would make a second
+// company with the same name. A company is an agency or a client, never both.
+export function typeConflict(companies, name, companyType) {
+  const found = findCompany(companies, name)
+  return found && found.companyType !== companyType ? found.companyType : null
 }
 
-// The sentence that says a name is already the other kind.
-export function kindConflictText(name, existing) {
+// The sentence that says a name is already the other type.
+export function typeConflictText(name, existing) {
   return t(existing === 'agency' ? 'hint.isAgency' : 'hint.isClient', { name: name.trim() })
 }
 
-// The agency and client names a company with its tag stands for (the way the API and the events have them): an
-// agency is the agency alone, a client has its agency `via` when it comes through one.
-export function companyNames({ name, kind, via }) {
-  return kind === 'client' ? { agency: (via ?? '').trim(), client: (name ?? '').trim() } : { agency: (name ?? '').trim(), client: '' }
-}
-
-// The other way round: the company, tag and via agency of an event's agency and client names.
-export function companyFromNames(agencyName, clientName) {
-  return clientName ? { name: clientName, kind: 'client', via: agencyName ?? '' } : { name: agencyName ?? '', kind: 'agency', via: '' }
-}
-
-// What a form says about the company it is about to save: which names the app doesn't have yet and will
-// create, or that the name is already the other tag. Empty when every name is already there.
-export function companyHint(agencies, clients, name, kind, via = '') {
+// What a form says about the company it is about to save: which names the app doesn't have yet and will create, or that
+// a name already is the other type. `via` is the agency a client came through. Empty when every name is already there.
+export function companyHint(companies, name, companyType, via = '') {
   const company = (name ?? '').trim()
-  const conflict = kindConflict(agencies, clients, company, kind)
-  if (conflict) return kindConflictText(company, conflict)
-  const agency = kind === 'client' ? (via ?? '').trim() : company
-  const newCompany = company && !companyMatches(agencies, clients, company)[kind]
-  const newAgency = kind === 'client' && agency && !companyMatches(agencies, clients, agency).agency
+  const agency = companyType === 'client' ? (via ?? '').trim() : ''
+  const conflict = typeConflict(companies, company, companyType)
+  if (conflict) return typeConflictText(company, conflict)
+  const viaConflict = agency ? typeConflict(companies, agency, 'agency') : null
+  if (viaConflict) return typeConflictText(agency, viaConflict)
+  const newCompany = company && !findCompany(companies, company)
+  const newAgency = agency && !findCompany(companies, agency)
   if (newCompany && newAgency) return t('hint.both', { agency, client: company })
-  if (newCompany) return t(kind === 'agency' ? 'hint.agency' : 'hint.client', { name: company })
+  if (newCompany) return t(companyType === 'agency' ? 'hint.agency' : 'hint.client', { name: company })
   if (newAgency) return t('hint.agency', { name: agency })
   return ''
 }

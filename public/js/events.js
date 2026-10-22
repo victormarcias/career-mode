@@ -19,8 +19,8 @@ export const EVENT_TYPES = [
   'archive',
 ]
 
-// An agency's status auto-toggle and the Timeline sort both need to know
-// which events end a process (archive the agency, win a same-date tie)
+// A company's status (derived from its latest event) and the Timeline sort both need to know
+// which events end a process (archive the company, win a same-date tie)
 // versus which ones don't.
 const CLOSING_EVENTS = ['rejection', 'red_flag', 'on_hold', 'offer', 'archive']
 export function isClosingEvent(event) {

@@ -19,7 +19,7 @@ from starlette.datastructures import Headers, MutableHeaders
 from . import crud, google_calendar, mailer, profile_photo, snapshot
 from .database import DEFAULT_DB_PATH, ROOT, make_engine, migrate, session_factory
 from .settings import ENV_PATH
-from .routes import agencies, calendar, clients, events, mail, settings as settings_routes
+from .routes import calendar, companies, events, mail, settings as settings_routes
 from .schemas import Snapshot
 from .stream import Broadcaster, event_stream, watch_database
 
@@ -84,7 +84,7 @@ def create_app(db_path=None, allowed_hosts=LOCAL_HOSTS, env_path=None, profile_d
     app = FastAPI(
         title='career-mode',
         version='1.0',
-        description='The job-search tracker: agencies, clients and the events of each process. Everything is on this computer, in one SQLite file.',
+        description='The job-search tracker: companies (agencies and clients) and the events of each process. Everything is on this computer, in one SQLite file.',
         lifespan=lifespan,
     )
     app.add_middleware(LocalOnly, allowed_hosts=allowed_hosts)
@@ -97,8 +97,7 @@ def create_app(db_path=None, allowed_hosts=LOCAL_HOSTS, env_path=None, profile_d
     async def integrity_error(_request: Request, err: IntegrityError):  # a database rule the checks above missed
         return JSONResponse({'detail': 'The database refused it: %s' % str(err.orig)}, status_code=409)
 
-    app.include_router(agencies.router)
-    app.include_router(clients.router)
+    app.include_router(companies.router)
     app.include_router(events.router)
     app.include_router(calendar.router)
     app.include_router(mail.router)

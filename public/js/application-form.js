@@ -1,6 +1,6 @@
 import { api } from './api.js'
 import { currentTime, toISODate } from './dates.js'
-import { companyHint, kindConflict, kindConflictText, kindFor, resolveCompany, setNotice } from './dom-utils.js'
+import { companyHint, findCompany, setNotice, typeConflict, typeConflictText, typeFor } from './dom-utils.js'
 import { t } from './i18n.js'
 
 // The form for an application sent by hand to a company that is new to the app: it asks for
@@ -76,31 +76,24 @@ export function splitRecruiters(notes) {
 
 // Creates what is new and returns the event. An existing company is found by name (ignoring case)
 // and reused as it is, except that an agency gets the recruiters that are missing added to its list.
-export async function saveApplication(fields, { agencies, clients, now = new Date() }, client = api) {
+export async function saveApplication(fields, { companies, now = new Date() }, client = api) {
   const problem = validateApplication(fields)
   if (problem) throw new Error(problem)
-  const conflict = kindConflict(agencies, clients, fields.company, fields.agency ? 'agency' : 'client')
-  if (conflict) throw new Error(kindConflictText(fields.company, conflict))
+  const companyType = fields.agency ? 'agency' : 'client'
+  const conflict = typeConflict(companies, fields.company, companyType)
+  if (conflict) throw new Error(typeConflictText(fields.company, conflict))
 
   const recruiters = parseRecruiters(fields.recruiters)
   const website = fields.website.trim() || null
-  const profile = { name: fields.company.trim(), website, linkedin: linkedinUrl(fields.companyHome) || null }
-  let agencyId = null
-  let clientId = null
-
-  if (fields.agency) {
-    const found = resolveCompany(agencies, fields.company)
-    if (found.isNew) {
-      agencyId = (await client.create('agencies', { ...profile, recruiters })).id
-    } else {
-      agencyId = found.id
-      const known = agencies.find((a) => a.id === found.id)?.recruiters ?? []
-      const missing = recruiters.filter((r) => !known.includes(r))
-      if (missing.length) await client.patch('agencies', agencyId, { recruiters: [...known, ...missing] })
-    }
+  const profile = { name: fields.company.trim(), companyType, website, linkedin: linkedinUrl(fields.companyHome) || null }
+  let companyId
+  const found = findCompany(companies, fields.company)
+  if (!found) {
+    companyId = (await client.create('companies', fields.agency ? { ...profile, recruiters } : profile)).id
   } else {
-    const found = resolveCompany(clients, fields.company)
-    clientId = found.isNew ? (await client.create('clients', { ...profile, viaAgencyId: null })).id : found.id
+    companyId = found.id
+    const missing = fields.agency ? recruiters.filter((r) => !(found.recruiters ?? []).includes(r)) : []
+    if (missing.length) await client.patch('companies', companyId, { recruiters: [...(found.recruiters ?? []), ...missing] })
   }
 
   const passive = fields.type === 'passive'
@@ -108,8 +101,7 @@ export async function saveApplication(fields, { agencies, clients, now = new Dat
     date: toISODate(now),
     time: currentTime(now),
     event: passive ? 'passive_message' : 'application',
-    agencyId,
-    clientId,
+    companyId,
     notes: buildNotes(recruiters, fields.notes),
     jdUrl: passive ? null : fields.link.trim() || null,
     applyType: passive ? null : fields.type,
@@ -118,13 +110,13 @@ export async function saveApplication(fields, { agencies, clients, now = new Dat
 
 // What the form says under the company name: whether saving will create it, as an agency or as a direct client,
 // or that the name is already the other tag.
-export function applicationCompanyHint({ company, agency }, { agencies, clients }) {
-  return companyHint(agencies, clients, company, agency ? 'agency' : 'client')
+export function applicationCompanyHint({ company, agency }, { companies }) {
+  return companyHint(companies, company, agency ? 'agency' : 'client')
 }
 
 // ---------- The form itself ----------
 
-export function initApplicationForm({ getAgencies, getClients }) {
+export function initApplicationForm({ getCompanies }) {
   const overlay = document.getElementById('app-overlay')
   const form = document.getElementById('app-form')
   const errorEl = document.getElementById('app-error')
@@ -162,12 +154,12 @@ export function initApplicationForm({ getAgencies, getClients }) {
     field('link').required = web
     document.getElementById('app-link-optional').classList.toggle('hidden', web)
     document.getElementById('app-link-req').classList.toggle('hidden', !web)
-    syncKind()
+    syncCompanyType()
   }
 
   // Company Home is only required for an agency.
-  function syncKind() {
-    const agency = field('kind').value === 'agency'
+  function syncCompanyType() {
+    const agency = field('company-type').value === 'agency'
     field('home').required = agency
     document.getElementById('app-home-optional').classList.toggle('hidden', agency)
     document.getElementById('app-home-req').classList.toggle('hidden', !agency)
@@ -178,7 +170,7 @@ export function initApplicationForm({ getAgencies, getClients }) {
   function updateCompanyHint() {
     setNotice(
       document.getElementById('app-company-hint'),
-      applicationCompanyHint({ company: field('company').value, agency: field('kind').value === 'agency' }, { agencies: getAgencies(), clients: getClients() }),
+      applicationCompanyHint({ company: field('company').value, agency: field('company-type').value === 'agency' }, { companies: getCompanies() }),
     )
   }
 
@@ -187,11 +179,11 @@ export function initApplicationForm({ getAgencies, getClients }) {
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) close()
   })
-  field('kind').addEventListener('change', syncKind)
+  field('company-type').addEventListener('change', syncCompanyType)
   // Typing the name of a company that exists is picking it: its tag follows.
   const pickCompany = () => {
-    field('kind').value = kindFor(getAgencies(), getClients(), field('company').value, field('kind').value)
-    syncKind()
+    field('company-type').value = typeFor(getCompanies(), field('company').value, field('company-type').value)
+    syncCompanyType()
   }
   field('company').addEventListener('input', pickCompany)
   field('company').addEventListener('change', pickCompany)
@@ -209,12 +201,12 @@ export function initApplicationForm({ getAgencies, getClients }) {
           company: field('company').value,
           companyHome: field('home').value,
           recruiters: field('recruiter').value,
-          agency: field('kind').value === 'agency',
+          agency: field('company-type').value === 'agency',
           website: field('website').value,
           notes: field('notes').value,
           link: field('link').value,
         },
-        { agencies: getAgencies(), clients: getClients() },
+        { companies: getCompanies() },
       )
       close()
     } catch (err) {

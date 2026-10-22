@@ -26,7 +26,7 @@ function extract(name, async = false) {
 
 function page({ agencies = [], clients = [], fields = {}, editing = null, typeDriven = false, company = '', pending = false } = {}) {
   const calls = []
-  const values = { 'f-date': '2026-10-08', 'f-time': '', 'f-event': 'note', 'f-company': '', 'f-kind': 'agency', 'f-via': '', 'f-notes': '', 'f-jd': '', 'f-apply-type': '', 'f-recruiter': '', ...fields }
+  const values = { 'f-date': '2026-10-08', 'f-time': '', 'f-event': 'note', 'f-company': '', 'f-company-type': 'agency', 'f-via': '', 'f-notes': '', 'f-jd': '', 'f-apply-type': '', 'f-recruiter': '', ...fields }
   const elements = {}
   const el = (id) =>
     (elements[id] ??= {
@@ -46,9 +46,9 @@ function page({ agencies = [], clients = [], fields = {}, editing = null, typeDr
         toggle: (c, on) => { elements[id].classes[on ? 'add' : 'delete'](c); if (c === 'hidden') elements[id].hidden = on },
       },
     })
-  const record = (kind) => async (collection, ...args) => {
-    calls.push([kind, collection, ...args])
-    return { id: kind === 'create' ? `new-${calls.length}` : args[0] }
+  const record = (type) => async (collection, ...args) => {
+    calls.push([type, collection, ...args])
+    return { id: type === 'create' ? `new-${calls.length}` : args[0] }
   }
   const api = { create: record('create'), patch: record('patch') }
   const ctx = {
@@ -56,8 +56,10 @@ function page({ agencies = [], clients = [], fields = {}, editing = null, typeDr
     setTimeout,
     clearTimeout,
     api,
-    agenciesMap: new Map(agencies.map((a) => [a.id, a])),
-    clientsMap: new Map(clients.map((c) => [c.id, c])),
+    companiesMap: new Map([
+      ...agencies.map((a) => [a.id, { companyType: 'agency', viaCompanyId: null, ...a }]),
+      ...clients.map((c) => [c.id, { companyType: 'client', viaCompanyId: c.viaAgencyId ?? null, ...c }]),
+    ]),
     editingAppId: editing,
     typeDrivenEdit: typeDriven,
     pendingEdit: pending,
@@ -71,7 +73,7 @@ function page({ agencies = [], clients = [], fields = {}, editing = null, typeDr
     closed: false,
   }
   vm.createContext(ctx)
-  vm.runInContext(`${dom}\n${extract('handleFormSubmit', true)}\n${extract('currentEvent')}\n${extract('eventFormTitle')}\n${extract('companyTitle')}\n${extract('updateCompanyHint')}\n${extract('updateKind')}\n${extract('pickCompany')}\nthis.hint = updateCompanyHint; this.submit = handleFormSubmit; this.kind = updateKind; this.pick = pickCompany; this.title = eventFormTitle; this.companyTitle = companyTitle`, ctx)
+  vm.runInContext(`${dom}\n${extract('handleFormSubmit', true)}\n${extract('currentEvent')}\n${extract('eventFormTitle')}\n${extract('companyTitle')}\n${extract('updateCompanyHint')}\n${extract('updateCompanyType')}\n${extract('pickCompany')}\nthis.hint = updateCompanyHint; this.submit = handleFormSubmit; this.companyType = updateCompanyType; this.pick = pickCompany; this.title = eventFormTitle; this.companyTitle = companyTitle`, ctx)
   const json = (x) => JSON.parse(JSON.stringify(x))
   return { ctx, calls: { all: () => json(calls) }, el, submit: () => ctx.submit({ preventDefault() {} }) }
 }
@@ -82,8 +84,8 @@ test('a new agency is created, then the event is linked to it', async () => {
   const p = page({ fields: { 'f-company': 'Super Empresa', 'f-event': 'hr_intro', 'f-notes': ' call ' } })
   await p.submit()
   assert.deepEqual(p.calls.all(), [
-    ['create', 'agencies', { name: 'Super Empresa' }],
-    ['create', 'events', { date: '2026-10-08', time: null, event: 'hr_intro', agencyId: 'new-1', clientId: null, notes: 'call' }],
+    ['create', 'companies', { name: 'Super Empresa', companyType: 'agency' }],
+    ['create', 'events', { date: '2026-10-08', time: null, event: 'hr_intro', companyId: 'new-1', viaCompanyId: null, notes: 'call' }],
   ])
   assert.equal(p.ctx.closed, true)
 })
@@ -92,40 +94,43 @@ test('an existing agency is found by name, ignoring case, and reused: nothing is
   const p = page({ agencies: [{ id: 'cwssg', name: 'CW Strategic Solutions Group' }], fields: { 'f-company': 'cw strategic solutions group' } })
   await p.submit()
   assert.deepEqual(p.calls.all().map((c) => c.slice(0, 2)), [['create', 'events']])
-  assert.equal(event(p.calls)[2].agencyId, 'cwssg')
+  assert.equal(event(p.calls)[2].companyId, 'cwssg')
 })
 
 test('a client is created via its agency, or re-pointed to it when it exists and comes through another', async () => {
-  const fresh = page({ agencies: [{ id: 'acme', name: 'Acme' }], fields: { 'f-company': 'Big Co', 'f-kind': 'client', 'f-via': 'Acme' } })
+  const fresh = page({ agencies: [{ id: 'acme', name: 'Acme' }], fields: { 'f-company': 'Big Co', 'f-company-type': 'client', 'f-via': 'Acme' } })
   await fresh.submit()
-  assert.deepEqual(fresh.calls.all()[0], ['create', 'clients', { name: 'Big Co', viaAgencyId: 'acme' }])
-  assert.deepEqual([event(fresh.calls)[2].agencyId, event(fresh.calls)[2].clientId], ['acme', 'new-1'])  // the event has both: Agency → Client
+  assert.deepEqual(fresh.calls.all()[0], ['create', 'companies', { name: 'Big Co', companyType: 'client', viaCompanyId: 'acme' }])
+  assert.deepEqual([event(fresh.calls)[2].companyId, event(fresh.calls)[2].viaCompanyId], ['new-1', 'acme'])  // Agency → Client
 
-  const known = page({ agencies: [{ id: 'acme', name: 'Acme' }], clients: [{ id: 'big', name: 'Big Co' }], fields: { 'f-company': 'big co', 'f-kind': 'client', 'f-via': 'Acme' } })
+  const known = page({ agencies: [{ id: 'acme', name: 'Acme' }], clients: [{ id: 'big', name: 'Big Co' }], fields: { 'f-company': 'big co', 'f-company-type': 'client', 'f-via': 'Acme' } })
   await known.submit()
-  assert.deepEqual(known.calls.all()[0], ['patch', 'clients', 'big', { viaAgencyId: 'acme' }])
-  assert.equal(event(known.calls)[2].clientId, 'big')
+  assert.deepEqual(known.calls.all()[0], ['patch', 'companies', 'big', { viaCompanyId: 'acme' }])
+  assert.deepEqual([event(known.calls)[2].companyId, event(known.calls)[2].viaCompanyId], ['big', 'acme'])
 
-  const same = page({ agencies: [{ id: 'acme', name: 'Acme' }], clients: [{ id: 'big', name: 'Big Co', viaAgencyId: 'acme' }], fields: { 'f-company': 'Big Co', 'f-kind': 'client', 'f-via': 'Acme' } })
+  const same = page({ agencies: [{ id: 'acme', name: 'Acme' }], clients: [{ id: 'big', name: 'Big Co', viaAgencyId: 'acme' }], fields: { 'f-company': 'Big Co', 'f-company-type': 'client', 'f-via': 'Acme' } })
   await same.submit()
   assert.deepEqual(same.calls.all().map((c) => c.slice(0, 2)), [['create', 'events']])  // already there: nothing to write
 
-  const newAgency = page({ fields: { 'f-company': 'Big Co', 'f-kind': 'client', 'f-via': 'Newco' } })
+  const newAgency = page({ fields: { 'f-company': 'Big Co', 'f-company-type': 'client', 'f-via': 'Newco' } })
   await newAgency.submit()
-  assert.deepEqual(newAgency.calls.all().slice(0, 2), [['create', 'agencies', { name: 'Newco' }], ['create', 'clients', { name: 'Big Co', viaAgencyId: 'new-1' }]])
+  assert.deepEqual(newAgency.calls.all().slice(0, 2), [
+    ['create', 'companies', { name: 'Newco', companyType: 'agency' }],
+    ['create', 'companies', { name: 'Big Co', companyType: 'client', viaCompanyId: 'new-1' }],
+  ])
 })
 
 test('a client with no agency is a direct one: created with none, or set to have none when it exists', async () => {
-  const p = page({ fields: { 'f-company': 'Direct Co', 'f-kind': 'client', 'f-event': 'note' } })
+  const p = page({ fields: { 'f-company': 'Direct Co', 'f-company-type': 'client', 'f-event': 'note' } })
   await p.submit()
-  assert.deepEqual(p.calls.all()[0], ['create', 'clients', { name: 'Direct Co' }])
+  assert.deepEqual(p.calls.all()[0], ['create', 'companies', { name: 'Direct Co', companyType: 'client' }])
   const saved = event(p.calls)[2]
-  assert.equal(saved.agencyId, null)
-  assert.equal(saved.clientId, 'new-1')
+  assert.equal(saved.viaCompanyId, null)
+  assert.equal(saved.companyId, 'new-1')
 
-  const known = page({ agencies: [{ id: 'acme', name: 'Acme' }], clients: [{ id: 'direct-co', name: 'Direct Co', viaAgencyId: 'acme' }], fields: { 'f-company': 'Direct Co', 'f-kind': 'client' } })
+  const known = page({ agencies: [{ id: 'acme', name: 'Acme' }], clients: [{ id: 'direct-co', name: 'Direct Co', viaAgencyId: 'acme' }], fields: { 'f-company': 'Direct Co', 'f-company-type': 'client' } })
   await known.submit()
-  assert.deepEqual(known.calls.all()[0], ['patch', 'clients', 'direct-co', { viaAgencyId: null }])
+  assert.deepEqual(known.calls.all()[0], ['patch', 'companies', 'direct-co', { viaCompanyId: null }])
 })
 
 test('an event needs a company, a passive message may have a client alone, and a name that is the other tag is refused', async () => {
@@ -135,33 +140,34 @@ test('an event needs a company, a passive message may have a client alone, and a
   assert.deepEqual(none.calls.all(), [])
   assert.equal(none.ctx.closed, false)
 
-  const passive = page({ fields: { 'f-apply-type': 'passive', 'f-company': 'Big Co', 'f-kind': 'client' }, typeDriven: true })
+  const passive = page({ fields: { 'f-apply-type': 'passive', 'f-company': 'Big Co', 'f-company-type': 'client' }, typeDriven: true })
   await passive.submit()
-  assert.deepEqual([event(passive.calls)[2].event, event(passive.calls)[2].agencyId, event(passive.calls)[2].clientId], ['passive_message', null, 'new-1'])
+  assert.deepEqual([event(passive.calls)[2].event, event(passive.calls)[2].companyId, event(passive.calls)[2].viaCompanyId], ['passive_message', 'new-1', null])
 
-  const clash = page({ agencies: [{ id: 'galgo', name: 'Galgo' }], fields: { 'f-company': 'galgo', 'f-kind': 'client' } })
+  const clash = page({ agencies: [{ id: 'galgo', name: 'Galgo' }], fields: { 'f-company': 'galgo', 'f-company-type': 'client' } })
   await clash.submit()
   assert.equal(clash.el('form-error').textContent, '"galgo" is already an agency.')
   assert.deepEqual(clash.calls.all(), [])
 
-  const both = page({ agencies: [{ id: 'galgo', name: 'Galgo' }], clients: [{ id: 'galgo', name: 'Galgo' }], fields: { 'f-company': 'Galgo', 'f-kind': 'client' } })
-  await both.submit()  // a name that is both already (from before) goes by the tag chosen
-  assert.equal(event(both.calls)[2].clientId, 'galgo')
+  const viaClient = page({ clients: [{ id: 'beta', name: 'Beta' }], fields: { 'f-company': 'Big Co', 'f-company-type': 'client', 'f-via': 'beta' } })
+  await viaClient.submit()  // the agency it came through has to be an agency
+  assert.equal(viaClient.el('form-error').textContent, '"beta" is already a client.')
+  assert.deepEqual(viaClient.calls.all(), [])
 })
 
 test('editing an event patches it instead of creating one', async () => {
   const p = page({ agencies: [{ id: 'acme', name: 'Acme' }], fields: { 'f-company': 'Acme', 'f-time': '10:30' }, editing: 'evt1' })
   await p.submit()
-  assert.deepEqual(p.calls.all(), [['patch', 'events', 'evt1', { date: '2026-10-08', time: '10:30', event: 'note', agencyId: 'acme', clientId: null, notes: '' }]])
+  assert.deepEqual(p.calls.all(), [['patch', 'events', 'evt1', { date: '2026-10-08', time: '10:30', event: 'note', companyId: 'acme', viaCompanyId: null, notes: '' }]])
 })
 
 test('a refusal from the server shows in the form, which stays open and usable', async () => {
   const p = page({ agencies: [{ id: 'acme', name: 'Acme' }], fields: { 'f-company': 'Acme' } })
   p.ctx.api.create = async () => {
-    throw new Error('A passive message needs an agency')
+    throw new Error('A passive message needs a company')
   }
   await p.submit()
-  assert.equal(p.el('form-error').textContent, 'A passive message needs an agency')
+  assert.equal(p.el('form-error').textContent, 'A passive message needs a company')
   assert.ok(p.el('form-error').classes.has('is-open'), 'the error folds open')
   assert.equal(p.ctx.closed, false)
   assert.equal(p.el('form-submit').disabled, false)
@@ -175,21 +181,21 @@ test('typing the name of a company that exists picks it: its tag follows, and a 
   ]
   const p = page({ agencies: [{ id: 'acme', name: 'Acme' }], clients, fields: { 'f-company': 'big CO' } })
   p.ctx.pick()
-  assert.deepEqual([p.el('f-kind').value, p.el('f-via').value, p.el('f-via').hidden], ['client', 'Acme', false])
+  assert.deepEqual([p.el('f-company-type').value, p.el('f-via').value, p.el('f-via').hidden], ['client', 'Acme', false])
 
   p.el('f-company').value = 'Solo Co'
   p.ctx.pick()
-  assert.deepEqual([p.el('f-kind').value, p.el('f-via').value], ['client', ''])
+  assert.deepEqual([p.el('f-company-type').value, p.el('f-via').value], ['client', ''])
 
   p.el('f-company').value = 'ACME'
   p.ctx.pick()
-  assert.deepEqual([p.el('f-kind').value, p.el('f-via').hidden], ['agency', true])  // Via agency is only for a client
+  assert.deepEqual([p.el('f-company-type').value, p.el('f-via').hidden], ['agency', true])  // Via agency is only for a client
 
   // a name that is not known is a new company: the tag stays as it was
-  p.el('f-kind').value = 'client'
+  p.el('f-company-type').value = 'client'
   p.el('f-company').value = 'Brand New Co'
   p.ctx.pick()
-  assert.equal(p.el('f-kind').value, 'client')
+  assert.equal(p.el('f-company-type').value, 'client')
 })
 
 test('the form says which typed companies are new, as soon as they are typed, and when a name is the other tag', () => {
@@ -203,7 +209,7 @@ test('the form says which typed companies are new, as soon as they are typed, an
   assert.equal(p.el('f-company-hint').textContent, 'Will create the new agency "Newco".')
   assert.ok(p.el('f-company-hint').classes.has('is-open'), 'the hint folds open')
 
-  p.el('f-kind').value = 'client'
+  p.el('f-company-type').value = 'client'
   p.el('f-company').value = 'Brand New Co'
   p.el('f-via').value = 'Newco' // typing the agency a client comes via runs the hint too
   p.ctx.hint()
@@ -216,8 +222,8 @@ test('the form says which typed companies are new, as soon as they are typed, an
 
   p.el('f-company').value = 'Acme' // its tag follows once it is typed, so changing it by hand is what clashes
   p.ctx.pick()
-  p.el('f-kind').value = 'client'
-  p.ctx.kind()
+  p.el('f-company-type').value = 'client'
+  p.ctx.companyType()
   assert.equal(p.el('f-company-hint').textContent, '"Acme" is already an agency.')
 })
 
@@ -231,12 +237,12 @@ test('an edit form is titled "{Company} → {Event}", the event following the Ty
   assert.equal(title('evt1', false, { 'f-event': 'red_flag' }), 'Northwind Staffing → Red Flag')
 })
 
-test('the company in the title is the agency, with the client in parentheses when the event has both', () => {
-  const p = page({ clients: [{ id: 'big', name: 'Big Co' }] })
-  assert.equal(p.ctx.companyTitle({ agencyId: 'acme', clientId: 'big', companyLabel: 'Acme' }), 'Acme (Big Co)')
-  assert.equal(p.ctx.companyTitle({ agencyId: null, clientId: 'big', companyLabel: 'Big Co' }), 'Big Co')
-  assert.equal(p.ctx.companyTitle({ agencyId: 'acme', clientId: null, companyLabel: 'Acme' }), 'Acme')
-  assert.equal(p.ctx.companyTitle({ agencyId: null, clientId: null, companyLabel: '' }), '—')
+test('the company in the title is the label of the event: the company, or "Agency → Client" when it has both', () => {
+  const p = page()
+  assert.equal(p.ctx.companyTitle({ companyId: 'acme', companyLabel: 'Acme' }), 'Acme')
+  assert.equal(p.ctx.companyTitle({ companyId: 'big', viaCompanyId: 'acme', companyLabel: 'Acme → Big Co' }), 'Acme → Big Co')
+  assert.equal(p.ctx.companyTitle({ companyId: null, companyLabel: '' }), '—')
+  assert.equal(p.ctx.companyTitle({ event: 'pending', jdUrl: 'https://jobs.example/x', companyLabel: '—' }), 'jobs.example/x')
 })
 
 test('creating an event sends no link; only an application or passive message goes by its Type and sends its link', async () => {
@@ -281,11 +287,11 @@ test('an application of type Web needs its Application link when edited, an emai
 })
 
 test('an application changed to passive keeps its client: a passive message needs a company, not an agency', async () => {
-  const p = page({ clients: [{ id: 'big', name: 'Big Co' }], fields: { 'f-company': 'Big Co', 'f-kind': 'client', 'f-apply-type': 'passive' }, editing: 'evt1', typeDriven: true })
+  const p = page({ clients: [{ id: 'big', name: 'Big Co' }], fields: { 'f-company': 'Big Co', 'f-company-type': 'client', 'f-apply-type': 'passive' }, editing: 'evt1', typeDriven: true })
   await p.submit()
   assert.deepEqual(p.calls.all().map((c) => c.slice(0, 3)), [['patch', 'events', 'evt1']])
   const saved = p.calls.all()[0][3]
-  assert.deepEqual([saved.event, saved.agencyId, saved.clientId], ['passive_message', null, 'big'])
+  assert.deepEqual([saved.event, saved.companyId, saved.viaCompanyId], ['passive_message', 'big', null])
 })
 
 // Runs the real fillEventSelect and handleFormDelete out of main.js.

@@ -1,4 +1,4 @@
-"""Backup and restore: two CSV files (calendar and companies), and the JSON the old Firestore backups used."""
+"""Backup and restore: two CSV files (calendar and companies), and the JSON of the older backups."""
 import csv
 import io
 import re
@@ -8,32 +8,31 @@ from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
 from . import crud
-from .models import Agency, AgencyRecruiter, Client, Event
-from .schemas import AgencyIn, AgencyOut, ClientIn, ClientOut, EventIn, EventOut
+from .models import Company, CompanyRecruiter, CompanyType, Event
+from .schemas import CompanyIn, CompanyOut, EventIn, EventOut
 
 
 def export_snapshot(session: Session) -> dict:
-    """What the JSON files hold, in the API's own camelCase shape."""
+    """What the JSON holds, in the API's own camelCase shape."""
     return {
-        'agencies': [AgencyOut.model_validate(a).model_dump(by_alias=True, mode='json') for a in crud.list_agencies(session)],
-        'clients': [ClientOut.model_validate(c).model_dump(by_alias=True, mode='json') for c in crud.list_clients(session)],
+        'companies': [CompanyOut.model_validate(c).model_dump(by_alias=True, mode='json') for c in crud.list_companies(session)],
         'events': [EventOut.model_validate(e).model_dump(by_alias=True, mode='json') for e in crud.list_events(session)],
     }
 
 
 # ---------- CSV: calendar.csv and companies.csv ----------
 #
-# Two flat files you can open in a spreadsheet: the events, and the agencies and clients in
-# one list (the `kind` column tells them apart, and an agency and a client may share an id).
+# Two flat files you can open in a spreadsheet: the events, and the companies (agencies and clients, told apart by
+# the `company_type` column). The older backups, with `agency_id` and `client_id` and a `kind` column, are read too.
 
 # Columns run roughly from shortest to longest, free text last, so the short ones stay in view in a spreadsheet.
 CALENDAR_COLUMNS = [
     'id', 'date', 'time', 'event', 'company', 'apply_type', 'calendar_event_id',
-    'agency_id', 'client_id', 'jd_url', 'notes',
+    'company_id', 'via_company_id', 'jd_url', 'notes',
 ]
 COMPANIES_COLUMNS = [
-    'kind', 'id', 'name', 'status', 'via_agency_id', 'website', 'linkedin', 'recruiters',
-    'application_link', 'type', 'notes',
+    'company_type', 'id', 'name', 'status', 'via_company_id', 'website', 'linkedin', 'recruiters',
+    'application_link', 'notes',
 ]
 CSV_FILES = {'calendar': 'calendar.csv', 'companies': 'companies.csv'}
 RECRUITER_SEPARATOR = ' | '  # LinkedIn links have no spaces, so this can't appear inside one
@@ -70,22 +69,17 @@ def export_csv(session: Session) -> dict:
         {
             'id': e['id'], 'date': e['date'], 'time': e['time'], 'event': e['event'], 'company': e['companyLabel'],
             'notes': e['notes'], 'jd_url': e['jdUrl'], 'apply_type': e['applyType'], 'calendar_event_id': e['calendarEventId'],
-            'agency_id': e['agencyId'], 'client_id': e['clientId'],
+            'company_id': e['companyId'], 'via_company_id': e['viaCompanyId'],
         }
         for e in data['events']
     ]
     companies = [
         {
-            'kind': 'agency', 'id': a['id'], 'name': a['name'], 'type': a['type'], 'website': a['website'], 'linkedin': a['linkedin'],
-            'application_link': a['applicationLink'], 'status': a['status'], 'recruiters': RECRUITER_SEPARATOR.join(a['recruiters']),
+            'company_type': c['companyType'], 'id': c['id'], 'name': c['name'], 'status': c['status'], 'via_company_id': c['viaCompanyId'],
+            'website': c['website'], 'linkedin': c['linkedin'], 'application_link': c['applicationLink'], 'notes': c['notes'],
+            'recruiters': RECRUITER_SEPARATOR.join(c['recruiters']),
         }
-        for a in data['agencies']
-    ] + [
-        {
-            'kind': 'client', 'id': c['id'], 'name': c['name'], 'website': c['website'], 'linkedin': c['linkedin'],
-            'notes': c['notes'], 'via_agency_id': c['viaAgencyId'],
-        }
-        for c in data['clients']
+        for c in data['companies']
     ]
     return {'calendar': _write_csv(CALENDAR_COLUMNS, calendar), 'companies': _write_csv(COMPANIES_COLUMNS, companies)}
 
@@ -99,30 +93,28 @@ def _read_csv(text: str, required, name: str):
 
 
 def parse_csv(calendar: str = None, companies: str = None):
-    """Reads what export_csv() writes (either file may be missing). Returns (snapshot, warnings),
+    """Reads what export_csv() writes, and the older files (either file may be missing). Returns (snapshot, warnings),
     ready for import_snapshot(); a row that can't be read is left out and reported."""
-    data = {'agencies': [], 'clients': [], 'events': []}
+    data = {'companies': [], 'events': []}
     warnings = []
-    for number, row in _read_csv(companies, ('kind', 'id', 'name'), 'companies.csv') if companies else ():
-        kind = (row.get('kind') or '').lower()
-        if kind == 'agency':
-            data['agencies'].append({
-                'id': row['id'], 'name': row['name'], 'type': row.get('type'), 'website': row.get('website'),
-                'linkedin': row.get('linkedin'), 'applicationLink': row.get('application_link'), 'status': row.get('status'),
-                'recruiters': [u.strip() for u in (row.get('recruiters') or '').split(RECRUITER_SEPARATOR.strip()) if u.strip()],
-            })
-        elif kind == 'client':
-            data['clients'].append({
-                'id': row['id'], 'name': row['name'], 'website': row.get('website'), 'linkedin': row.get('linkedin'),
-                'notes': row.get('notes'), 'viaAgencyId': row.get('via_agency_id'),
-            })
-        else:
-            warnings.append('companies.csv line %d: kind must be agency or client, not %r; row left out' % (number, row.get('kind')))
+    for number, row in _read_csv(companies, ('id', 'name'), 'companies.csv') if companies else ():
+        company_type = (row.get('company_type') or row.get('kind') or '').lower()  # `kind` is what the older files call it
+        if company_type not in ('agency', 'client'):
+            warnings.append('companies.csv line %d: company_type must be agency or client, not %r; row left out' % (number, company_type))
+            continue
+        data['companies'].append({
+            'id': row['id'], 'name': row['name'], 'companyType': company_type,
+            'notes': row.get('notes') or row.get('type'),  # an older agency kept what it does in `type`
+            'website': row.get('website'), 'linkedin': row.get('linkedin'), 'applicationLink': row.get('application_link'),
+            'viaCompanyId': row.get('via_company_id') or row.get('via_agency_id'),
+            'recruiters': [u.strip() for u in (row.get('recruiters') or '').split(RECRUITER_SEPARATOR.strip()) if u.strip()],
+        })
     for number, row in _read_csv(calendar, ('id', 'date', 'event'), 'calendar.csv') if calendar else ():
         data['events'].append({
             'id': row['id'], 'date': row['date'], 'time': row.get('time'), 'event': row['event'], 'notes': row.get('notes'),
             'jdUrl': row.get('jd_url'), 'applyType': row.get('apply_type'), 'calendarEventId': row.get('calendar_event_id'),
-            'agencyId': row.get('agency_id'), 'clientId': row.get('client_id'),
+            'companyId': row.get('company_id'), 'viaCompanyId': row.get('via_company_id'),
+            'agencyId': row.get('agency_id'), 'clientId': row.get('client_id'),  # the older files; see _from_older
         })  # `company` is only there to read: the server derives it
     return data, warnings
 
@@ -134,69 +126,101 @@ def _reason(err: Exception) -> str:
     return getattr(err, 'message', str(err))
 
 
-def import_snapshot(session: Session, snapshot: dict, replace: bool = False) -> dict:
-    """Loads agencies, clients and events, keeping their ids.
+def _from_older(snapshot: dict) -> dict:
+    """The older shape (agencies, clients, and events with agencyId and clientId) as companies and events.
 
-    Accepts what export_snapshot() writes and the old Firestore backups
-    (`applications` instead of `events`, `status: null`, a stored `companyLabel`
-    that is now ignored). Nothing aborts the whole import: a record that can't
-    be loaded is skipped and reported, and a dangling reference is cut (the
-    event or client is kept, unlinked) and reported. Stored statuses are kept as
-    they are: the "a new event changes the agency's status" rule is for live
-    use, not for loading history.
+    An agency and a client could share an id there: the client gets a new one (-2) and its events follow. A client's
+    name that an agency already has gets " (client)" after it, so no name is twice. An event of a client keeps its
+    agency as the via."""
+    companies = [dict(c) for c in snapshot.get('companies') or []]
+    ids = {c.get('id') for c in companies}
+    names = {(c.get('name') or '').strip().lower() for c in companies}
+    client_ids = {}
+    for a in snapshot.get('agencies') or []:
+        companies.append({**a, 'companyType': 'agency', 'notes': a.get('notes') or a.get('type')})
+        ids.add(a.get('id'))
+        names.add((a.get('name') or '').strip().lower())
+    for c in snapshot.get('clients') or []:
+        new_id, n = c.get('id'), 2
+        while new_id in ids:
+            new_id, n = '%s-%d' % (c.get('id'), n), n + 1
+        name = c.get('name') or ''
+        while name.strip().lower() in names:
+            name = '%s (client)' % name
+        ids.add(new_id)
+        names.add(name.strip().lower())
+        client_ids[c.get('id')] = new_id
+        companies.append({**c, 'id': new_id, 'name': name, 'companyType': 'client', 'viaCompanyId': c.get('viaAgencyId') or c.get('viaCompanyId')})
+    events = []
+    for e in snapshot.get('events', snapshot.get('applications')) or []:
+        e = dict(e)
+        if e.get('clientId') or e.get('agencyId'):
+            if e.get('clientId'):
+                e['viaCompanyId'] = e.get('agencyId') or e.get('viaCompanyId')
+                e['companyId'] = client_ids.get(e['clientId'], e['clientId'])
+            else:
+                e['companyId'] = e['agencyId']
+        e.pop('agencyId', None)
+        e.pop('clientId', None)
+        events.append(e)
+    return {'companies': companies, 'events': events}
+
+
+def import_snapshot(session: Session, snapshot: dict, replace: bool = False) -> dict:
+    """Loads companies and events, keeping their ids.
+
+    Accepts what export_snapshot() writes and the older backups (agencies and clients, `applications` instead of
+    `events`, a stored `companyLabel` and `status` that are now ignored: both are derived). Nothing aborts the
+    whole import: a record that can't be loaded is skipped and reported, and a dangling reference is cut (the
+    event or client is kept, unlinked) and reported.
     """
-    report = {'agencies': 0, 'clients': 0, 'events': 0, 'warnings': [], 'skipped': []}
-    agencies = snapshot.get('agencies') or []
-    clients = snapshot.get('clients') or []
-    events = snapshot.get('events', snapshot.get('applications')) or []
+    report = {'companies': 0, 'events': 0, 'warnings': [], 'skipped': []}
+    snapshot = _from_older(snapshot)
+    companies = snapshot['companies']
+    events = snapshot['events']
 
     if replace:
-        for model in (Event, Client, AgencyRecruiter, Agency):
+        for model in (Event, CompanyRecruiter, Company):
             session.execute(delete(model))
         session.flush()
 
     def attempt(kind, record, load):
         label = record.get('id') or record.get('name')
         try:
-            if record.get('id') and session.get({'agencies': Agency, 'clients': Client, 'events': Event}[kind], record['id']):
+            if record.get('id') and session.get({'companies': Company, 'events': Event}[kind], record['id']):
                 raise crud.DomainError(409, 'already there')
             with session.begin_nested():  # a failure undoes only this record
                 load()
             report[kind] += 1
         except (crud.DomainError, ValidationError) as err:
-            report['skipped'].append('%s %s: %s' % (kind[:-1], label, _reason(err)))
+            report['skipped'].append('%s %s: %s' % (kind[:-1] if kind == 'events' else 'company', label, _reason(err)))
         except Exception as err:  # a database rule (a duplicate name, say)
-            report['skipped'].append('%s %s: %s' % (kind[:-1], label, str(err).splitlines()[0]))
+            report['skipped'].append('%s %s: %s' % (kind[:-1] if kind == 'events' else 'company', label, str(err).splitlines()[0]))
 
-    for a in agencies:
-        def load_agency(a=a):
-            data = AgencyIn.model_validate(a)
-            if crud._name_owner(session, Agency, data.name):
-                raise crud.DomainError(409, 'an agency named "%s" is already there' % data.name)
-            agency = Agency(id=crud._check_id(a.get('id')), **data.model_dump(exclude={'recruiters'}))
-            session.add(agency)
+    # agencies first: a client's via has to be there when the client is loaded
+    for c in sorted(companies, key=lambda c: c.get('companyType') != CompanyType.agency.value):
+        known = {x.get('id') for x in companies if x.get('companyType') == CompanyType.agency.value}
+        if c.get('viaCompanyId') and c['viaCompanyId'] not in known and session.get(Company, c['viaCompanyId']) is None:
+            report['warnings'].append('company %s pointed to a missing agency "%s": now direct' % (c.get('id'), c['viaCompanyId']))
+            c = {**c, 'viaCompanyId': None}
+
+        def load_company(c=c):
+            data = CompanyIn.model_validate(c)
+            if crud._name_owner(session, data.name):
+                raise crud.DomainError(409, 'a company named "%s" is already there' % data.name)
+            fields = crud._fields(data)
+            crud._check_via(session, fields['company_type'], fields['via_company_id'], c.get('id'))
+            company = Company(id=crud._check_id(c.get('id')), **fields)
+            session.add(company)
             session.flush()
-            crud._set_recruiters(session, agency, data.recruiters)
-        attempt('agencies', a, load_agency)
-
-    for c in clients:
-        if c.get('viaAgencyId') and session.get(Agency, c['viaAgencyId']) is None:
-            report['warnings'].append('client %s pointed to a missing agency "%s": now direct' % (c.get('id'), c['viaAgencyId']))
-            c = {**c, 'viaAgencyId': None}
-
-        def load_client(c=c):
-            data = ClientIn.model_validate(c)
-            if crud._name_owner(session, Client, data.name):
-                raise crud.DomainError(409, 'a client named "%s" is already there' % data.name)
-            session.add(Client(id=crud._check_id(c.get('id')), **data.model_dump()))
-            session.flush()
-        attempt('clients', c, load_client)
+            crud._set_recruiters(session, company, data.recruiters)
+        attempt('companies', c, load_company)
 
     for e in events:
         e = dict(e)
-        for key, model, kind in (('agencyId', Agency, 'agency'), ('clientId', Client, 'client')):
-            if e.get(key) and session.get(model, e[key]) is None:
-                report['warnings'].append('event %s pointed to a missing %s "%s": left unlinked' % (e.get('id'), kind, e[key]))
+        for key in ('companyId', 'viaCompanyId'):
+            if e.get(key) and session.get(Company, e[key]) is None:
+                report['warnings'].append('event %s pointed to a missing company "%s": left unlinked' % (e.get('id'), e[key]))
                 e[key] = None
 
         def load_event(e=e):

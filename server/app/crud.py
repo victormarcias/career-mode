@@ -3,11 +3,11 @@ import re
 import unicodedata
 import uuid
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
-from .models import CLOSING_EVENTS, Agency, AgencyRecruiter, AgencyStatus, Client, Event, EventType
-from .schemas import AgencyIn, AgencyPatch, ClientIn, ClientPatch, EventIn, EventPatch
+from .models import CLOSING_EVENTS, Company, CompanyRecruiter, CompanyStatus, CompanyType, Event, EventType
+from .schemas import CompanyIn, CompanyPatch, EventIn, EventPatch
 
 
 class DomainError(Exception):
@@ -47,172 +47,172 @@ def _get(session: Session, model, record_id: str, label: str):
     return record
 
 
-def _name_owner(session: Session, model, name: str):
-    """The id of whoever already has this name (the column compares ignoring case)."""
-    return session.scalar(select(model.id).where(model.name == name))
+def _name_owner(session: Session, name: str):
+    """The id of the company that already has this name (the column compares ignoring case)."""
+    return session.scalar(select(Company.id).where(Company.name == name))
 
 
-def find_company(session: Session, model, name: str):
-    """The agency or client with this name (ignoring case), or whose id is its slug, like the front end finds it."""
-    owner = _name_owner(session, model, name.strip()) or slugify(name)
-    return session.get(model, owner) if owner else None
+def find_company(session: Session, name: str):
+    """The company with this name (ignoring case), or whose id is its slug, like the front end finds it."""
+    owner = _name_owner(session, name.strip()) or slugify(name)
+    return session.get(Company, owner) if owner else None
 
 
-# ---------- Agencies ----------
+# ---------- Companies ----------
 
 
-def list_agencies(session: Session) -> list[Agency]:
-    return list(session.scalars(select(Agency).order_by(Agency.name)))
+def _involving(company_id):
+    """The events a company is in: its own, and those of the clients that came through it."""
+    return or_(Event.company_id == company_id, Event.via_company_id == company_id)
 
 
-def get_agency(session: Session, agency_id: str) -> Agency:
-    return _get(session, Agency, agency_id, 'Agency')
+def company_status(events) -> CompanyStatus:
+    """Archived when the latest event closes the process. The latest is the one on the latest day; a closing event wins a
+    tie on the day whatever its time, and among the rest the later time wins. No events: active."""
+    if not events:
+        return CompanyStatus.active
+    closing = {e.value for e in CLOSING_EVENTS}
+    latest = max(events, key=lambda e: (e.date, e.type in closing, e.time or '00:00'))
+    return CompanyStatus.archived if latest.type in closing else CompanyStatus.active
 
 
-def _set_recruiters(session: Session, agency: Agency, urls: list[str]):
-    agency.recruiters.clear()
-    session.flush()  # the old rows go first, or the new ones would clash on (agency, position)
-    agency.recruiters.extend(AgencyRecruiter(position=i, url=url) for i, url in enumerate(urls))
+def list_companies(session: Session, company_type: str = None) -> list[Company]:
+    query = select(Company).order_by(Company.name)
+    if company_type is not None:
+        query = query.where(Company.company_type == company_type)
+    companies = list(session.scalars(query))
+    events: dict[str, list] = {}
+    for event in session.execute(select(Event.company_id, Event.via_company_id, Event.date, Event.time, Event.type)):
+        for company_id in {event.company_id, event.via_company_id} - {None}:
+            events.setdefault(company_id, []).append(event)
+    for company in companies:
+        company.status = company_status(events.get(company.id, [])).value
+    return companies
 
 
-def create_agency(session: Session, data: AgencyIn) -> Agency:
-    if _name_owner(session, Agency, data.name):
-        raise DomainError(409, 'An agency named "%s" already exists' % data.name)
+def get_company(session: Session, company_id: str) -> Company:
+    company = _get(session, Company, company_id, 'Company')
+    company.status = company_status(list(session.scalars(select(Event).where(_involving(company_id))).unique())).value
+    return company
+
+
+def _set_recruiters(session: Session, company: Company, urls: list[str]):
+    company.recruiters.clear()
+    session.flush()  # the old rows go first, or the new ones would clash on (company, position)
+    company.recruiters.extend(CompanyRecruiter(position=i, url=url) for i, url in enumerate(urls))
+
+
+def _check_via(session: Session, company_type: str, via_company_id, own_id=None):
+    """Only a client has a via, and it is an agency (not the company itself)."""
+    if via_company_id is None:
+        return
+    if company_type != CompanyType.client.value:
+        raise DomainError(422, 'Only a client can come through an agency: viaCompanyId is for a client')
+    via = session.get(Company, via_company_id)
+    if via is None:
+        raise DomainError(422, 'viaCompanyId "%s" does not exist' % via_company_id)
+    if via.company_type != CompanyType.agency.value or via_company_id == own_id:
+        raise DomainError(422, 'viaCompanyId "%s" is not an agency' % via_company_id)
+
+
+def _fields(data: CompanyIn) -> dict:
+    fields = data.model_dump(exclude={'recruiters'})
+    fields['company_type'] = fields['company_type'].value if hasattr(fields['company_type'], 'value') else fields['company_type']
+    return fields
+
+
+def create_company(session: Session, data: CompanyIn) -> Company:
+    if _name_owner(session, data.name):
+        raise DomainError(409, 'A company named "%s" already exists' % data.name)
     slug = slugify(data.name)
     if not slug:
         raise DomainError(422, 'The name needs at least one letter or digit')
-    agency = Agency(id=_unique_id(session, Agency, slug), **data.model_dump(exclude={'recruiters'}))
-    session.add(agency)
+    fields = _fields(data)
+    _check_via(session, fields['company_type'], fields['via_company_id'])
+    company = Company(id=_unique_id(session, Company, slug), **fields)
+    session.add(company)
     session.flush()
-    _set_recruiters(session, agency, data.recruiters)
+    _set_recruiters(session, company, data.recruiters)
     session.commit()
-    return agency
+    return get_company(session, company.id)
 
 
-def update_agency(session: Session, agency_id: str, patch: AgencyPatch) -> Agency:
-    agency = get_agency(session, agency_id)
+def _still_an_agency_of(session: Session, company_id: str):
+    """Why a company can't stop being an agency: it is the agency of clients or events."""
+    clients = session.scalar(select(func.count()).select_from(Company).where(Company.via_company_id == company_id))
+    events = session.scalar(select(func.count()).select_from(Event).where(Event.via_company_id == company_id))
+    if clients or events:
+        raise DomainError(409, 'It is the agency of %d client%s and %d event%s: they have to change first'
+                          % (clients, '' if clients == 1 else 's', events, '' if events == 1 else 's'))
+
+
+def update_company(session: Session, company_id: str, patch: CompanyPatch) -> Company:
+    company = _get(session, Company, company_id, 'Company')
     changes = patch.model_dump(exclude_unset=True)
     recruiters = changes.pop('recruiters', None)
-    for key in ('name', 'type', 'status'):  # these columns can't be NULL
+    if 'company_type' in changes and changes['company_type'] is not None:
+        changes['company_type'] = changes['company_type'].value
+    for key in ('name', 'notes', 'company_type'):  # these columns can't be NULL
         if key in changes and changes[key] is None:
             raise DomainError(422, '"%s" cannot be empty' % key)
-    owner = _name_owner(session, Agency, changes['name']) if 'name' in changes else None
-    if owner and owner != agency_id:
-        raise DomainError(409, 'Another agency is already named "%s"' % changes['name'])
+    owner = _name_owner(session, changes['name']) if 'name' in changes else None
+    if owner and owner != company_id:
+        raise DomainError(409, 'Another company is already named "%s"' % changes['name'])
+    new_type = changes.get('company_type', company.company_type)
+    if new_type == CompanyType.client.value and company.company_type == CompanyType.agency.value:
+        _still_an_agency_of(session, company_id)
+    if new_type == CompanyType.agency.value and 'via_company_id' not in changes:
+        changes['via_company_id'] = None  # an agency has none: becoming one drops it
+    _check_via(session, new_type, changes.get('via_company_id', company.via_company_id), company_id)
     for key, value in changes.items():
-        setattr(agency, key, value)
+        setattr(company, key, value)
     if recruiters is not None:
-        _set_recruiters(session, agency, recruiters)
+        _set_recruiters(session, company, recruiters)
     session.commit()
-    return agency
+    return get_company(session, company_id)
 
 
-def replace_agency(session: Session, agency_id: str, data: AgencyIn) -> Agency:
+def replace_company(session: Session, company_id: str, data: CompanyIn) -> Company:
     """PUT: the record becomes exactly what was sent (and is created if it didn't exist)."""
-    _check_id(agency_id)
-    owner = _name_owner(session, Agency, data.name)
-    if owner and owner != agency_id:
-        raise DomainError(409, 'Another agency is already named "%s"' % data.name)
-    agency = session.get(Agency, agency_id)
-    if agency is None:
-        agency = Agency(id=agency_id)
-        session.add(agency)
-    for key, value in data.model_dump(exclude={'recruiters'}).items():
-        setattr(agency, key, value)
+    _check_id(company_id)
+    owner = _name_owner(session, data.name)
+    if owner and owner != company_id:
+        raise DomainError(409, 'Another company is already named "%s"' % data.name)
+    fields = _fields(data)
+    company = session.get(Company, company_id)
+    if company is not None and company.company_type == CompanyType.agency.value and fields['company_type'] == CompanyType.client.value:
+        _still_an_agency_of(session, company_id)
+    _check_via(session, fields['company_type'], fields['via_company_id'], company_id)
+    if company is None:
+        company = Company(id=company_id)
+        session.add(company)
+    for key, value in fields.items():
+        setattr(company, key, value)
     session.flush()
-    _set_recruiters(session, agency, data.recruiters)
+    _set_recruiters(session, company, data.recruiters)
     session.commit()
-    return agency
+    return get_company(session, company_id)
 
 
-def delete_agency(session: Session, agency_id: str):
-    agency = get_agency(session, agency_id)
-    count = session.scalar(select(func.count()).select_from(Event).where(Event.agency_id == agency_id))
+def delete_company(session: Session, company_id: str):
+    company = _get(session, Company, company_id, 'Company')
+    count = session.scalar(select(func.count()).select_from(Event).where(_involving(company_id)))
     if count:
-        raise DomainError(409, 'This agency still has %d event%s. Delete or move them first.' % (count, '' if count == 1 else 's'))
-    session.delete(agency)  # its recruiters go with it, and its clients become direct
-    session.commit()
-
-
-# ---------- Clients ----------
-
-
-def list_clients(session: Session) -> list[Client]:
-    return list(session.scalars(select(Client).order_by(Client.name)))
-
-
-def get_client(session: Session, client_id: str) -> Client:
-    return _get(session, Client, client_id, 'Client')
-
-
-def _require_agency(session: Session, agency_id, field='agencyId'):
-    if agency_id is not None and session.get(Agency, agency_id) is None:
-        raise DomainError(422, '%s "%s" does not exist' % (field, agency_id))
-
-
-def create_client(session: Session, data: ClientIn) -> Client:
-    if _name_owner(session, Client, data.name):
-        raise DomainError(409, 'A client named "%s" already exists' % data.name)
-    slug = slugify(data.name)
-    if not slug:
-        raise DomainError(422, 'The name needs at least one letter or digit')
-    _require_agency(session, data.via_agency_id, 'viaAgencyId')
-    client = Client(id=_unique_id(session, Client, slug), **data.model_dump())
-    session.add(client)
-    session.commit()
-    return client
-
-
-def update_client(session: Session, client_id: str, patch: ClientPatch) -> Client:
-    client = get_client(session, client_id)
-    changes = patch.model_dump(exclude_unset=True)
-    for key in ('name', 'notes'):
-        if key in changes and changes[key] is None:
-            raise DomainError(422, '"%s" cannot be empty' % key)
-    owner = _name_owner(session, Client, changes['name']) if 'name' in changes else None
-    if owner and owner != client_id:
-        raise DomainError(409, 'Another client is already named "%s"' % changes['name'])
-    if 'via_agency_id' in changes:
-        _require_agency(session, changes['via_agency_id'], 'viaAgencyId')
-    for key, value in changes.items():
-        setattr(client, key, value)
-    session.commit()
-    return client
-
-
-def replace_client(session: Session, client_id: str, data: ClientIn) -> Client:
-    _check_id(client_id)
-    owner = _name_owner(session, Client, data.name)
-    if owner and owner != client_id:
-        raise DomainError(409, 'Another client is already named "%s"' % data.name)
-    _require_agency(session, data.via_agency_id, 'viaAgencyId')
-    client = session.get(Client, client_id)
-    if client is None:
-        client = Client(id=client_id)
-        session.add(client)
-    for key, value in data.model_dump().items():
-        setattr(client, key, value)
-    session.commit()
-    return client
-
-
-def delete_client(session: Session, client_id: str):
-    client = get_client(session, client_id)
-    count = session.scalar(select(func.count()).select_from(Event).where(Event.client_id == client_id))
-    if count:
-        raise DomainError(409, 'This client still has %d event%s. Delete or move them first.' % (count, '' if count == 1 else 's'))
-    session.delete(client)
+        raise DomainError(409, 'This company still has %d event%s. Delete or move them first.' % (count, '' if count == 1 else 's'))
+    session.delete(company)  # its recruiters go with it, and its clients become direct
     session.commit()
 
 
 # ---------- Events ----------
 
 
-def list_events(session: Session, *, jd_url=None, agency_id=None, client_id=None, event=None) -> list[Event]:
+def list_events(session: Session, *, jd_url=None, company_id=None, event=None) -> list[Event]:
     query = select(Event)
-    for column, value in ((Event.jd_url, jd_url), (Event.agency_id, agency_id), (Event.client_id, client_id), (Event.type, event)):
+    for column, value in ((Event.jd_url, jd_url), (Event.type, event)):
         if value is not None:
             query = query.where(column == value)
+    if company_id is not None:
+        query = query.where(_involving(company_id))
     query = query.order_by(Event.date.desc(), func.coalesce(Event.time, '').desc(), Event.created_at.desc(), Event.id)
     return list(session.scalars(query).unique())
 
@@ -221,29 +221,37 @@ def get_event(session: Session, event_id: str) -> Event:
     return _get(session, Event, event_id, 'Event')
 
 
+def _check_event_companies(session: Session, company_id, via_company_id):
+    """What an event points to exists; a via is an agency, and only a client's event has one."""
+    company = None
+    if company_id is not None:
+        company = session.get(Company, company_id)
+        if company is None:
+            raise DomainError(422, 'companyId "%s" does not exist' % company_id)
+    if via_company_id is not None:
+        via = session.get(Company, via_company_id)
+        if via is None:
+            raise DomainError(422, 'viaCompanyId "%s" does not exist' % via_company_id)
+        if via.company_type != CompanyType.agency.value:
+            raise DomainError(422, 'viaCompanyId "%s" is not an agency' % via_company_id)
+        if company is None or company.company_type != CompanyType.client.value:
+            raise DomainError(422, 'Only an event of a client has a viaCompanyId: the company has to be a client')
+
+
 def _event_columns(session: Session, fields: dict) -> dict:
     """API field names -> columns, checking that what the event points to exists."""
     columns = {}
     for key, value in fields.items():
         columns['type' if key == 'event' else key] = value.value if hasattr(value, 'value') else value
-    _require_agency(session, columns.get('agency_id'), 'agencyId')
-    if columns.get('client_id') is not None and session.get(Client, columns['client_id']) is None:
-        raise DomainError(422, 'clientId "%s" does not exist' % columns['client_id'])
+    if 'company_id' in columns or 'via_company_id' in columns:
+        _check_event_companies(session, columns.get('company_id'), columns.get('via_company_id'))
     return columns
-
-
-def _apply_status_rule(session: Session, agency_id, event_type):
-    """A new event reactivates its agency, unless it closes the process, which archives it."""
-    if agency_id:
-        agency = session.get(Agency, agency_id)
-        agency.status = (AgencyStatus.archived if EventType(event_type) in CLOSING_EVENTS else AgencyStatus.active).value
 
 
 def _insert_event(session: Session, event_id: str, columns: dict) -> Event:
     event = Event(id=event_id, **columns)
     session.add(event)
     session.flush()
-    _apply_status_rule(session, columns.get('agency_id'), columns['type'])
     return event
 
 
@@ -253,9 +261,9 @@ def create_event(session: Session, data: EventIn) -> Event:
     return event
 
 
-def _check_passive_message(event_type, agency_id, client_id):
-    if event_type == EventType.passive_message.value and not (agency_id or client_id):
-        raise DomainError(422, 'A passive message needs an agency or a client: say which company the recruiter works for')
+def _check_passive_message(event_type, company_id):
+    if event_type == EventType.passive_message.value and not company_id:
+        raise DomainError(422, 'A passive message needs a company: say which one the recruiter works for')
 
 
 def update_event(session: Session, event_id: str, patch: EventPatch) -> Event:
@@ -266,10 +274,12 @@ def update_event(session: Session, event_id: str, patch: EventPatch) -> Event:
             raise DomainError(422, '"%s" cannot be empty' % ('event' if key == 'type' else key))
     if 'notes' in columns and columns['notes'] is None:
         columns['notes'] = ''
-    _check_passive_message(columns.get('type', event.type), columns['agency_id'] if 'agency_id' in columns else event.agency_id,
-                           columns['client_id'] if 'client_id' in columns else event.client_id)
-    # Editing an event never flips its agency's status: the edited one isn't
-    # necessarily the agency's latest, so the status could end up wrong.
+    company_id = columns['company_id'] if 'company_id' in columns else event.company_id
+    via_company_id = columns['via_company_id'] if 'via_company_id' in columns else event.via_company_id
+    if via_company_id is not None and company_id is None:
+        via_company_id = columns['via_company_id'] = None  # no company, no agency in between
+    _check_event_companies(session, company_id, via_company_id)
+    _check_passive_message(columns.get('type', event.type), company_id)
     for key, value in columns.items():
         setattr(event, key, value)
     session.commit()

@@ -21,8 +21,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from . import crud
-from .models import Agency, Client, Event, EventType
-from .schemas import AgencyIn, ClientIn, ClientPatch, EventIn
+from .models import Company, CompanyType, Event, EventType
+from .schemas import CompanyIn, CompanyPatch, EventIn
 
 ICAL_HOST = 'calendar.google.com'
 
@@ -181,19 +181,16 @@ def _repeats_in(event: CalendarEvent, first: dt.date, last: dt.date) -> bool:
     return not (until and dt.datetime.strptime(until.group(1), '%Y%m%d').date() < first)
 
 
-def _suggest_company(session: Session, line: Optional[str]) -> tuple[Optional[str], Optional[str]]:
-    """(agency, client) names to offer for a "Company:" line. One the app has is used as it is (a client brings
-    the agency it came through); one it doesn't is offered as a new agency, which the person can change."""
+def _suggest_company(session: Session, line: Optional[str]) -> dict:
+    """The company to offer for a "Company:" line, as {company, companyType, via} (names). One the app has is used as
+    it is (a client brings the agency it came through); one it doesn't is offered as a new agency, which the person can change."""
     if not line:
-        return None, None
-    agency = crud.find_company(session, Agency, line)
-    if agency:
-        return agency.name, None
-    client = crud.find_company(session, Client, line)
-    if client:
-        via = session.get(Agency, client.via_agency_id) if client.via_agency_id else None
-        return (via.name if via else None), client.name
-    return line, None
+        return {'company': None, 'companyType': None, 'via': None}
+    company = crud.find_company(session, line)
+    if company is None:
+        return {'company': line, 'companyType': CompanyType.agency.value, 'via': None}
+    via = session.get(Company, company.via_company_id) if company.via_company_id else None
+    return {'company': company.name, 'companyType': company.company_type, 'via': via.name if via else None}
 
 
 def plan_range(session: Session, ics_text: str, first: dt.date, last: dt.date, tz=None) -> dict:
@@ -202,7 +199,7 @@ def plan_range(session: Session, ics_text: str, first: dt.date, last: dt.date, t
     `events` are the ones to add (`action` "new") or to move because their day or time changed in Google
     ("moved"); the ones already logged as they are only count as `unchanged`. A repeating event is not
     expanded, so it is only counted (`recurringSkipped`); an all-day or cancelled one is ignored. A new event
-    comes with the company to offer for it (`agency`, `client`), taken from a "Company:" line of the description.
+    comes with the company to offer for it (`company`, `companyType`, `via`), taken from a "Company:" line of the description.
     """
     plan = {'events': [], 'unchanged': 0, 'recurringSkipped': 0}
     for event in parse_ics(ics_text, tz):
@@ -221,17 +218,18 @@ def plan_range(session: Session, ics_text: str, first: dt.date, last: dt.date, t
         summary = event.summary or 'Google Calendar event'
         description = clean_description(event.description)
         if known is None:
-            agency, client = _suggest_company(session, _company_line(description))
+            offer = _suggest_company(session, _company_line(description))
         else:
-            agency, client = (known.agency.name if known.agency else None), (known.client.name if known.client else None)
+            offer = {'company': known.company.name if known.company else None,
+                     'companyType': known.company.company_type if known.company else None,
+                     'via': known.via.name if known.via else None}
         plan['events'].append({
             'key': event.key,
             'summary': summary,
             'notes': event_notes(summary, description),
             'date': date,
             'time': time,
-            'agency': agency,
-            'client': client,
+            **offer,
             'action': 'new' if known is None else 'moved',
             'type': suggested_type(event.summary).value,
         })
@@ -243,26 +241,39 @@ class Choice:
     """What was picked in the popup for one event."""
 
     type: EventType
-    agency: Optional[str] = None  # a name: an existing agency is reused, a new one is created
-    client: Optional[str] = None
+    company: Optional[str] = None  # a name: an existing company is reused, a new one is created
+    company_type: Optional[str] = None  # agency or client; what a new company is, and what an existing one must already be
+    via: Optional[str] = None  # for a client: the name of the agency it came through
 
 
-def _resolve_company(session: Session, agency_name: Optional[str], client_name: Optional[str]) -> tuple[Optional[str], Optional[str]]:
-    """The ids of the agency and the client to link, creating what is new: the same rules as the Update form.
+def _resolve_company(session: Session, choice: Choice) -> tuple[Optional[str], Optional[str]]:
+    """The ids (company, via) to link, creating what is new: the same rules as the Update form.
 
-    A client given with an agency is (re)pointed to it; a known client given alone brings the agency it came through.
+    A name that exists as the other type than the one chosen is refused, so a company is never made twice. A client
+    given with an agency is (re)pointed to it; a known client given alone keeps the agency it came through.
     """
-    agency = None
-    if agency_name:
-        agency = crud.find_company(session, Agency, agency_name) or crud.create_agency(session, AgencyIn(name=agency_name))
-    if not client_name:
-        return (agency.id if agency else None), None
-    client = crud.find_company(session, Client, client_name)
-    if client is None:
-        client = crud.create_client(session, ClientIn(name=client_name, via_agency_id=agency.id if agency else None))
-    elif agency and client.via_agency_id != agency.id:
-        client = crud.update_client(session, client.id, ClientPatch(via_agency_id=agency.id))
-    return (agency.id if agency else client.via_agency_id), client.id
+    if not choice.company:
+        return None, None
+    company = crud.find_company(session, choice.company)
+    company_type = choice.company_type or (company.company_type if company else CompanyType.agency.value)
+    via = None
+    if choice.via:
+        if company_type != CompanyType.client.value:
+            raise crud.DomainError(422, 'Only a client can come through an agency: "%s" is an agency' % choice.company)
+        via = crud.find_company(session, choice.via)
+        if via is None:
+            via = crud.create_company(session, CompanyIn(name=choice.via, company_type=CompanyType.agency))
+        elif via.company_type != CompanyType.agency.value:
+            raise crud.DomainError(422, '"%s" is a client, not an agency' % via.name)
+    if company is None:
+        company = crud.create_company(session, CompanyIn(name=choice.company, company_type=company_type, via_company_id=via.id if via else None))
+    elif company.company_type != company_type:
+        raise crud.DomainError(409, '"%s" is already %s: pick it as that' % (company.name, 'an agency' if company.company_type == 'agency' else 'a client'))
+    elif via and company.via_company_id != via.id:
+        company = crud.update_company(session, company.id, CompanyPatch(via_company_id=via.id))
+    if company.company_type == CompanyType.agency.value:
+        return company.id, None
+    return company.id, (via.id if via else company.via_company_id)
 
 
 def apply_range(session: Session, ics_text: str, first: dt.date, last: dt.date, chosen: dict, tz=None) -> dict:
@@ -276,8 +287,8 @@ def apply_range(session: Session, ics_text: str, first: dt.date, last: dt.date, 
     items = [item for item in plan_range(session, ics_text, first, last, tz)['events'] if item['key'] in chosen]
     for item in items:
         choice = chosen[item['key']]
-        if item['action'] == 'new' and not (choice.agency or choice.client):
-            raise crud.DomainError(422, 'Pick an agency or a client for "%s"' % item['summary'])
+        if item['action'] == 'new' and not choice.company:
+            raise crud.DomainError(422, 'Pick a company for "%s"' % item['summary'])
     result = {'created': 0, 'updated': 0}
     for item in items:
         choice = chosen[item['key']]
@@ -287,10 +298,10 @@ def apply_range(session: Session, ics_text: str, first: dt.date, last: dt.date, 
             session.commit()
             result['updated'] += 1
             continue
-        agency_id, client_id = _resolve_company(session, choice.agency, choice.client)
+        company_id, via_company_id = _resolve_company(session, choice)
         crud.create_event(session, EventIn(
             date=item['date'], time=item['time'], event=choice.type, notes=item['notes'],
-            calendar_event_id=item['key'], agency_id=agency_id, client_id=client_id,
+            calendar_event_id=item['key'], company_id=company_id, via_company_id=via_company_id,
         ))
         result['created'] += 1
     return result

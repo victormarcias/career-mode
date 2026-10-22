@@ -5,7 +5,7 @@ import pytest
 
 SERVED = ['/', '/index.html', '/style.css', '/js/main.js', '/js/i18n.js', '/navigation/favicon.png', '/locales/en.json', '/locales/es.json']
 NOT_SERVED = [
-    '/data/career-mode.db', '/.env', '/server/app/main.py', '/server/alembic.ini', '/backup/agencies.json',
+    '/data/career-mode.db', '/.env', '/server/app/main.py', '/server/alembic.ini', '/backup/companies.json',
     '/scripts/generate_daily_image.py', '/.git/config', '/README.md', '/requirements.txt', '/.venv/pyvenv.cfg',
     '/.claude/settings.local.json', '/.claude/skills/apply-email/SKILL.md', '/.claude/skills/apply-email/../../settings.local.json',
     '/js/../.env', '/%2e%2e/.env', '/js/%2e%2e/%2e%2e/.env', '/public/../data/career-mode.db',
@@ -54,16 +54,16 @@ def test_a_foreign_host_name_is_refused(client):  # DNS rebinding
 
 
 def test_writes_from_another_site_are_refused(client):
-    body = {'name': 'Hacked'}
-    assert client.post('/api/agencies', json=body, headers={'Origin': 'https://evil.example'}).status_code == 403
-    assert client.post('/api/agencies', json=body, headers={'Origin': 'http://testserver'}).status_code == 201
+    body = {'name': 'Hacked', 'companyType': 'agency'}
+    assert client.post('/api/companies', json=body, headers={'Origin': 'https://evil.example'}).status_code == 403
+    assert client.post('/api/companies', json=body, headers={'Origin': 'http://testserver'}).status_code == 201
     assert client.get('/api/events', headers={'Origin': 'https://evil.example'}).status_code == 200  # reading is the browser's own job to block
 
 
 def test_a_write_must_be_json(client):
-    assert client.post('/api/agencies', content=b'name=x', headers={'Content-Type': 'application/x-www-form-urlencoded'}).status_code == 422
-    assert client.post('/api/agencies', content=b'{broken', headers={'Content-Type': 'application/json'}).status_code == 422
-    assert client.post('/api/agencies', content=b'[1]', headers={'Content-Type': 'application/json'}).status_code == 422
+    assert client.post('/api/companies', content=b'name=x', headers={'Content-Type': 'application/x-www-form-urlencoded'}).status_code == 422
+    assert client.post('/api/companies', content=b'{broken', headers={'Content-Type': 'application/json'}).status_code == 422
+    assert client.post('/api/companies', content=b'[1]', headers={'Content-Type': 'application/json'}).status_code == 422
 
 
 def test_unknown_routes_and_methods(client):

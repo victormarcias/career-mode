@@ -2,10 +2,10 @@ import { escapeHtml, wireAccordion } from './dom-utils.js'
 import { daysSince } from './dates.js'
 import { t } from './i18n.js'
 import { archiveCompany } from './entity-edit.js'
-import { agencyBodyHtml, clientBodyHtml, isClientArchived, kindTagHtml } from './companies.js'
+import { companyBodyHtml, companyTypeTagHtml, eventsOf } from './companies.js'
 
 // A manual "no news, I'm archiving this by hand" review — the user picks a
-// staleness threshold, gets back the active agencies and clients whose last
+// staleness threshold, gets back the active companies whose last
 // application is at least that old, and archives whichever ones he confirms. Nothing here is reactive (no live refresh): it's a one-shot
 // report fetched on demand, not a live view.
 
@@ -22,7 +22,7 @@ function heatStyle(days) {
 }
 
 function sortResults(results, mode) {
-  const byName = (a, b) => a.entity.name.localeCompare(b.entity.name)
+  const byName = (a, b) => a.company.name.localeCompare(b.company.name)
   const compare = {
     name: byName,
     days: (a, b) => b.days - a.days || byName(a, b), // oldest first
@@ -35,7 +35,7 @@ function spinnerHtml() {
   return '<div class="flex justify-center py-10"><div class="h-6 w-6 animate-spin rounded-full border-2 border-gray-700 border-t-gray-300"></div></div>'
 }
 
-// The days are counted from the day of the entity's LAST application: that is the one still waiting for an answer.
+// The days are counted from the day of the company's LAST application: that is the one still waiting for an answer.
 // A recruiter's message that started the conversation (a passive message) counts as an application here. With none
 // of them (only interviews or notes, say) it falls back to the last event of any kind, so the company still shows up.
 const APPLICATION_TYPES = ['application', 'passive_message']
@@ -45,49 +45,32 @@ export function lastApplicationDate(matches) {
   return latest(matches.filter((a) => APPLICATION_TYPES.includes(a.event))) ?? latest(matches)
 }
 
-export function computeStale(minDays, { agenciesMap, clientsMap, applications }) {
+export function computeStale(minDays, { companiesMap, applications }) {
   const results = []
-
-  for (const agency of agenciesMap.values()) {
-    if (agency.status === 'archived') continue
-    const matches = applications.filter((app) => app.agencyId === agency.id)
+  for (const company of companiesMap.values()) {
+    if (company.status === 'archived') continue
+    const matches = eventsOf(applications, company)
     const lastOn = lastApplicationDate(matches)
     if (!lastOn) continue
     const days = daysSince(lastOn)
-    if (days >= minDays) results.push({ kind: 'agency', entity: agency, days, matches })
+    if (days >= minDays) results.push({ company, days, matches, via: companiesMap.get(company.viaCompanyId) })
   }
-
-  // Clients have no stored status — "active" is derived from their own
-  // Timeline (same rule as the Companies tab), so one whose agency was already
-  // archived can still be sitting here active.
-  for (const client of clientsMap.values()) {
-    const matches = applications.filter((app) => app.clientId === client.id)
-    const lastOn = lastApplicationDate(matches)
-    if (!lastOn || isClientArchived(matches)) continue
-    const days = daysSince(lastOn)
-    if (days >= minDays) {
-      const via = agenciesMap.get(client.viaAgencyId)
-      results.push({ kind: 'client', entity: client, days, matches, via })
-    }
-  }
-
   return results
 }
 
-function resultCardHtml({ kind, entity, days, matches, via }) {
-  const isAgency = kind === 'agency'
-  const body = isAgency ? agencyBodyHtml(entity, matches) : clientBodyHtml(entity, matches, via)
+function resultCardHtml({ company, days, matches, via }) {
+  const body = companyBodyHtml(company, matches, via)
   return `
-    <div class="capsule" data-id="${entity.id}" data-open="false">
+    <div class="capsule" data-id="${company.id}" data-open="false">
       <div class="capsule-header">
         <label class="flex items-center pl-4">
-          <input type="checkbox" class="check-item-cb h-4 w-4 rounded border-gray-700 bg-gray-800" value="${kind}:${entity.id}" />
+          <input type="checkbox" class="check-item-cb h-4 w-4 rounded border-gray-700 bg-gray-800" value="${company.id}" />
         </label>
         <button type="button" class="capsule-summary" aria-expanded="false">
           <div class="flex w-full items-center gap-2">
             <span>🏢</span>
-            <span class="font-medium text-gray-100">${escapeHtml(entity.name)}</span>
-            ${kindTagHtml(kind)}
+            <span class="font-medium text-gray-100">${escapeHtml(company.name)}</span>
+            ${companyTypeTagHtml(company.companyType)}
             ${via ? `<span class="text-xs text-gray-500">${t('companies.viaLower')} ${escapeHtml(via.name)}</span>` : ''}
             <span class="ml-auto rounded-full px-2 py-0.5 text-[10px]" style="${heatStyle(days)}">${t(days === 1 ? 'followUp.dayOne' : 'followUp.dayMany', { count: days })}</span>
           </div>
@@ -177,14 +160,11 @@ async function handleArchive() {
   if (!selected.length) return
 
   renderLoading()
-  for (const value of selected) {
-    const [kind, id] = value.split(':')
-    await archiveCompany(kind, id, t('followUp.archiveNote'))
-  }
+  for (const id of selected) await archiveCompany(id, t('followUp.archiveNote'))
   renderSuccess(selected.length)
 }
 
-// `getDeps` is a getter (not a plain object) because agenciesMap/clientsMap/
+// `getDeps` is a getter (not a plain object) because companiesMap/
 // applications are reassigned on every refresh from the server in main.js — this
 // needs whatever is current at the moment Fetch is actually clicked.
 export function initFollowUp(getDeps) {

@@ -5,8 +5,8 @@ from sqlalchemy.exc import IntegrityError
 
 @pytest.fixture(autouse=True)
 def base_rows(sql):
-    sql("INSERT INTO agencies (id, name) VALUES ('acme', 'Acme')")
-    sql("INSERT INTO clients (id, name, via_agency_id) VALUES ('big', 'Big', 'acme')")
+    sql("INSERT INTO companies (id, name, company_type) VALUES ('acme', 'Acme', 'agency')")
+    sql("INSERT INTO companies (id, name, company_type, via_company_id) VALUES ('big', 'Big', 'client', 'acme')")
 
 
 def event(sql, **cols):
@@ -14,24 +14,43 @@ def event(sql, **cols):
     sql('INSERT INTO events (%s) VALUES (%s)' % (', '.join(cols), ', '.join(':' + c for c in cols)), **cols)
 
 
-def test_company_names_are_unique_ignoring_case(sql):
+def test_company_names_are_unique_ignoring_case_whatever_the_type(sql):
     with pytest.raises(IntegrityError):
-        sql("INSERT INTO agencies (id, name) VALUES ('acme-2', 'ACME')")
+        sql("INSERT INTO companies (id, name, company_type) VALUES ('acme-2', 'ACME', 'agency')")
     with pytest.raises(IntegrityError):
-        sql("INSERT INTO clients (id, name) VALUES ('big-2', 'big')")
+        sql("INSERT INTO companies (id, name, company_type) VALUES ('acme-3', 'acme', 'client')")  # an agency's name, as a client
 
 
 def test_blank_names_are_refused(sql):
     with pytest.raises(IntegrityError):
-        sql("INSERT INTO agencies (id, name) VALUES ('x', '   ')")
+        sql("INSERT INTO companies (id, name, company_type) VALUES ('x', '   ', 'agency')")
+
+
+def test_a_company_is_an_agency_or_a_client(sql):
+    with pytest.raises(IntegrityError):
+        sql("INSERT INTO companies (id, name, company_type) VALUES ('x', 'X', 'employer')")
+    with pytest.raises(IntegrityError):
+        sql("INSERT INTO companies (id, name, company_type) VALUES ('y', 'Y', NULL)")
+
+
+def test_only_a_client_has_a_via(sql):
+    with pytest.raises(IntegrityError):
+        sql("INSERT INTO companies (id, name, company_type, via_company_id) VALUES ('z', 'Z', 'agency', 'acme')")
+    with pytest.raises(IntegrityError):
+        sql("UPDATE companies SET via_company_id = 'acme' WHERE id = 'acme'")
 
 
 def test_an_event_must_point_to_real_companies(sql):
     with pytest.raises(IntegrityError):
-        event(sql, agency_id='ghost')
+        event(sql, company_id='ghost')
     with pytest.raises(IntegrityError):
-        event(sql, client_id='ghost')
-    event(sql, agency_id='acme', client_id='big')
+        event(sql, company_id='big', via_company_id='ghost')
+    event(sql, company_id='big', via_company_id='acme')
+
+
+def test_a_via_needs_a_company(sql):
+    with pytest.raises(IntegrityError):
+        event(sql, via_company_id='acme')
 
 
 @pytest.mark.parametrize('bad', [{'type': 'party'}, {'date': '08/10/2026'}, {'time': '9am'}, {'apply_type': 'carrier_pigeon'}, {'type': 'agency'}])
@@ -44,33 +63,33 @@ def test_valid_values_are_accepted(sql):
     event(sql, time='09:30', apply_type='web_form')
 
 
-def test_a_passive_message_needs_an_agency_or_a_client(sql):
+def test_a_passive_message_needs_a_company(sql):
     with pytest.raises(IntegrityError):
         event(sql, type='passive_message')
-    event(sql, type='passive_message', client_id='big')  # a company that hires directly has no agency
-    event(sql, id='e2', type='passive_message', agency_id='acme')
+    event(sql, type='passive_message', company_id='big')  # a company that hires directly has no agency
+    event(sql, id='e2', type='passive_message', company_id='acme')
 
 
 def test_a_company_with_events_cannot_be_deleted(sql):
-    event(sql, agency_id='acme', client_id='big')
+    event(sql, company_id='big', via_company_id='acme')
     with pytest.raises(IntegrityError):
-        sql("DELETE FROM agencies WHERE id = 'acme'")
+        sql("DELETE FROM companies WHERE id = 'acme'")  # its client's event came through it
     with pytest.raises(IntegrityError):
-        sql("DELETE FROM clients WHERE id = 'big'")
+        sql("DELETE FROM companies WHERE id = 'big'")
 
 
 def test_deleting_an_agency_without_events_frees_its_clients_and_recruiters(sql):
-    sql("INSERT INTO agency_recruiters VALUES ('acme', 0, 'https://linkedin.com/in/x')")
-    sql("DELETE FROM agencies WHERE id = 'acme'")
-    assert sql("SELECT via_agency_id FROM clients WHERE id = 'big'").scalar() is None
-    assert sql('SELECT COUNT(*) FROM agency_recruiters').scalar() == 0
+    sql("INSERT INTO company_recruiters VALUES ('acme', 0, 'https://linkedin.com/in/x')")
+    sql("DELETE FROM companies WHERE id = 'acme'")
+    assert sql("SELECT via_company_id FROM companies WHERE id = 'big'").scalar() is None
+    assert sql('SELECT COUNT(*) FROM company_recruiters').scalar() == 0
 
 
 def test_changing_an_id_follows_through(sql):
-    event(sql, agency_id='acme')
-    sql("UPDATE agencies SET id = 'acme-inc' WHERE id = 'acme'")
-    assert sql('SELECT agency_id FROM events').scalar() == 'acme-inc'
-    assert sql('SELECT via_agency_id FROM clients').scalar() == 'acme-inc'
+    event(sql, company_id='big', via_company_id='acme')
+    sql("UPDATE companies SET id = 'acme-inc' WHERE id = 'acme'")
+    assert sql('SELECT via_company_id FROM events').scalar() == 'acme-inc'
+    assert sql("SELECT via_company_id FROM companies WHERE id = 'big'").scalar() == 'acme-inc'
 
 
 def test_calendar_event_id_is_unique_when_set(sql):

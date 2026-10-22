@@ -74,8 +74,8 @@ def sync(client, env_path, *events, types=None, companies=None, **kw):
     listed = preview(client, env_path, *events, **kw).json()['events']
     chosen = []
     for e in listed:
-        agency, client_name = (companies or {}).get(e['key'], (e['agency'], e['client']))
-        chosen.append({'key': e['key'], 'type': (types or {}).get(e['key'], e['type']), 'agency': agency, 'client': client_name})
+        company, company_type, via = (companies or {}).get(e['key'], (e['company'], e['companyType'], e['via']))
+        chosen.append({'key': e['key'], 'type': (types or {}).get(e['key'], e['type']), 'company': company, 'companyType': company_type, 'via': via})
     return client.post('/api/calendar/sync', json=body(events=chosen, **kw))
 
 
@@ -86,13 +86,13 @@ def test_it_refuses_without_a_calendar_id(client):
 
 
 def test_the_preview_lists_what_would_be_added_and_adds_nothing(client, env_path):
-    client.post('/api/agencies', json={'name': 'Acme'})
+    client.post('/api/companies', json={'name': 'Acme', 'companyType': 'agency'})
     r = preview(client, env_path, CALENDLY)
     assert r.status_code == 200
     [event] = r.json()['events']
     assert event == {
         'key': 'cal1@google.com', 'summary': 'HR intro with Acme', 'notes': 'HR intro with Acme\n\nCompany: Acme\nPhone: 1',
-        'date': '2026-10-13', 'time': event['time'], 'agency': 'Acme', 'client': None, 'action': 'new', 'type': 'hr_intro',
+        'date': '2026-10-13', 'time': event['time'], 'company': 'Acme', 'companyType': 'agency', 'via': None, 'action': 'new', 'type': 'hr_intro',
     }
     assert (r.json()['unchanged'], r.json()['recurringSkipped']) == (0, 0)
     assert client.get('/api/events').json() == []
@@ -116,23 +116,23 @@ def test_tech_in_the_title_suggests_a_tech_interview_and_cultur_a_culture_one(cl
 
 def test_a_culture_interview_can_be_logged_from_the_calendar(client, env_path):
     feed(client, env_path, CALENDLY)
-    r = client.post('/api/calendar/sync', json=body(events=[{'key': 'cal1@google.com', 'type': 'culture_interview', 'agency': 'Acme'}]))
+    r = client.post('/api/calendar/sync', json=body(events=[{'key': 'cal1@google.com', 'type': 'culture_interview', 'company': 'Acme'}]))
     assert r.status_code == 200 and r.json()['created'] == 1
     assert logged(client)['cal1@google.com']['event'] == 'culture_interview'
 
 
 def test_the_title_and_the_description_go_to_the_notes(client, env_path):
-    client.post('/api/agencies', json={'name': 'Acme'})
+    client.post('/api/companies', json={'name': 'Acme', 'companyType': 'agency'})
     r = sync(client, env_path, CALENDLY, types={'cal1@google.com': 'tech_interview'})
     assert r.status_code == 200 and r.json() == {'created': 1, 'updated': 0}
     event = logged(client)['cal1@google.com']
-    assert (event['event'], event['agencyId'], event['companyLabel']) == ('tech_interview', 'acme', 'Acme')
+    assert (event['event'], event['companyId'], event['companyLabel']) == ('tech_interview', 'acme', 'Acme')
     assert event['notes'] == 'HR intro with Acme\n\nCompany: Acme\nPhone: 1'
     assert event['date'] == '2026-10-13' and len(event['time']) == 5
 
 
 def test_an_event_with_no_description_has_just_its_title_as_notes(client, env_path):
-    sync(client, env_path, vevent(UID='a', DTSTART='20261013T180000Z', SUMMARY='Intro'), companies={'a': ('Acme', None)})
+    sync(client, env_path, vevent(UID='a', DTSTART='20261013T180000Z', SUMMARY='Intro'), companies={'a': ('Acme', 'agency', None)})
     assert logged(client)['a']['notes'] == 'Intro'
 
 
@@ -143,74 +143,83 @@ def test_a_description_in_html_becomes_plain_text(client, env_path):
 
 
 def test_the_first_event_of_a_company_creates_it(client, env_path):
-    assert client.get('/api/agencies').json() == []
+    assert client.get('/api/companies').json() == []
     r = sync(client, env_path, CALENDLY)  # the preview offers "Acme" as an agency the app does not have
     assert r.json() == {'created': 1, 'updated': 0}
-    [agency] = client.get('/api/agencies').json()
-    assert (agency['name'], agency['status']) == ('Acme', 'active')
+    [company] = client.get('/api/companies').json()
+    assert (company['name'], company['companyType'], company['status']) == ('Acme', 'agency', 'active')
     event = logged(client)['cal1@google.com']
-    assert (event['agencyId'], event['clientId'], event['companyLabel']) == (agency['id'], None, 'Acme')
+    assert (event['companyId'], event['viaCompanyId'], event['companyLabel']) == (company['id'], None, 'Acme')
 
 
 def test_two_events_of_a_new_company_create_it_once(client, env_path):
     events = [vevent(UID='a', DTSTART='20261013T180000Z', SUMMARY='one'), vevent(UID='b', DTSTART='20261014T180000Z', SUMMARY='two')]
-    sync(client, env_path, *events, companies={'a': ('Newco', None), 'b': ('newco', None)})
-    assert [a['name'] for a in client.get('/api/agencies').json()] == ['Newco']
-    assert {e['agencyId'] for e in client.get('/api/events').json()} == {'newco'}
+    sync(client, env_path, *events, companies={'a': ('Newco', 'agency', None), 'b': ('newco', 'agency', None)})
+    assert [a['name'] for a in client.get('/api/companies').json()] == ['Newco']
+    assert {e['companyId'] for e in client.get('/api/events').json()} == {'newco'}
 
 
 def test_a_new_direct_client_is_created_without_an_agency(client, env_path):
-    sync(client, env_path, CALENDLY, companies={'cal1@google.com': (None, 'Acme Inc')})
-    [created] = client.get('/api/clients').json()
-    assert (created['name'], created['viaAgencyId']) == ('Acme Inc', None)
-    assert client.get('/api/agencies').json() == []
-    assert logged(client)['cal1@google.com']['clientId'] == created['id']
+    sync(client, env_path, CALENDLY, companies={'cal1@google.com': ('Acme Inc', 'client', None)})
+    [created] = client.get('/api/companies').json()
+    assert (created['name'], created['companyType'], created['viaCompanyId']) == ('Acme Inc', 'client', None)
+    assert logged(client)['cal1@google.com']['companyId'] == created['id']
 
 
 def test_a_client_with_an_agency_is_linked_to_both(client, env_path):
-    sync(client, env_path, CALENDLY, companies={'cal1@google.com': ('Staffing Co', 'Acme')})
-    [created] = client.get('/api/clients').json()
+    sync(client, env_path, CALENDLY, companies={'cal1@google.com': ('Acme', 'client', 'Staffing Co')})
+    companies = {c['name']: c for c in client.get('/api/companies').json()}
     event = logged(client)['cal1@google.com']
-    assert (created['viaAgencyId'], event['agencyId'], event['clientId']) == ('staffing-co', 'staffing-co', 'acme')
-    assert event['companyLabel'] == 'Staffing Co'
+    assert (companies['Acme']['companyType'], companies['Acme']['viaCompanyId'], companies['Staffing Co']['companyType']) == ('client', 'staffing-co', 'agency')
+    assert (event['companyId'], event['viaCompanyId']) == ('acme', 'staffing-co')
+    assert event['companyLabel'] == 'Staffing Co → Acme'
 
 
 def test_a_known_client_alone_brings_its_agency_and_is_found_by_the_description(client, env_path):
-    client.post('/api/agencies', json={'name': 'Staffing Co'})
-    client.post('/api/clients', json={'name': 'Acme', 'viaAgencyId': 'staffing-co'})
+    client.post('/api/companies', json={'name': 'Staffing Co', 'companyType': 'agency'})
+    client.post('/api/companies', json={'name': 'Acme', 'companyType': 'client', 'viaCompanyId': 'staffing-co'})
     [offer] = preview(client, env_path, CALENDLY).json()['events']
-    assert (offer['agency'], offer['client']) == ('Staffing Co', 'Acme')  # the agency it came through
-    sync(client, env_path, CALENDLY, companies={'cal1@google.com': (None, 'acme')})
+    assert (offer['company'], offer['companyType'], offer['via']) == ('Acme', 'client', 'Staffing Co')  # the agency it came through
+    sync(client, env_path, CALENDLY, companies={'cal1@google.com': ('acme', None, None)})
     event = logged(client)['cal1@google.com']
-    assert (event['agencyId'], event['clientId']) == ('staffing-co', 'acme')
-    assert len(client.get('/api/clients').json()) == 1
+    assert (event['companyId'], event['viaCompanyId']) == ('acme', 'staffing-co')
+    assert len(client.get('/api/companies').json()) == 2
 
 
-def test_an_event_needs_an_agency_or_a_client_and_nothing_is_written_before_checking(client, env_path):
+def test_a_name_that_exists_as_the_other_type_is_refused_and_nothing_is_written(client, env_path):
+    client.post('/api/companies', json={'name': 'Acme', 'companyType': 'agency'})
+    r = sync(client, env_path, CALENDLY, companies={'cal1@google.com': ('Acme', 'client', None)})
+    assert r.status_code == 409 and 'already an agency' in r.json()['detail']
+    assert client.get('/api/events').json() == [] and len(client.get('/api/companies').json()) == 1
+    r = sync(client, env_path, CALENDLY, companies={'cal1@google.com': ('Acme', 'agency', 'Other')})  # an agency has no agency
+    assert r.status_code == 422 and len(client.get('/api/companies').json()) == 1
+
+
+def test_an_event_needs_a_company_and_nothing_is_written_before_checking(client, env_path):
     events = [vevent(UID='a', DTSTART='20261013T180000Z', SUMMARY='one'), vevent(UID='b', DTSTART='20261014T180000Z', SUMMARY='two')]
     feed(client, env_path, *events)
-    chosen = [{'key': 'a', 'type': 'hr_intro', 'agency': 'Newco'}, {'key': 'b', 'type': 'hr_intro'}]
+    chosen = [{'key': 'a', 'type': 'hr_intro', 'company': 'Newco'}, {'key': 'b', 'type': 'hr_intro'}]
     r = client.post('/api/calendar/sync', json=body(events=chosen))
     assert r.status_code == 422 and '"two"' in r.json()['detail']
-    assert client.get('/api/events').json() == [] and client.get('/api/agencies').json() == []  # not even Newco
+    assert client.get('/api/events').json() == [] and client.get('/api/companies').json() == []  # not even Newco
 
 
 def test_an_event_without_a_company_line_offers_none(client, env_path):
     [offer] = preview(client, env_path, vevent(UID='a', DTSTART='20261013T180000Z', SUMMARY='Chat')).json()['events']
-    assert (offer['agency'], offer['client']) == (None, None)
+    assert (offer['company'], offer['companyType'], offer['via']) == (None, None, None)
 
 
 def test_only_the_events_that_were_confirmed_are_logged(client, env_path):
     events = [vevent(UID='a', DTSTART='20261013T180000Z', SUMMARY='one'), vevent(UID='b', DTSTART='20261014T180000Z', SUMMARY='two')]
     feed(client, env_path, *events)
-    r = client.post('/api/calendar/sync', json=body(events=[{'key': 'b', 'type': 'hr_intro', 'agency': 'Acme'}]))
+    r = client.post('/api/calendar/sync', json=body(events=[{'key': 'b', 'type': 'hr_intro', 'company': 'Acme'}]))
     assert r.json() == {'created': 1, 'updated': 0} and list(logged(client)) == ['b']
     assert [e['key'] for e in client.post('/api/calendar/preview', json=body()).json()['events']] == ['a']  # still offered
 
 
 def test_a_type_that_is_not_an_interview_of_the_calendar_is_refused(client, env_path):
     feed(client, env_path, CALENDLY)
-    r = client.post('/api/calendar/sync', json=body(events=[{'key': 'cal1@google.com', 'type': 'offer', 'agency': 'Acme'}]))
+    r = client.post('/api/calendar/sync', json=body(events=[{'key': 'cal1@google.com', 'type': 'offer', 'company': 'Acme'}]))
     assert r.status_code == 422 and client.get('/api/events').json() == []
 
 
@@ -220,7 +229,7 @@ def test_a_logged_event_is_not_offered_again_and_a_moved_one_is_offered_as_moved
     assert again['events'] == [] and again['unchanged'] == 1
     moved = vevent(UID='cal1@google.com', DTSTART='20261014T180000Z', SUMMARY='HR intro with Acme', DESCRIPTION='Company: Acme')
     [offer] = preview(client, env_path, moved).json()['events']
-    assert (offer['action'], offer['date'], offer['agency']) == ('moved', '2026-10-14', 'Acme')  # its own company
+    assert (offer['action'], offer['date'], offer['company']) == ('moved', '2026-10-14', 'Acme')  # its own company
     assert sync(client, env_path, moved).json() == {'created': 0, 'updated': 1}
     assert logged(client)['cal1@google.com']['date'] == '2026-10-14' and len(client.get('/api/events').json()) == 1
 
@@ -228,12 +237,12 @@ def test_a_logged_event_is_not_offered_again_and_a_moved_one_is_offered_as_moved
 def test_a_type_company_and_notes_changed_by_hand_are_kept_when_the_event_moves(client, env_path):
     sync(client, env_path, CALENDLY)
     event = logged(client)['cal1@google.com']
-    client.post('/api/agencies', json={'name': 'Other'})
-    client.patch('/api/events/%s' % event['id'], json={'event': 'tech_filter', 'notes': 'my notes', 'agencyId': 'other'})
+    client.post('/api/companies', json={'name': 'Other', 'companyType': 'agency'})
+    client.patch('/api/events/%s' % event['id'], json={'event': 'tech_filter', 'notes': 'my notes', 'companyId': 'other'})
     moved = vevent(UID='cal1@google.com', DTSTART='20261014T180000Z', SUMMARY='HR intro with Acme', DESCRIPTION='Company: Acme')
-    sync(client, env_path, moved, types={'cal1@google.com': 'hr_intro'}, companies={'cal1@google.com': ('Acme', None)})
+    sync(client, env_path, moved, types={'cal1@google.com': 'hr_intro'}, companies={'cal1@google.com': ('Acme', 'agency', None)})
     kept = logged(client)['cal1@google.com']
-    assert (kept['event'], kept['notes'], kept['agencyId'], kept['date']) == ('tech_filter', 'my notes', 'other', '2026-10-14')
+    assert (kept['event'], kept['notes'], kept['companyId'], kept['date']) == ('tech_filter', 'my notes', 'other', '2026-10-14')
 
 
 def test_only_the_asked_days_all_day_cancelled_and_repeating_events_are_left_out(client, env_path):
@@ -247,7 +256,7 @@ def test_only_the_asked_days_all_day_cancelled_and_repeating_events_are_left_out
     ]
     plan = preview(client, env_path, *events).json()
     assert [e['key'] for e in plan['events']] == ['in'] and plan['recurringSkipped'] == 1
-    assert sync(client, env_path, *events, companies={'in': ('Acme', None)}).json() == {'created': 1, 'updated': 0}
+    assert sync(client, env_path, *events, companies={'in': ('Acme', 'agency', None)}).json() == {'created': 1, 'updated': 0}
     assert list(logged(client)) == ['in']
 
 
