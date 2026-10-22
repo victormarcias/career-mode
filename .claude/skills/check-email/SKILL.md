@@ -20,7 +20,7 @@ Use `search_threads` (and `get_thread` for a recruiter's message). Nothing else 
 Put each thread in one place, from its sender, subject and snippet:
 
 - **AIApply:** from `hello@aiapplynotif.com`. Positive ones (`<Company> wants to interview you`, `<Company> sent you an assessment`, `A follow-up from <Company>`) go to `/sync-aiapply`; `An update from <Company>` is a rejection on AIApply: it goes to `/reply-rejected`, which logs it.
-- **Rejection:** a company says it is not going ahead with the user (unfortunately, "not moving forward", "other candidates", and the same in Spanish and Portuguese), or AIApply says so. It goes to `/reply-rejected`, which replies and logs it in the Calendar.
+- **Rejection:** a company says it is not going ahead with the user (unfortunately, "not moving forward", "other candidates", and the same in Spanish), or AIApply says so. It goes to `/reply-rejected`, which replies and logs it in the Calendar.
 - **Recruiter:** a person who writes first about a job, a proposal or an opportunity (not a reply to something the user applied for, and not an alert or newsletter). It goes to `/reply-recruiter`, once for each one.
 - **Needs the user:** a company, not AIApply, that asks for something (an interview time, an assessment, a form, a call). Not handled by any skill: only listed, one line each, with sender and subject.
 - **Everything else** (alerts, newsletters, receipts, confirmations of an application): left alone and only counted.

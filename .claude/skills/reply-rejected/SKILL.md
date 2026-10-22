@@ -9,11 +9,11 @@ Companies that say no usually get no answer, and the Calendar should say they di
 
 ## What it sends
 
-The user's own words, in the language of the rejection (English, Spanish or Portuguese; any other language, in English):
+The user's own words, in the language of the rejection (English or Spanish; any other language, in English):
 
 > Thanks for considering me and letting me know. And of course, we'll stay in touch for future opportunities.
 
-As a plain-text email, with the greeting and the sign-off around it: `Hi <first name>,` (Spanish `Hola <nombre>,`, Portuguese `Olá <nome>,`), a blank line, the sentence (in Spanish "Muchas gracias por considerarme y por avisarme. Por supuesto, estaremos en contacto para futuras oportunidades."), a blank line, `Best regards,` (`Saludos,`, `Abraço,`) and the user's first name, from the profile's Basics (`profile/profile.md`), read at run time. When the sender is not a person (a team, a company name, "Recruiting"), the greeting is just `Hi,`. Nothing else is added: no question, no feedback request, no salary, no link, no attachment.
+As a plain-text email, with the greeting and the sign-off around it: `Hi <first name>,` (Spanish `Hola <nombre>,`), a blank line, the sentence (in Spanish "Muchas gracias por considerarme y por avisarme. Por supuesto, estaremos en contacto para futuras oportunidades."), a blank line, `Best regards,` (Spanish `Saludos,`) and the user's first name, from the profile's Basics (`profile/profile.md`), read at run time. When the sender is not a person (a team, a company name, "Recruiting"), the greeting is just `Hi,`. Nothing else is added: no question, no feedback request, no salary, no link, no attachment.
 
 ## Gmail
 
@@ -21,7 +21,7 @@ Use `search_threads`, `get_thread`, `reply` and `unlabel_thread` of the Gmail co
 
 ## 1. Find the rejections
 
-`search_threads` with `-from:me newer_than:14d` (the days the user gives, if they give some) and the words of a rejection, such as: `(unfortunately OR "regret to inform" OR "not moving forward" OR "not be moving forward" OR "other candidates" OR "decided not to" OR "will not be proceeding" OR "not selected" OR lamentamos OR "otros candidatos" OR infelizmente OR "outros candidatos" OR "wasn't a yes")`, `pageSize` 30, the default view (subject and snippet).
+`search_threads` with `-from:me newer_than:14d` (the days the user gives, if they give some) and the words of a rejection, such as: `(unfortunately OR "regret to inform" OR "not moving forward" OR "not be moving forward" OR "other candidates" OR "decided not to" OR "will not be proceeding" OR "not selected" OR lamentamos OR "otros candidatos" OR "wasn't a yes")`, `pageSize` 30, the default view (subject and snippet).
 
 Keep a thread when the subject or the snippet clearly says the company is **not going ahead with the user**. Leave out the unclear ones (a newsletter, a job alert, a rejection of someone else, "unfortunately the interview moved") and say how many, with their subjects, so the user decides.
 
