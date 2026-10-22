@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 [Español](CHANGELOG.es.md)
 
+## [Unreleased]
+
+### Added
+
+- **`/sync-aiapply`:** reads the AIApply.io notifications in Gmail and logs each positive reply from a company (an interview invitation, an assessment, a follow-up) as a web application, once, with the company as an agency or a client.
+
 ## [0.1.1] - 2026-10-20
 
 ### Added
@@ -56,5 +62,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 Initial release.
 
+[Unreleased]: https://github.com/victormarcias/career-mode/compare/0.1.1...HEAD
 [0.1.1]: https://github.com/victormarcias/career-mode/compare/0.1...0.1.1
 [0.1]: https://github.com/victormarcias/career-mode/releases/tag/0.1
