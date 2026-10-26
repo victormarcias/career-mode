@@ -29,7 +29,7 @@ A thread that is not clear goes in "Needs the user", never into a skill.
 
 ## 3. Run the skills
 
-Call each with the Skill tool, only for the kinds that have something, in this order, and pass the days the user gave:
+Call each with the Skill tool, only for the kinds that have something, in this order, and pass the days the user gave and `--verbose` when the user gave it:
 
 1. `/sync-aiapply`, once, when there is at least one positive AIApply notification.
 2. `/reply-rejected`, once, when there is at least one rejection.
@@ -39,4 +39,4 @@ A skill that stops (the app is not running, an email it can't read) is reported 
 
 ## 4. Finish
 
-Say in chat, in a few lines: what each skill did (what `/sync-aiapply` logged, to whom `/reply-rejected` replied and what it logged, the drafts of `/reply-recruiter` shown above), what **needs the user**, and how many threads were left alone. Nothing is committed.
+Say nothing of what was done unless the command has `--verbose`; without it, show only what **needs the user** and the drafts of `/reply-recruiter` (the user sends them), plus any skill that stopped. With `--verbose`, say in chat, in a few lines: what each skill did (what `/sync-aiapply` logged, to whom `/reply-rejected` replied and what it logged, the drafts of `/reply-recruiter` shown above), what **needs the user**, and how many threads were left alone. Nothing is committed.

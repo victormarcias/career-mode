@@ -54,4 +54,4 @@ The sidebar's "Pending" page doesn't apply to anything itself — it queues a JD
 1. `GET /api/events?event=pending` for every pending event, oldest first (the list comes newest first, so reverse it).
 2. A `pending` event holds only a link, so for each one, one at a time with a short pause between them, run the core process above (read the JD Post as the hard rule says, then steps 1-6). Step 6 replaces the pending placeholder with the real `application` event.
 3. If a link can't be completed (captcha, recorded video, dead link, JD Post too old, no fit, etc.), its `pending` event stays as it is and is flagged in the summary instead of being deleted.
-4. Finish with a short summary in chat: how many went through, how many are still pending and why.
+4. Say nothing of what was done unless the command has `--verbose`: then finish with a short summary in chat, how many went through, how many are still pending and why. Without it, speak only about a link that is stuck on something only the user can do (what is left to click or type) or a failure.

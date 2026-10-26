@@ -51,7 +51,7 @@ Through the local API at `http://localhost:8333` (docs at `/docs`; if a request 
 1. **The company.** Find it by name (ignoring case) in `GET /api/companies`; the name comes from the sender, the subject or the text of the rejection. No company with that name: nothing is logged.
 2. **Its process.** Take its latest `application` (or `passive_message`) event, `GET /api/events?companyId=<id>`, archived company or not. **No such event: nothing is logged**, even if the company exists. Otherwise use the same `companyId` and `viaCompanyId` as that event.
 
-What is not logged is only mentioned in the summary, with the company and the reason ("not in the Calendar" or "no application").
+What is not logged is only mentioned in the `--verbose` summary, with the company and the reason ("not in the Calendar" or "no application").
 3. **Not twice.** If the company already has a `rejection` event on that day or later, it is logged: skip it.
 4. `POST /api/events` with `event`: `rejection`, `date` and `time`: the day and the time (`HH:MM`, the user's time zone) the rejection email arrived, and `notes`: the reason when the email gives one, in a short line, else **"Other candidates."**, never "No reason given.". The company is archived by itself: a closing event as its latest one does that. The rejection stays in the Calendar on its day; archiving only moves the company out of the Active filter and out of Follow Up.
 
@@ -59,4 +59,4 @@ Do it for every rejection that reaches this step, also when it could not be answ
 
 ## 5. Finish
 
-Say in chat, briefly: to whom a reply was sent and archived (company or person, and the role when the subject says it), which rejections were logged in the Calendar (company and day), which were already answered or already logged, which can't be answered (no-reply) or are unclear, and which rejections were not logged because they have no process in the Calendar. Nothing is committed. A later `/reply-rejected` finds the sent ones answered and the logged ones logged, and skips them.
+Say nothing of what was done unless the command has `--verbose`; without it, speak only when something needs the user (a failure, a step that stopped, an unclear rejection). With `--verbose`, say in chat, briefly: to whom a reply was sent and archived (company or person, and the role when the subject says it), which rejections were logged in the Calendar (company and day), which were already answered or already logged, which can't be answered (no-reply) or are unclear, and which rejections were not logged because they have no process in the Calendar. Nothing is committed. A later `/reply-rejected` finds the sent ones answered and the logged ones logged, and skips them.

@@ -39,4 +39,4 @@ Don't touch anything else, and say what you wrote.
 
 ## 4. Finish
 
-Reply in chat with: the analysis, the draft reply, and what was saved (company created or reused, recruiter added, the Calendar event created or, for a thread already logged, updated). Nothing is sent and nothing is committed.
+Reply in chat with the analysis and the draft reply, which the user needs. What was saved (company created or reused, recruiter added, the Calendar event created or, for a thread already logged, updated) is said only with `--verbose`. Nothing is sent and nothing is committed.

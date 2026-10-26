@@ -50,4 +50,4 @@ Each `An update from <Company>` thread goes to the trash with `trash_thread` (th
 
 ## 5. Finish
 
-Say in chat, briefly: how many positive notifications were found and logged (company, position, type and time), which were already there, how many "Not this time" notices went to the trash and how many stayed for `/reply-rejected`, and how many threads were left alone. Nothing is sent and nothing is committed.
+Say nothing of what was done unless the command has `--verbose`; without it, speak only when something needs the user (a failure, a step that stopped). With `--verbose`, say in chat, briefly: how many positive notifications were found and logged (company, position, type and time), which were already there, how many "Not this time" notices went to the trash and how many stayed for `/reply-rejected`, and how many threads were left alone. Nothing is sent and nothing is committed.

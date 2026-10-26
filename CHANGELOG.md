@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Passive messages:** a passive message needs an agency or a client, so a recruiter of a company that hires directly is logged against the client. Existing databases are migrated on start.
 - **`/reply-recruiter`:** logs a direct employer as a client, and an agency as an agency.
 - **`/apply-pending`:** a JD Post is discarded when it was last updated a month ago or more, and no technology rules a post out any more: Python or JavaScript is what counts, and the other tools can be learned.
+- **Skills' output:** `/sync-aiapply`, `/reply-rejected`, `/check-email`, `/reply-recruiter` and `/apply-pending` no longer report what they did, unless the command has `--verbose`. Failures, what needs the user and the reply drafts are always shown.
 - **One company, one API:** agencies and clients are one list of companies, each an agency or a client (`companyType`), with its name unique whichever it is: the same name can no longer be made twice, by the API or by a form. An event has a `companyId` (its client, or its agency when there is no client) and a `viaCompanyId` (the agency a client came through). A company's status is derived from its events instead of stored. The Companies page, Follow Up, the forms, the Google Calendar sync, the backups (`companies.csv` has a `company_type` column, and the older backup files still load) and the skills use it. Existing databases are migrated on start.
 
 ### Removed
