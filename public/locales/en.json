@@ -172,7 +172,6 @@
   "followUp.archiveNote": "No news — archived manually.",
   "app.errType": "Pick the type: email, passive or web.",
   "app.errCompany": "The company name is required.",
-  "app.errHomeRequired": "Company Home is required for an agency.",
   "app.errHomeKind": "Company Home must be the company page on LinkedIn (linkedin.com/company/...).",
   "app.errRecruiters": "Each recruiter must be a LinkedIn profile (linkedin.com/in/...), one per line.",
   "hint.agency": "Will create the new agency \"{name}\".",

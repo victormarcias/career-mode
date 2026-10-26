@@ -36,14 +36,13 @@ export const isCompanyHome = (value) => /^\/(company|school|showcase)\/[^/]+/.te
 export const isRecruiterProfile = (value) => /^\/in\/[^/]+/.test(linkedinPath(value) ?? '')
 
 // The first problem with the form, as a sentence to show, or null when it can be saved. Company Home
-// is required for an agency only, and the recruiters never are (not everyone has a LinkedIn profile),
-// but a link that is given has to be the right kind of address.
+// and the recruiters are never required (not everyone has a LinkedIn profile), but a link that is
+// given has to be the right kind of address.
 export function validateApplication(fields) {
   if (!TYPES.includes(fields.type)) return t('app.errType')
   if (fields.type === 'web_form' && !fields.link.trim()) return t('form.errLinkRequired')
   if (!fields.company.trim()) return t('app.errCompany')
   const home = linkedinUrl(fields.companyHome)
-  if (!home && fields.agency) return t('app.errHomeRequired')
   if (home && !isCompanyHome(home)) return t('app.errHomeKind')
   if (parseRecruiters(fields.recruiters).some((r) => !isRecruiterProfile(r))) {
     return t('app.errRecruiters')
@@ -157,12 +156,7 @@ export function initApplicationForm({ getCompanies }) {
     syncCompanyType()
   }
 
-  // Company Home is only required for an agency.
   function syncCompanyType() {
-    const agency = field('company-type').value === 'agency'
-    field('home').required = agency
-    document.getElementById('app-home-optional').classList.toggle('hidden', agency)
-    document.getElementById('app-home-req').classList.toggle('hidden', !agency)
     updateCompanyHint()
   }
 

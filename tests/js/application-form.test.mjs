@@ -61,7 +61,7 @@ test('the mandatory fields are checked in order, and a complete form passes', ()
   assert.match(validateApplication({ ...complete, type: 'web' }), /email, passive or web/)
   assert.match(validateApplication({ ...complete, company: '  ' }), /company name/i)
   assert.match(validateApplication({ ...complete, companyHome: 'https://www.linkedin.com/' }), /Company Home/)
-  assert.match(validateApplication({ ...complete, companyHome: '' }), /Company Home is required/)
+  assert.equal(validateApplication({ ...complete, companyHome: '' }), null) // not required, not even for an agency
   assert.match(validateApplication({ ...complete, recruiters: 'https://www.linkedin.com/' }), /Each recruiter/)
   assert.match(validateApplication({ ...complete, recruiters: 'https://www.linkedin.com/company/x' }), /Each recruiter/)
   assert.match(validateApplication({ ...complete, companyHome: 'company/northwind-staffing' }), /Company Home/)  // a path alone is not a link
@@ -95,7 +95,8 @@ test('the Application link is required for a web application and optional for an
   assert.deepEqual(client.calls, [])
 })
 
-test('Company Home is optional without an agency and the recruiter is always optional, but a link that is given must be right', () => {
+test('Company Home and the recruiter are always optional, but a link that is given must be right', () => {
+  assert.equal(validateApplication({ ...complete, agency: true, companyHome: '' }), null)
   assert.equal(validateApplication({ ...complete, agency: false, companyHome: '' }), null)
   assert.match(validateApplication({ ...complete, agency: false, companyHome: 'https://example.com/x' }), /Company Home must be/)
   assert.equal(validateApplication({ ...complete, recruiters: '' }), null)

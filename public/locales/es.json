@@ -172,7 +172,6 @@
   "followUp.archiveNote": "Sin novedades — archivada a mano.",
   "app.errType": "Elige el tipo: email, pasiva o web.",
   "app.errCompany": "El nombre de la empresa es obligatorio.",
-  "app.errHomeRequired": "La página de la empresa es obligatoria para una agency.",
   "app.errHomeKind": "La página de la empresa tiene que ser la de LinkedIn (linkedin.com/company/...).",
   "app.errRecruiters": "Cada recruiter tiene que ser un perfil de LinkedIn (linkedin.com/in/...), uno por línea.",
   "hint.agency": "Se va a crear la nueva agency \"{name}\".",
