@@ -1,7 +1,7 @@
 import { calendar, settings } from './api.js'
 import { addDays, toISODate } from './dates.js'
 import { EVENT_LABELS } from './events.js'
-import { companyHint, escapeHtml, findCompany, setNotice, typeConflict, typeConflictText, typeFor } from './dom-utils.js'
+import { companyHint, escapeHtml, findCompany, setNotice, setNoticeWithLink, typeConflict, typeConflictText, typeFor } from './dom-utils.js'
 import { t } from './i18n.js'
 
 // What an event of the calendar can be logged as (the server accepts only these two).
@@ -24,14 +24,6 @@ export function syncSummary({ created, updated }) {
   if (created) parts.push(t(created === 1 ? 'sync.addedOne' : 'sync.addedMany', { count: created }))
   if (updated) parts.push(t(updated === 1 ? 'sync.movedOne' : 'sync.movedMany', { count: updated }))
   return `${parts.length ? parts.join(', ') : t('sync.nothingChanged')}.`
-}
-
-// The button works only once a calendar is set in Settings.
-export function applySyncState(button, configured) {
-  button.disabled = !configured
-  const title = configured ? t('sync.title') : t('calendar.syncOff')
-  button.title = title
-  button.setAttribute('aria-label', title)
 }
 
 // ---------- The popup ----------
@@ -125,13 +117,12 @@ function readState(form, items) {
 
 // ---------- The button ----------
 
-export async function refreshSyncButton() {
-  const button = document.getElementById('sync-calendar-btn')
+// The button is always on: without a calendar it says so, and where to set one.
+async function calendarIsSet() {
   try {
-    const vars = await settings.env()
-    applySyncState(button, Boolean(vars.find((v) => v.name === 'GOOGLE_CALENDAR_ID')?.isSet))
+    return Boolean((await settings.env()).find((v) => v.name === 'GOOGLE_CALENDAR_ID')?.isSet)
   } catch {
-    applySyncState(button, false)
+    return true // the sync itself will say what is wrong
   }
 }
 
@@ -203,8 +194,12 @@ export function initCalendarSync({ getWeekStart, getCompanies }) {
   button.addEventListener('click', async () => {
     const { start, end } = weekDates(getWeekStart())
     button.disabled = true
-    say('muted', t('sync.reading'))
     try {
+      if (!(await calendarIsSet())) {
+        say('error', '')
+        return setNoticeWithLink(status, t('sync.calendarNotSet'), '#settings', t('sync.goToSettings'))
+      }
+      say('muted', t('sync.reading'))
       const plan = await calendar.preview(start, end)
       if (!plan.events.length) {
         say('success', `${t('sync.nothingNew')}${repeatingNote(plan.recurringSkipped)}`)
@@ -220,7 +215,7 @@ export function initCalendarSync({ getWeekStart, getCompanies }) {
     } catch (err) {
       say('error', err.message)
     } finally {
-      await refreshSyncButton()
+      button.disabled = false
     }
   })
 
@@ -262,5 +257,4 @@ export function initCalendarSync({ getWeekStart, getCompanies }) {
       showError(err.message)
     }
   })
-  refreshSyncButton()
 }

@@ -86,6 +86,16 @@ const NOTICE_MS = 200 // as long as the fold in style.css (.notice)
 // Shows a notice line (a hint, an error, a status) with `text`, or folds it away when `text` is empty. The line
 // grows and shrinks vertically (see .notice in style.css) instead of popping in; the old text stays while it
 // folds, and is cleared once it is gone.
+// A notice with a link after it, such as "not set up yet" and "Go to Settings".
+export function setNoticeWithLink(el, text, href, label) {
+  setNotice(el, text)
+  const link = document.createElement('a')
+  link.href = href
+  link.className = 'ml-2 underline'
+  link.textContent = label
+  el.append(link)
+}
+
 export function setNotice(el, text) {
   clearTimeout(el._noticeTimer)
   if (text) {

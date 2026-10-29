@@ -115,6 +115,11 @@ export const calendar = {
   sync: (start, end, events) => write('POST', '/api/calendar/sync', { start, end, events }),
 }
 
+// Google Tasks (the three GOOGLE_TASKS_* settings): queues the job links of the open tasks as pending applications.
+export const googleTasks = {
+  sync: () => write('POST', '/api/google-tasks/sync'),
+}
+
 export const api = {
   list: (collection, filters) => request('GET', `/api/${collection}${query(filters)}`),
   get: (collection, id) => request('GET', `/api/${collection}/${encodeURIComponent(id)}`),

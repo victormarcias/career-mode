@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 const { EVENT_LABELS } = await import('../../public/js/events.js')
-const { applySyncState, confirmLabel, firstWithoutCompany, repeatingNote, syncPayload, syncRowsHtml, syncSummary, weekDates } =
+const { confirmLabel, firstWithoutCompany, repeatingNote, syncPayload, syncRowsHtml, syncSummary, weekDates } =
   await import('../../public/js/calendar-sync.js')
 
 function fakeButton() {
@@ -14,23 +14,6 @@ function fakeButton() {
 const hr = { key: 'a', summary: 'HR intro with Acme', notes: 'HR intro with Acme\n\nCompany: Acme', date: '2026-10-13', time: '15:00', company: 'Acme', companyType: 'agency', via: null, action: 'new', type: 'hr_intro' }
 const tech = { ...hr, key: 'b', summary: 'Tech interview', company: null, companyType: null, type: 'tech_interview' }
 const moved = { ...hr, key: 'c', action: 'moved' }
-
-test('the button is off, with its own hint, until a calendar is set', () => {
-  const button = fakeButton()
-  applySyncState(button, false)
-  assert.equal(button.disabled, true)
-  assert.equal(button.title, 'Google Calendar not synced')
-  assert.equal(button.attributes['aria-label'], 'Google Calendar not synced')
-})
-
-test('with a calendar set the button is on and says what it does', () => {
-  const button = fakeButton()
-  applySyncState(button, false)
-  applySyncState(button, true)
-  assert.equal(button.disabled, false)
-  assert.equal(button.title, 'Sync Google Calendar')
-  assert.equal(button.attributes['aria-label'], 'Sync Google Calendar')
-})
 
 test('the week to sync is Monday to Friday, as local dates', () => {
   assert.deepEqual(weekDates(new Date(2026, 9, 12)), { start: '2026-10-12', end: '2026-10-16' })

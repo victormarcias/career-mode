@@ -10,6 +10,7 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
 
 ### Añadido
 
+- **Sync Google Tasks:** un botón junto al de Google Calendar en el Calendario lee las tareas abiertas de Google Tasks del usuario (con la API de Google Tasks), pone en cola cada link de empleo que tengan como aplicación pendiente, una sola vez, y marca esas tareas como hechas. Sin sus tres ajustes (nuevos, con los pasos) lo dice y enlaza a Settings; el botón de Google Calendar hace lo mismo.
 - **`/sync-aiapply`:** lee las notificaciones de AIApply.io en Gmail y registra cada respuesta positiva de una empresa (una invitación a entrevista, un assessment, un seguimiento) como una application web, una sola vez, con la empresa como agency o como client. Sus avisos "Not this time" pasan a la papelera cuando ya no queda nada por registrar de ellos.
 - **`/reply-rejected`:** busca los rechazos que las empresas enviaron al Gmail del usuario y responde a cada uno, una sola vez, agradeciendo y diciendo que seguirán en contacto, archiva el mail y registra el rechazo en el Calendar.
 - **`/check-email`:** ordena el Gmail reciente y ejecuta `/sync-aiapply`, `/reply-rejected` y `/reply-recruiter` sobre lo que encuentra.

@@ -84,10 +84,15 @@
                 class="state-pill rounded-full border px-4 py-2 text-sm font-medium" data-i18n="calendar.newUpdate">
                 + Update
               </button>
-              <button id="sync-calendar-btn" type="button" disabled title="Google Calendar not synced"
-                aria-label="Google Calendar not synced" data-i18n-title="calendar.syncOff" data-i18n-aria-label="calendar.syncOff"
-                class="state-pill flex h-[38px] w-[38px] items-center justify-center rounded-full border disabled:cursor-not-allowed disabled:opacity-40 disabled:grayscale">
+              <button id="sync-calendar-btn" type="button" title="Sync Google Calendar"
+                aria-label="Sync Google Calendar" data-i18n-title="sync.title" data-i18n-aria-label="sync.title"
+                class="state-pill flex h-[38px] w-[38px] items-center justify-center rounded-full border disabled:cursor-not-allowed disabled:opacity-40">
                 <img src="navigation/google-calendar.png" alt="" class="h-5 w-5" draggable="false" />
+              </button>
+              <button id="sync-tasks-btn" type="button" title="Sync Google Tasks"
+                aria-label="Sync Google Tasks" data-i18n-title="sync.tasksTitle" data-i18n-aria-label="sync.tasksTitle"
+                class="state-pill flex h-[38px] w-[38px] items-center justify-center rounded-full border disabled:cursor-not-allowed disabled:opacity-40">
+                <img src="navigation/google-tasks.svg" alt="" class="h-5 w-5" draggable="false" />
               </button>
               <button id="weekly-report-btn" type="button" aria-pressed="false"
                 class="state-pill rounded-full border px-4 py-2 text-sm font-medium" data-i18n="calendar.weeklyReport">
@@ -105,17 +110,21 @@
               <div id="weekly-report-content" class="static-page rounded-2xl border border-gray-800 bg-gray-900 p-4"></div>
             </div>
           </div>
+
+          <!-- The queued links, under the week: shown only while there is any (see js/pending.js) -->
+          <div id="pending-block" class="mt-8 hidden w-fit max-w-2xl">
+            <h2 class="mb-2 text-base font-medium text-gray-100" data-i18n="pending.applications">Pending Applications</h2>
+            <div id="pending-list" class="rounded-2xl border border-gray-800 bg-gray-900 p-2"></div>
+          </div>
         </section>
 
-        <!-- Pending view (central page): the queued links, and the form that queues one (see js/pending.js) -->
+        <!-- Pending view (central page): the form that queues a link, and Google Tasks (see js/pending.js); the queued links are under the Calendar -->
         <section id="view-pending" class="hidden px-8 py-6">
           <div class="mx-auto max-w-2xl">
             <header class="mb-6">
               <h1 class="text-lg font-medium text-gray-100" data-i18n="pending.title">Pending</h1>
               <p id="pending-meta" class="text-sm text-gray-500"></p>
             </header>
-
-            <div id="pending-list" class="mb-6 rounded-2xl border border-gray-800 bg-gray-900 p-2"></div>
 
             <h2 class="text-base font-medium text-gray-100" data-i18n="pending.queueTitle">Queue application links</h2>
             <p class="mb-3 text-sm text-gray-500" data-i18n-html="pending.queueHelp">Add the links to the queue, one per line, to apply in bulk later using
@@ -134,6 +143,14 @@
               <p id="apply-url-error" class="notice text-xs text-red-400"></p>
               <p id="apply-feedback" class="hidden items-center gap-2 text-xs"></p>
             </form>
+
+            <h2 class="mt-8 text-base font-medium text-gray-100" data-i18n="pending.tasksTitle">Google Tasks</h2>
+            <p class="mb-3 text-sm text-gray-500" data-i18n="pending.tasksHelp">Queue the job links saved in your open Google Tasks.</p>
+            <div class="flex items-center gap-3">
+              <button id="pending-tasks-btn" type="button"
+                class="rounded-full bg-gray-100 px-5 py-2 text-sm font-medium text-gray-900 hover:bg-white disabled:opacity-50" data-i18n="sync.tasksTitle">Sync Google Tasks</button>
+              <p id="pending-tasks-status" class="notice min-w-0 flex-1 text-xs" role="status"></p>
+            </div>
           </div>
         </section>
 

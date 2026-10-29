@@ -26,7 +26,7 @@ Nada personal sale de tu computadora: git ignora `profile/`, `data/`, `backup/` 
 ## Features
 
 ### Calendario
-Registra cada aplicación en una vista semanal, desde el primer mensaje hasta la oferta o el rechazo: aplicaciones, mensajes de recruiters, entrevistas, notas. Agrega o edita eventos desde la misma página. El **Weekly Report** cuenta lo que enviaste esa semana (por email o por plataforma) y lo que avanzó. **Sync Google Calendar** trae tus entrevistas de HR, técnicas y de cultura desde tu propio calendario.
+Registra cada aplicación en una vista semanal, desde el primer mensaje hasta la oferta o el rechazo: aplicaciones, mensajes de recruiters, entrevistas, notas. Agrega o edita eventos desde la misma página. El **Weekly Report** cuenta lo que enviaste esa semana (por email o por plataforma) y lo que avanzó. **Sync Google Calendar** trae tus entrevistas de HR, técnicas y de cultura desde tu propio calendario, y **Sync Google Tasks** pone en cola en Pending los links de empleo guardados en tus Google Tasks.
 
 <p align="center">
   <img src="docs/screenshots/es/calendar.png" alt="Calendar">
@@ -71,7 +71,7 @@ Los mensajes que más envías (aplicación, cover letter, respuesta de rechazo y
 </p>
 
 ### Ajustes
-Todo lo que necesitan la app y los skills, en una sola lista: idioma (English o español), cuenta de correo, CV, Google Calendar y foto. Las claves y contraseñas quedan ocultas hasta que haces clic en el ojo.
+Todo lo que necesitan la app y los skills, en una sola lista: idioma (English o español), cuenta de correo, CV, Google Calendar, Google Tasks y foto. Las claves y contraseñas quedan ocultas hasta que haces clic en el ojo.
 
 <p align="center">
   <img src="docs/screenshots/es/settings.png" alt="Settings" width="560">

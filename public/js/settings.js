@@ -55,6 +55,18 @@ function hintHtml(id, text) {
   return `<div class="field-hint"><div class="field-hint-inner"><p id="${id}-hint" class="pt-2 text-xs text-gray-500">${codeHtml(text)}</p></div></div>`
 }
 
+// The settings that belong together share the start of their name (EMAIL_*, GOOGLE_*): the page draws a line only between those groups.
+export function groupsHtml(vars) {
+  const groups = []
+  for (const v of vars) {
+    const key = v.name.split('_')[0]
+    const last = groups[groups.length - 1]
+    if (last?.key === key) last.vars.push(v)
+    else groups.push({ key, vars: [v] })
+  }
+  return groups.map((g) => `<div class="space-y-3 py-4 first:pt-0 [&>.field]:p-0">${g.vars.map(fieldHtml).join('')}</div>`).join('')
+}
+
 // The name of a setting, in white as code: the only title a field has.
 function keyHtml(name, forId) {
   const code = `<code class="font-mono text-sm text-white">${name}</code>`
@@ -196,7 +208,7 @@ async function renderEnvSection(container, notice = null) {
 
   container.innerHTML = `
     <form autocomplete="off">
-      <div class="divide-y divide-gray-800">${vars.map(fieldHtml).join('')}${pictureRowHtml()}</div>
+      <div class="divide-y divide-gray-800">${groupsHtml(vars)}${pictureRowHtml()}</div>
       <div class="flex items-center gap-3 border-t border-gray-800 pt-5">
         <button type="submit" class="shrink-0 whitespace-nowrap rounded-full bg-gray-100 px-5 py-2 text-sm font-medium text-gray-900 hover:bg-white disabled:opacity-50">${t('common.save')}</button>
         <span class="settings-status min-w-0 text-xs"></span>

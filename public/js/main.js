@@ -11,7 +11,8 @@ import { generateWeeklyReport, hideWeeklyReport, isWeeklyReportOpen, refreshWeek
 import { initFollowUp, renderFollowUp } from './follow-up.js'
 import { renderSettings } from './settings.js'
 import { renderProfile } from './profile-view.js'
-import { initCalendarSync, refreshSyncButton } from './calendar-sync.js'
+import { initCalendarSync } from './calendar-sync.js'
+import { initTasksSync } from './tasks-sync.js'
 import { initI18n, t } from './i18n.js'
 
 // ---------- App state ----------
@@ -73,6 +74,8 @@ function initApp() {
   initApplicationForm({ getCompanies: () => Array.from(companiesMap.values()) })
   initFollowUp(companiesDeps)
   initCalendarSync({ getWeekStart: () => weekStart, getCompanies: () => Array.from(companiesMap.values()) })
+  initTasksSync()
+  initTasksSync('pending-tasks-btn', 'pending-tasks-status')
 
   subscribe('events', (rows) => {
     applications = rows
@@ -80,7 +83,7 @@ function initApp() {
     refreshWeeklyReport(applications, weekStart)
     renderDatalists()
     if (currentSection() === 'calendar') renderWeek()
-    if (currentSection() === 'pending') renderPending(applications)
+    renderPending(applications) // the queued links are under the Calendar
     if (currentSection() === 'companies') handleRoute()
     maybeOpenEvent()
   })
@@ -168,9 +171,9 @@ function handleRoute() {
   updateSidebarActive(section)
 
   if (section === 'calendar') {
-    refreshSyncButton() // the calendar may have been set (or removed) in Settings since the last visit
     if (parsed.anchor) pendingEventId = parsed.anchor
     renderWeek()
+    renderPending(applications)
     maybeOpenEvent()
   } else if (section === 'outreach') {
     renderOutreach(parsed.tab)
@@ -178,8 +181,6 @@ function handleRoute() {
     renderCompanies(parsed, companiesDeps())
   } else if (section === 'follow-up') {
     renderFollowUp()
-  } else if (section === 'pending') {
-    renderPending(applications)
   } else if (section === 'settings') {
     renderSettings()
   } else if (section === 'profile') {

@@ -16,10 +16,10 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy.exc import IntegrityError
 from starlette.datastructures import Headers, MutableHeaders
 
-from . import crud, google_calendar, mailer, profile_photo, snapshot
+from . import crud, google_calendar, google_tasks, mailer, profile_photo, snapshot
 from .database import DEFAULT_DB_PATH, ROOT, make_engine, migrate, session_factory
 from .settings import ENV_PATH
-from .routes import calendar, companies, events, mail, settings as settings_routes
+from .routes import calendar, companies, events, google_tasks as google_tasks_routes, mail, settings as settings_routes
 from .schemas import Snapshot
 from .stream import Broadcaster, event_stream, watch_database
 
@@ -75,6 +75,8 @@ def create_app(db_path=None, allowed_hosts=LOCAL_HOSTS, env_path=None, profile_d
         app.state.env_path = Path(env_path) if env_path else ENV_PATH
         app.state.profile_dir = Path(profile_dir) if profile_dir else PROFILE_DIR
         app.state.fetch_ics = google_calendar.fetch_ics  # replaced in tests, so none of them reaches Google
+        app.state.fetch_tasks = google_tasks.fetch_tasks
+        app.state.complete_tasks = google_tasks.complete_tasks
         app.state.send_mail = mailer.smtp_send  # replaced in tests, so none of them sends an email
         watcher = asyncio.create_task(watch_database(db_path, app.state.broadcaster))
         yield
@@ -100,6 +102,7 @@ def create_app(db_path=None, allowed_hosts=LOCAL_HOSTS, env_path=None, profile_d
     app.include_router(companies.router)
     app.include_router(events.router)
     app.include_router(calendar.router)
+    app.include_router(google_tasks_routes.router)
     app.include_router(mail.router)
     app.include_router(settings_routes.router)
 

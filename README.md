@@ -26,7 +26,7 @@ Nothing personal leaves your computer: git ignores `profile/`, `data/`, `backup/
 ## Features
 
 ### Calendar
-Log every job application in a week-view calendar, from the first message to the offer or the rejection: applications, recruiter messages, interviews, notes. Add or edit events from the same page. The **Weekly Report** counts what you sent that week (by mail or by platform) and what moved forward. **Sync Google Calendar** brings your HR, technical and culture interviews in from your own calendar.
+Log every job application in a week-view calendar, from the first message to the offer or the rejection: applications, recruiter messages, interviews, notes. Add or edit events from the same page. The **Weekly Report** counts what you sent that week (by mail or by platform) and what moved forward. **Sync Google Calendar** brings your HR, technical and culture interviews in from your own calendar, and **Sync Google Tasks** queues the job links saved in your Google Tasks in Pending.
 
 <p align="center">
   <img src="docs/screenshots/en/calendar.png" alt="Calendar">
@@ -71,7 +71,7 @@ The messages you send most (application, cover letter, rejection reply, and so o
 </p>
 
 ### Settings
-Everything the app and the skills need, in one list: language (English or Spanish), email account, CV, Google Calendar and picture. Keys and passwords are hidden until you click the eye.
+Everything the app and the skills need, in one list: language (English or Spanish), email account, CV, Google Calendar, Google Tasks and picture. Keys and passwords are hidden until you click the eye.
 
 <p align="center">
   <img src="docs/screenshots/en/settings.png" alt="Settings" width="560">
