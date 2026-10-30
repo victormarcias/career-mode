@@ -76,9 +76,9 @@ export function openableLink(value) {
   return /^[^\s@/:]+@[^\s@/:]+\.[^\s@/:]+$/.test(link) ? `mailto:${link}` : null
 }
 
-// Where the arrow next to a company goes: its website, else its LinkedIn page, else nowhere.
-export function companyPageLink(company) {
-  return openableLink(company?.website) ?? openableLink(company?.linkedin)
+// Where the arrow next to a company goes: its card in Companies, or nowhere when the name typed is not a company yet.
+export function companyCardLink(company) {
+  return company?.id ? `#companies/${encodeURIComponent(company.id)}` : null
 }
 
 const NOTICE_MS = 200 // as long as the fold in style.css (.notice)

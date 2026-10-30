@@ -1,7 +1,7 @@
 import { api, subscribe } from './api.js'
 import { EVENT_TYPES, EVENT_LABELS, EVENT_COLORS, EVENT_COLOR_HIGHLIGHT } from './events.js'
 import { startOfWeek, addDays, formTime, toISODate, formatDayLabel, formatWeekNumber, formatWeekRange, currentOrNextBusinessWeekStart } from './dates.js'
-import { companyHint, companyPageLink, escapeHtml, findCompany, openableLink, pendingLabel, setNotice, slideTransition, typeConflict, typeConflictText, typeFor } from './dom-utils.js'
+import { companyCardLink, companyHint, escapeHtml, findCompany, openableLink, pendingLabel, setNotice, slideTransition, typeConflict, typeConflictText, typeFor } from './dom-utils.js'
 import { renderOutreach, detectApplyType } from './outreach.js'
 import { initPending, renderPending } from './pending.js'
 import { initEntityEditForm } from './entity-edit.js'
@@ -51,6 +51,7 @@ function initApp() {
   document.getElementById('f-company').addEventListener('input', updateCompanyOpener)
   document.getElementById('f-company').addEventListener('change', updateCompanyOpener)
   document.getElementById('f-company-type').addEventListener('change', updateCompanyType)
+  document.getElementById('f-company-open').addEventListener('click', closeForm)  // it leaves the Calendar for the company's card
   document.getElementById('f-via').addEventListener('input', updateCompanyHint)
   // Pressed once it opens the report, pressed again it folds it away.
   document.getElementById('weekly-report-btn').addEventListener('click', () => {
@@ -401,8 +402,8 @@ function eventFormTitle() {
   return `${editingCompany} → ${name}`
 }
 
-// The arrows next to the Application link and the Company open them in another tab; each shows only while it
-// has something to open (the link as typed, or the website of the company typed, else its LinkedIn page).
+// The arrow next to the Application link opens it in another tab, and the building next to the Company goes to
+// its card in Companies; each shows only while it has something to open (the link as typed, or the company typed).
 function showOpener(id, href) {
   const opener = document.getElementById(id)
   if (href) opener.setAttribute('href', href)
@@ -417,7 +418,7 @@ function updateLinkOpener() {
 
 function updateCompanyOpener() {
   const company = findCompany(Array.from(companiesMap.values()), document.getElementById('f-company').value)
-  showOpener('f-company-open', companyPageLink(company))
+  showOpener('f-company-open', companyCardLink(company))
 }
 
 // The Application link belongs to an application being edited (or a queued link), not to any other

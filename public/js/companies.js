@@ -33,10 +33,23 @@ export function companyCounts(companies) {
   return { active: companies.length - archived, archived }
 }
 
+// The tab a typed name belongs to: the one already selected while it lists a match, else the other when that is where
+// the match is (an archived company is found from the Active tab), else the one selected. Not a filter at all (null) stays.
+export function tabForSearch(companies, query, current) {
+  if (current === null || !plain(query)) return current
+  const found = (status) => companies.some((c) => (c.status === 'archived') === (status === 'archived') && matchesSearch(c.name, query))
+  if (found(current)) return current
+  const other = current === 'active' ? 'archived' : 'active'
+  return found(other) ? other : current
+}
+
 // Filtering as the person types: the cards are drawn again, the box is not touched.
 export function setSearch(text) {
   searchText = text
-  if (lastDeps) renderList(lastOpenId, lastDeps)
+  if (lastDeps) {
+    statusFilterKey = tabForSearch(Array.from(lastDeps.companiesMap.values()), text, statusFilterKey)
+    renderList(lastOpenId, lastDeps)
+  }
 }
 
 // Re-renders in place with a fade (no slide) — a filter change isn't a "moved
@@ -254,5 +267,7 @@ export function renderCompanies(route, deps) {
     searchText = ''
     document.getElementById('company-search').value = ''
   }
+  const opened = deps.companiesMap.get(route.openCompanyId)  // and so is its tab: an archived company is not under Active
+  if (opened && statusFilterKey !== null) statusFilterKey = opened.status === 'archived' ? 'archived' : 'active'
   renderList(route.openCompanyId ?? null, deps)
 }

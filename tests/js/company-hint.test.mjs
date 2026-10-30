@@ -4,8 +4,8 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-const { companyHint, companyPageLink, findCompany, openableLink, setNotice, typeConflict, typeFor } = await import('../../public/js/dom-utils.js')
-const { activeCompanies, companyCounts, matchesSearch } = await import('../../public/js/companies.js')
+const { companyHint, companyCardLink, findCompany, openableLink, setNotice, typeConflict, typeFor } = await import('../../public/js/dom-utils.js')
+const { activeCompanies, companyCounts, matchesSearch, tabForSearch } = await import('../../public/js/companies.js')
 
 const companies = [
   { id: 'acme', name: 'Acme', companyType: 'agency' },
@@ -83,12 +83,25 @@ test('an application link is opened as a web address or as an email, and nothing
   }
 })
 
-test('the arrow next to a company goes to its website, else to its LinkedIn page, else nowhere', () => {
-  assert.equal(companyPageLink({ website: 'https://acme.example', linkedin: 'https://www.linkedin.com/company/acme' }), 'https://acme.example')
-  assert.equal(companyPageLink({ website: null, linkedin: 'https://www.linkedin.com/company/acme' }), 'https://www.linkedin.com/company/acme')
-  assert.equal(companyPageLink({ website: 'not a link', linkedin: 'https://www.linkedin.com/company/acme' }), 'https://www.linkedin.com/company/acme')
-  assert.equal(companyPageLink({ website: null, linkedin: null }), null)
-  assert.equal(companyPageLink(null), null)
+test('a typed name picks the Active or Archived tab it is found in', () => {
+  const list = [
+    { name: 'Acme', status: 'active' },
+    { name: 'Beta Corp', status: 'archived' },
+    { name: 'Beta Labs', status: 'active' },
+  ]
+  assert.equal(tabForSearch(list, 'corp', 'active'), 'archived')  // only archived has it
+  assert.equal(tabForSearch(list, 'acme', 'archived'), 'active')
+  assert.equal(tabForSearch(list, 'beta', 'active'), 'active')  // the tab already has a match: it stays
+  assert.equal(tabForSearch(list, 'zzz', 'archived'), 'archived')  // nowhere: it stays
+  assert.equal(tabForSearch(list, '', 'archived'), 'archived')  // nothing typed
+  assert.equal(tabForSearch(list, 'corp', null), null)  // showing everything already
+})
+
+test('the arrow next to a company goes to its card in Companies, else nowhere', () => {
+  assert.equal(companyCardLink({ id: 'acme', name: 'Acme' }), '#companies/acme')
+  assert.equal(companyCardLink({ id: 'a b/c', name: 'Odd' }), '#companies/a%20b%2Fc')
+  assert.equal(companyCardLink(undefined), null)
+  assert.equal(companyCardLink(null), null)
 })
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))

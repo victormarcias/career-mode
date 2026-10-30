@@ -17,6 +17,8 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
 
 ### Cambiado
 
+- **Las pestañas de Empresas siguen a la empresa:** al escribir un nombre en el buscador se elige la pestaña Activas o Archivadas donde está, y un link a una empresa (el edificio del formulario del Calendario, un link "via") abre la pestaña en la que está.
+- **Flecha de Company en el formulario del Calendario:** es un icono de edificio que lleva a la ficha de la empresa en Empresas, en vez de una flecha que abría su web o su página de LinkedIn en otra pestaña; la ficha las muestra.
 - **Empresa en cada evento nuevo:** el formulario de Update, el de New application y la sincronización con Google Calendar piden una sola Empresa, con una etiqueta Agency (por defecto) o Client al lado. Un client tiene un campo opcional A través de una agency. Al escribir el nombre de una empresa que ya existe se elige esa, y su etiqueta la sigue. Un nombre que ya existe con la otra etiqueta se rechaza, así no se crea una empresa dos veces.
 - **Mensajes pasivos:** un mensaje pasivo necesita una agency o un client, así que el recruiter de una empresa que contrata directo se registra en el client. Las bases de datos existentes se migran al arrancar.
 - **`/reply-recruiter`:** registra al empleador directo como client, y a una agency como agency.
