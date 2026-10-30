@@ -18,8 +18,9 @@ def session(tmp_path):
 def test_export_then_import_into_an_empty_database_gives_the_same_data(client, make_agency, make_client, make_event, session):
     make_agency('Acme', recruiters=['https://x'])
     make_client('Big', viaCompanyId='acme')
-    make_event(companyId='big', viaCompanyId='acme', event='rejection', notes='n')
-    make_event(event='pending', jdUrl='https://p')
+    # Each event on its own day: on the same day the order falls back to `created_at`, which a backup doesn't keep
+    make_event(companyId='big', viaCompanyId='acme', event='rejection', notes='n', date='2026-10-01')
+    make_event(event='pending', jdUrl='https://p', date='2026-10-02')
     exported = client.get('/api/export').json()
     report = snapshot.import_snapshot(session, exported, replace=True)
     assert (report['companies'], report['events'], report['skipped']) == (2, 2, [])
@@ -85,9 +86,9 @@ def test_csv_export_is_two_files_and_loads_back_the_same_data(client, make_agenc
     make_agency('Acme', recruiters=['https://x/1', 'https://x/2'], applicationLink='a@b.co')
     make_client('Big', viaCompanyId='acme', notes='line one\nline two, with "quotes"')
     make_client('Solo')
-    make_event(companyId='big', viaCompanyId='acme', event='rejection', notes='=HYPERLINK("http://evil")')
-    make_event(companyId='solo', event='note', notes="'+1 already quoted")
-    make_event(event='pending', jdUrl='https://p')
+    make_event(companyId='big', viaCompanyId='acme', event='rejection', notes='=HYPERLINK("http://evil")', date='2026-10-01')
+    make_event(companyId='solo', event='note', notes="'+1 already quoted", date='2026-10-02')
+    make_event(event='pending', jdUrl='https://p', date='2026-10-03')
     exported = client.get('/api/export').json()
     snapshot.import_snapshot(session, exported)  # `session` is a second, empty database
     files = snapshot.export_csv(session)
