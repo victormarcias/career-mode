@@ -16,9 +16,10 @@ let statusFilterKey = 'active'
 // What is typed in the search box: only the companies whose name has it (ignoring case and accents) are listed.
 let searchText = ''
 
-function matchesStatusFilter(archived) {
-  if (statusFilterKey === null) return true
-  return archived ? statusFilterKey === 'archived' : statusFilterKey === 'active'
+// Whether a company is listed under a tab.
+export function inTab(company, key) {
+  if (key === null) return true
+  return (company.status === 'archived') === (key === 'archived')
 }
 
 const plain = (text) => (text ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
@@ -33,14 +34,37 @@ export function companyCounts(companies) {
   return { active: companies.length - archived, archived }
 }
 
+// The tag at the right of a company says its status, on the same dark capsule whatever it is. An archived one says how it was
+// closed (`closedBy` in the API): the emoji of the event that closed it and a text in a color like the emoji's. Ghosted, the
+// archive by hand, is no event of its own, so it has the ghost, in whitish gray.
+const CLOSED_BY_LOOKS = {
+  ghosted: { emoji: '👻', color: 'text-gray-300' },
+  rejection: { emoji: EVENT_LABELS.rejection.emoji, color: 'text-red-400' },
+  red_flag: { emoji: EVENT_LABELS.red_flag.emoji, color: 'text-orange-400' },
+  on_hold: { emoji: EVENT_LABELS.on_hold.emoji, color: 'text-amber-400' },
+  offer: { emoji: EVENT_LABELS.offer.emoji, color: 'text-emerald-400' },
+}
+
+export function statusTag(company) {
+  if (company.status !== 'archived') return { emoji: '', text: t('companies.statusActive'), classes: 'bg-gray-800 text-emerald-400' }
+  const key = company.closedBy in CLOSED_BY_LOOKS ? company.closedBy : 'ghosted'
+  const { emoji, color } = CLOSED_BY_LOOKS[key]
+  return { emoji, text: t(`companies.closedBy.${key}`), classes: `bg-gray-800 ${color}` }
+}
+
 // The tab a typed name belongs to: the one already selected while it lists a match, else the other when that is where
 // the match is (an archived company is found from the Active tab), else the one selected. Not a filter at all (null) stays.
 export function tabForSearch(companies, query, current) {
   if (current === null || !plain(query)) return current
-  const found = (status) => companies.some((c) => (c.status === 'archived') === (status === 'archived') && matchesSearch(c.name, query))
+  const found = (key) => companies.some((c) => inTab(c, key) && matchesSearch(c.name, query))
   if (found(current)) return current
   const other = current === 'active' ? 'archived' : 'active'
   return found(other) ? other : current
+}
+
+// The tab a company is opened in: the one it is in, unless nothing is selected (everything is listed).
+export function tabForCompany(company, current) {
+  return current === null ? null : company.status === 'archived' ? 'archived' : 'active'
 }
 
 // Filtering as the person types: the cards are drawn again, the box is not touched.
@@ -163,7 +187,7 @@ export function activeCompanies(companies) {
 function companyCardHtml(c, applications, companiesMap, isOpen) {
   const matches = eventsOf(applications, c)
   const via = companiesMap.get(c.viaCompanyId)
-  const archived = c.status === 'archived'
+  const tag = statusTag(c)
   return `
     <div class="capsule" data-key="${c.id}" data-open="${isOpen}">
       <div class="capsule-header">
@@ -173,7 +197,7 @@ function companyCardHtml(c, applications, companiesMap, isOpen) {
             <span class="font-medium text-gray-100">${escapeHtml(c.name)}</span>
             ${companyTypeTagHtml(c.companyType)}
             ${via ? `<span class="text-xs text-gray-500">${t('companies.viaLower')} ${escapeHtml(via.name)}</span>` : ''}
-            <span class="ml-auto rounded-full px-2 py-0.5 text-[10px] ${archived ? 'bg-gray-800 text-red-400' : 'bg-gray-800 text-emerald-400'}">${archived ? t('companies.statusArchived') : t('companies.statusActive')}</span>
+            <span class="ml-auto inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium leading-none ${tag.classes}">${tag.emoji ? `<span>${tag.emoji}</span>` : ''}<span>${tag.text}</span></span>
           </div>
         </button>
         <button type="button" class="capsule-edit-btn company-edit-btn rounded-full bg-gray-100 px-4 py-1 text-sm font-medium text-gray-900 hover:bg-white" data-id="${c.id}">${t('common.edit')}</button>
@@ -198,7 +222,7 @@ function renderToolbar(companiesMap) {
 // Agencies and clients in one list, by name, each tagged with its type.
 function listHtml({ applications, companiesMap }, openId) {
   const cards = Array.from(companiesMap.values())
-    .filter((c) => matchesStatusFilter(c.status === 'archived') && matchesSearch(c.name, searchText))
+    .filter((c) => inTab(c, statusFilterKey) && matchesSearch(c.name, searchText))
     .sort((a, b) => a.name.localeCompare(b.name))
     .map((c) => companyCardHtml(c, applications, companiesMap, c.id === openId))
   if (!cards.length) return `<p class="py-10 text-center text-sm text-gray-500">${t('companies.noResults')}</p>`
@@ -268,6 +292,6 @@ export function renderCompanies(route, deps) {
     document.getElementById('company-search').value = ''
   }
   const opened = deps.companiesMap.get(route.openCompanyId)  // and so is its tab: an archived company is not under Active
-  if (opened && statusFilterKey !== null) statusFilterKey = opened.status === 'archived' ? 'archived' : 'active'
+  if (opened) statusFilterKey = tabForCompany(opened, statusFilterKey)
   renderList(route.openCompanyId ?? null, deps)
 }

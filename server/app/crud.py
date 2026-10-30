@@ -2,6 +2,7 @@
 import re
 import unicodedata
 import uuid
+from typing import Optional
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
@@ -66,14 +67,26 @@ def _involving(company_id):
     return or_(Event.company_id == company_id, Event.via_company_id == company_id)
 
 
-def company_status(events) -> CompanyStatus:
-    """Archived when the latest event closes the process. The latest is the one on the latest day; a closing event wins a
-    tie on the day whatever its time, and among the rest the later time wins. No events: active."""
+GHOSTED = 'ghosted'  # not an event type: what an archive by hand is called, since it closes a process nobody ended
+
+
+def company_closed_by(events) -> Optional[str]:
+    """How the process of a company was closed, or None while it is open. The latest event is the one on the latest
+    day; a closing event wins a tie on the day whatever its time, and among the rest the later time wins. When the
+    latest event closes the process, its type is the answer (rejection, red_flag, on_hold, offer), except the archive
+    the user does by hand: the company just stopped answering, so it is ghosted."""
     if not events:
-        return CompanyStatus.active
+        return None
     closing = {e.value for e in CLOSING_EVENTS}
     latest = max(events, key=lambda e: (e.date, e.type in closing, e.time or '00:00'))
-    return CompanyStatus.archived if latest.type in closing else CompanyStatus.active
+    if latest.type not in closing:
+        return None
+    return GHOSTED if latest.type == EventType.archive.value else latest.type
+
+
+def company_status(events) -> CompanyStatus:
+    """Archived when the latest event closes the process, active otherwise (and with no events)."""
+    return CompanyStatus.archived if company_closed_by(events) else CompanyStatus.active
 
 
 def list_companies(session: Session, company_type: str = None) -> list[Company]:
@@ -87,12 +100,15 @@ def list_companies(session: Session, company_type: str = None) -> list[Company]:
             events.setdefault(company_id, []).append(event)
     for company in companies:
         company.status = company_status(events.get(company.id, [])).value
+        company.closed_by = company_closed_by(events.get(company.id, []))
     return companies
 
 
 def get_company(session: Session, company_id: str) -> Company:
     company = _get(session, Company, company_id, 'Company')
-    company.status = company_status(list(session.scalars(select(Event).where(_involving(company_id))).unique())).value
+    events = list(session.scalars(select(Event).where(_involving(company_id))).unique())
+    company.status = company_status(events).value
+    company.closed_by = company_closed_by(events)
     return company
 
 

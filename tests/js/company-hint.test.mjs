@@ -5,7 +5,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 const { companyHint, companyCardLink, findCompany, openableLink, setNotice, typeConflict, typeFor } = await import('../../public/js/dom-utils.js')
-const { activeCompanies, companyCounts, matchesSearch, tabForSearch } = await import('../../public/js/companies.js')
+const { activeCompanies, companyCounts, inTab, matchesSearch, statusTag, tabForCompany, tabForSearch } = await import('../../public/js/companies.js')
 
 const companies = [
   { id: 'acme', name: 'Acme', companyType: 'agency' },
@@ -65,6 +65,25 @@ test('the tabs count the active and the archived companies', () => {
   assert.deepEqual(companyCounts([]), { active: 0, archived: 0 })
 })
 
+test('a company is listed under the tab of its status', () => {
+  assert.deepEqual(['active', 'archived', null].map((key) => inTab({ status: 'archived' }, key)), [false, true, true])
+  assert.deepEqual(['active', 'archived', null].map((key) => inTab({ status: 'active' }, key)), [true, false, true])
+})
+
+test('the tag of an archived company says how it was closed, with the emoji of the event and a text in its color', () => {
+  const tag = (closedBy) => statusTag({ status: 'archived', closedBy })
+  const looks = (closedBy) => [tag(closedBy).emoji, tag(closedBy).text]
+  assert.deepEqual(looks('ghosted'), ['👻', 'Ghosted'])
+  assert.deepEqual(looks('rejection'), ['❌', 'Rejected'])
+  assert.deepEqual(looks('red_flag'), ['🚩', 'Red flag'])
+  assert.deepEqual(looks('on_hold'), ['⏸️', 'On hold'])
+  assert.deepEqual(looks('offer'), ['🎉', 'Offer'])
+  assert.deepEqual(looks(null), ['👻', 'Ghosted'])  // an archive by hand is the default
+  assert.equal(tag('rejection').classes, 'bg-gray-800 text-red-400')  // the capsule is always the dark one; the text has the color
+  assert.equal(tag('ghosted').classes, 'bg-gray-800 text-gray-300')  // whitish gray, like the ghost
+  assert.deepEqual(statusTag({ status: 'active', closedBy: null }), { emoji: '', text: 'Active', classes: 'bg-gray-800 text-emerald-400' })
+})
+
 test('the search keeps the names that have what is typed, ignoring case and accents', () => {
   assert.ok(matchesSearch('Hire Hangar', 'hang'))
   assert.ok(matchesSearch('Café & Co', 'CAFE'))
@@ -95,6 +114,13 @@ test('a typed name picks the Active or Archived tab it is found in', () => {
   assert.equal(tabForSearch(list, 'zzz', 'archived'), 'archived')  // nowhere: it stays
   assert.equal(tabForSearch(list, '', 'archived'), 'archived')  // nothing typed
   assert.equal(tabForSearch(list, 'corp', null), null)  // showing everything already
+})
+
+test('a company is opened in the tab it is in', () => {
+  assert.equal(tabForCompany({ status: 'archived' }, 'active'), 'archived')
+  assert.equal(tabForCompany({ status: 'active' }, 'archived'), 'active')
+  assert.equal(tabForCompany({ status: 'archived' }, 'archived'), 'archived')
+  assert.equal(tabForCompany({ status: 'archived' }, null), null)  // showing everything
 })
 
 test('the arrow next to a company goes to its card in Companies, else nowhere', () => {

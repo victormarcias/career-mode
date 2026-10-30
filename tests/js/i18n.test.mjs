@@ -48,7 +48,7 @@ test('every text the code asks for by name exists', () => {
 })
 
 test('every key is used, except the families the code builds the name of', () => {
-  const built = ['events.', 'settings.var.', 'settings.choice.', 'report.q.', 'date.', 'hint.']
+  const built = ['events.', 'settings.var.', 'settings.choice.', 'report.q.', 'date.', 'hint.', 'companies.closedBy.']
   const unused = Object.keys(en).filter((key) => !built.some((prefix) => key.startsWith(prefix)) && !code.includes(key))
   assert.deepEqual(unused, [])
 })
@@ -58,6 +58,7 @@ test('the families built from a name have every member: each event type, each se
   for (const type of [...EVENT_TYPES, 'pending']) assert.ok(`events.${type}` in en, `events.${type}`)
   const names = ['APP_LANGUAGE', 'CV_PDF_PATH', 'EMAIL_ADDRESS', 'EMAIL_PASSWORD', 'EMAIL_SMTP_HOST', 'EMAIL_SMTP_PORT', 'GEMINI_API_KEY', 'GOOGLE_CALENDAR_ID', 'GOOGLE_TASKS_CLIENT_ID', 'GOOGLE_TASKS_CLIENT_SECRET', 'GOOGLE_TASKS_REFRESH_TOKEN']
   for (const name of names) for (const part of ['label', 'description']) assert.ok(`settings.var.${name}.${part}` in en, `settings.var.${name}.${part}`)
+  for (const closedBy of ['ghosted', 'rejection', 'red_flag', 'on_hold', 'offer']) assert.ok(`companies.closedBy.${closedBy}` in en, closedBy)
   for (const lang of LANGUAGES) assert.ok(`settings.choice.APP_LANGUAGE.${lang}` in en, lang)
   for (const q of ['hrTalked', 'hiddenMarket', 'byMail', 'byPlatform', 'passiveInterviews', 'hrInterviews', 'techInterviews', 'cultureInterviews', 'offers']) {
     assert.ok(`report.q.${q}` in en, q)

@@ -7,9 +7,9 @@
 def test_create_gives_a_slug_id_and_the_full_shape(make_agency):
     a = make_agency('Café & Co', website='https://cafe.example', recruiters=['https://linkedin.com/in/ana', ' ', 'https://linkedin.com/in/bo'])
     assert a['id'] == 'cafe-co'
-    assert a['status'] == 'active'
+    assert a['status'] == 'active' and a['closedBy'] is None
     assert a['recruiters'] == ['https://linkedin.com/in/ana', 'https://linkedin.com/in/bo']  # blank dropped, order kept
-    assert set(a) == {'id', 'name', 'companyType', 'notes', 'website', 'linkedin', 'applicationLink', 'recruiters', 'viaCompanyId', 'status'}
+    assert set(a) == {'id', 'name', 'companyType', 'notes', 'website', 'linkedin', 'applicationLink', 'recruiters', 'viaCompanyId', 'status', 'closedBy'}
 
 
 def test_a_name_that_exists_is_refused_ignoring_case_whatever_the_type(client, make_agency):
@@ -230,6 +230,33 @@ def test_the_status_of_a_company_is_derived_from_its_latest_event(client, make_a
     make_event(event='pending', jdUrl='https://x')                 # an unlinked event touches nobody
     assert status('big') == 'active'
     assert [c['status'] for c in client.get('/api/companies').json()] == ['archived', 'active']  # the list says the same
+
+
+def test_closed_by_says_how_an_archived_company_was_closed(client, make_agency, make_event):
+    for name in ('Mute', 'Answered', 'Rejected', 'Flagged', 'Waiting', 'Offered', 'Reopened', 'Fresh'):
+        make_agency(name)
+    closed_by = lambda name: client.get('/api/companies/' + name).json()['closedBy']  # noqa: E731
+    make_event(date='2026-10-01', event='application', companyId='mute')
+    assert closed_by('mute') is None                               # still active: nobody has closed it
+    make_event(date='2026-10-20', event='archive', companyId='mute')
+    assert closed_by('mute') == 'ghosted'                          # archived by hand
+    assert client.get('/api/companies/mute').json()['status'] == 'archived'
+    make_event(date='2026-10-01', event='application', companyId='answered')
+    make_event(date='2026-10-05', event='hr_intro', companyId='answered')
+    make_event(date='2026-10-20', event='archive', companyId='answered')
+    assert closed_by('answered') == 'ghosted'                      # an archive by hand is ghosted, whatever came before it
+    for name, event in (('rejected', 'rejection'), ('flagged', 'red_flag'), ('waiting', 'on_hold'), ('offered', 'offer')):
+        make_event(date='2026-10-01', event='application', companyId=name)
+        make_event(date='2026-10-05', event=event, companyId=name)
+        assert closed_by(name) == event                            # the type of the event that closed it
+    make_event(date='2026-10-01', event='application', companyId='reopened')
+    make_event(date='2026-10-02', event='archive', companyId='reopened')
+    make_event(date='2026-10-03', event='application', companyId='reopened')
+    assert closed_by('reopened') is None                           # applied again: active
+    assert closed_by('fresh') is None                              # no events
+    assert [c['closedBy'] for c in client.get('/api/companies').json()] == [  # the list says the same, by name
+        'ghosted', 'red_flag', None, 'ghosted', 'offer', 'rejection', None, 'on_hold'
+    ]
 
 
 def test_an_agency_is_archived_with_the_latest_event_of_its_clients(client, make_agency, make_client, make_event):

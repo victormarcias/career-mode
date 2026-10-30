@@ -98,6 +98,7 @@ class CompanyOut(CamelModel):
     recruiters: list[str]
     via_company_id: Optional[str]
     status: CompanyStatus = Field(description='Derived, never stored: archived when the latest event of the company (or of a client that came through it) closes its process')
+    closed_by: Optional[str] = Field(description="Derived, never stored: how the process was closed while the company is archived, else null: the type of its latest event (rejection, red_flag, on_hold, offer), or ghosted for an archive by hand")
 
     @field_validator('recruiters', mode='before')
     @classmethod

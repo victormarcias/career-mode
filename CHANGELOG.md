@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- **How an archived company was closed:** the tag of an archived company in Companies says the reason (👻 Ghosted, ❌ Rejected, 🚩 Red flag, ⏸️ On hold or 🎉 Offer), in a color like the emoji's, and the API says it with a derived `closedBy` on every company. Ghosted is an archive by hand.
 - **Sync Google Tasks:** a button next to Google Calendar's in the Calendar reads the open tasks of the user's Google Tasks (through the Google Tasks API), queues every job link in them as a pending application, once, and marks those tasks as done. Without its three settings (new, with the steps) it says so and links to Settings; the Google Calendar button does the same.
 - **`/sync-aiapply`:** reads the AIApply.io notifications in Gmail and logs each positive reply from a company (an interview invitation, an assessment, a follow-up) as a web application, once, with the company as an agency or a client. Its "Not this time" notices are moved to the trash once there is nothing left to log from them.
 - **`/reply-rejected`:** finds the rejections companies sent to the user's Gmail and replies to each one, once, thanking them and saying they will stay in touch, archives the email, and logs the rejection in the Calendar.
