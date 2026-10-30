@@ -10,6 +10,7 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
 
 ### Añadido
 
+- **Menú colapsable:** el menú lateral puede mostrar solo sus iconos, con el favicon en lugar del logo y un tooltip en cada icono. Un botón arriba a la derecha del logo lo hace, y se colapsa solo cuando la ventana es muy angosta para el contenido (menos de 1.240 px); lo que elijas con el botón se mantiene hasta que la ventana cruce ese ancho.
 - **Cómo se cerró una empresa archivada:** el tag de una empresa archivada en Empresas dice la razón (👻 Desaparecida, ❌ Rechazo, 🚩 Alerta roja, ⏸️ En pausa o 🎉 Oferta), con un color como el del emoji, y la API lo dice con un `closedBy` derivado en cada empresa. Desaparecida es un archivo a mano.
 - **Sync Google Tasks:** un botón junto al de Google Calendar en el Calendario lee las tareas abiertas de Google Tasks del usuario (con la API de Google Tasks), pone en cola cada link de empleo que tengan como aplicación pendiente, una sola vez, y marca esas tareas como hechas. Sin sus tres ajustes (nuevos, con los pasos) lo dice y enlaza a Settings; el botón de Google Calendar hace lo mismo.
 - **`/sync-aiapply`:** lee las notificaciones de AIApply.io en Gmail y registra cada respuesta positiva de una empresa (una invitación a entrevista, un assessment, un seguimiento) como una application web, una sola vez, con la empresa como agency o como client. Sus avisos "Not this time" pasan a la papelera cuando ya no queda nada por registrar de ellos.

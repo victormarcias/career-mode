@@ -13,6 +13,8 @@
   "nav.outreach": "Outreach",
   "nav.settings": "Settings",
   "nav.apiDocs": "API docs",
+  "sidebar.collapse": "Collapse menu",
+  "sidebar.expand": "Expand menu",
   "settings.title": "Settings",
   "settings.subtitle": "How this copy of career-mode is set up on this computer.",
   "settings.config.title": "Configuration",

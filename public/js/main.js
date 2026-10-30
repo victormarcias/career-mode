@@ -14,6 +14,7 @@ import { renderProfile } from './profile-view.js'
 import { initCalendarSync } from './calendar-sync.js'
 import { initTasksSync } from './tasks-sync.js'
 import { initI18n, t } from './i18n.js'
+import { initSidebar } from './sidebar.js'
 
 // ---------- App state ----------
 let weekStart = currentOrNextBusinessWeekStart(new Date())
@@ -626,4 +627,5 @@ async function handleFormDelete() {
 // ---------- Companies (agencies and clients): see companies.js ----------
 
 await initI18n() // the texts are in public/locales; the language is the APP_LANGUAGE setting
+initSidebar()
 initApp()

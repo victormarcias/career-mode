@@ -14,48 +14,57 @@
   <div id="app">
     <div class="flex h-screen">
       <!-- Sidebar -->
-      <nav class="flex w-56 shrink-0 flex-col border-r border-gray-800 bg-gray-900 px-3 py-4">
-        <img src="navigation/logo.png" alt="career-mode" class="mx-auto mb-4 h-28 w-28 select-none" draggable="false" />
+      <nav id="sidebar" class="flex w-56 shrink-0 flex-col border-r border-gray-800 bg-gray-900 px-3 py-4">
+        <div class="relative mb-4">
+          <img src="navigation/logo.png" alt="career-mode" class="sidebar-logo mx-auto h-28 w-28 select-none" draggable="false" />
+          <img src="navigation/favicon.png" alt="career-mode" class="sidebar-favicon mx-auto h-8 w-8 select-none" draggable="false" />
+          <button id="sidebar-toggle" type="button" aria-expanded="true" title="Collapse menu" aria-label="Collapse menu"
+            class="absolute right-0 top-0 flex h-7 w-7 items-center justify-center rounded-full text-gray-500 hover:bg-gray-800 hover:text-gray-100">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-5 w-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5" />
+            </svg>
+          </button>
+        </div>
         <div class="space-y-1">
           <button data-nav="calendar"
-            class="nav-item flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-gray-50">
-            <span>📅</span><span data-i18n="nav.calendar">Calendar</span>
+            class="nav-item side-item flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-gray-50">
+            <span>📅</span><span class="nav-label" data-i18n="nav.calendar">Calendar</span>
           </button>
           <button data-nav="companies"
-            class="nav-item flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-gray-50">
-            <span>🏢</span><span data-i18n="nav.companies">Companies</span>
+            class="nav-item side-item flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-gray-50">
+            <span>🏢</span><span class="nav-label" data-i18n="nav.companies">Companies</span>
           </button>
           <button data-nav="follow-up"
-            class="nav-item flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-gray-50">
-            <span>🔍</span><span data-i18n="nav.followUp">Follow Up</span>
+            class="nav-item side-item flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-gray-50">
+            <span>🔍</span><span class="nav-label" data-i18n="nav.followUp">Follow Up</span>
           </button>
           <button data-nav="pending"
-            class="nav-item flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-gray-50">
-            <span>⏳</span><span data-i18n="nav.pending">Pending</span>
+            class="nav-item side-item flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-gray-50">
+            <span>⏳</span><span class="nav-label" data-i18n="nav.pending">Pending</span>
           </button>
         </div>
 
         <hr class="my-3 border-gray-800">
 
         <button data-nav="profile"
-          class="nav-item flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-gray-50">
-          <span>👤</span><span data-i18n="nav.profile">My Profile</span>
+          class="nav-item side-item flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-gray-50">
+          <span>👤</span><span class="nav-label" data-i18n="nav.profile">My Profile</span>
         </button>
         <button data-nav="outreach"
-          class="nav-item flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-gray-50">
-          <span>📤</span><span data-i18n="nav.outreach">Outreach</span>
+          class="nav-item side-item flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-gray-50">
+          <span>📤</span><span class="nav-label" data-i18n="nav.outreach">Outreach</span>
         </button>
 
         <hr class="my-3 border-gray-800">
 
         <div class="space-y-1">
           <button data-nav="settings"
-            class="nav-item flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-gray-50">
-            <span>⚙️</span><span data-i18n="nav.settings">Settings</span>
+            class="nav-item side-item flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-gray-50">
+            <span>⚙️</span><span class="nav-label" data-i18n="nav.settings">Settings</span>
           </button>
           <a href="/docs" target="_blank" rel="noreferrer"
-            class="flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-gray-50">
-            <span>📚</span><span data-i18n="nav.apiDocs">API docs</span>
+            class="side-item flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-gray-50">
+            <span>📚</span><span class="nav-label" data-i18n="nav.apiDocs">API docs</span>
           </a>
         </div>
       </nav>

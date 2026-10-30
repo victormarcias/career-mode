@@ -162,6 +162,33 @@ input[type='search']::-webkit-search-cancel-button {
   outline-offset: 1px;
 }
 
+/* The sidebar collapses to its icons (js/sidebar.js): the favicon replaces the logo and the toggle goes under it. */
+#sidebar.has-transition {
+  transition: width 0.2s ease;
+}
+#sidebar:not(.is-collapsed) .sidebar-favicon {
+  display: none;
+}
+#sidebar.is-collapsed {
+  width: 4.25rem;
+}
+#sidebar.is-collapsed .sidebar-logo,
+#sidebar.is-collapsed .nav-label {
+  display: none;
+}
+#sidebar.is-collapsed .side-item {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+#sidebar.is-collapsed #sidebar-toggle {
+  position: static;
+  margin: 0.75rem auto 0;
+}
+#sidebar.is-collapsed #sidebar-toggle svg {
+  transform: rotate(180deg);
+}
+
 .nav-item.active {
   background-color: #1f2937;
   color: #f9fafb;
