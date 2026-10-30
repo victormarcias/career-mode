@@ -120,7 +120,7 @@
 
         <!-- Pending view (central page): the form that queues a link, and Google Tasks (see js/pending.js); the queued links are under the Calendar -->
         <section id="view-pending" class="hidden px-8 py-6">
-          <div class="mx-auto max-w-2xl">
+          <div class="page-column">
             <header class="mb-6">
               <h1 class="text-lg font-medium text-gray-100" data-i18n="pending.title">Pending</h1>
               <p id="pending-meta" class="text-sm text-gray-500"></p>
@@ -156,7 +156,7 @@
 
         <!-- Outreach view (static page, not markdown) -->
         <section id="view-outreach" class="hidden px-8 py-6">
-          <div class="mx-auto max-w-3xl">
+          <div class="page-column">
             <header class="mb-6 flex items-center gap-2" id="outreach-tabs"></header>
             <div class="static-page slide-transition" id="outreach-content"></div>
           </div>
@@ -164,7 +164,7 @@
 
         <!-- My Profile view: profile/profile.md drawn as cards (see js/profile-view.js) -->
         <section id="view-profile" class="hidden px-8 py-6">
-          <div class="mx-auto max-w-3xl">
+          <div class="page-column">
             <header class="mb-6">
               <h1 class="text-lg font-medium text-gray-100" data-i18n="profile.title">My Profile</h1>
               <p class="text-sm text-gray-500" data-i18n="profile.subtitle">What the skills read to fill a form or write to a recruiter. It stays on
@@ -175,8 +175,8 @@
         </section>
 
         <!-- Companies view: agencies and clients in one list -->
-        <section id="view-companies" class="hidden px-10 py-6">
-          <div class="max-w-[33.6rem]">
+        <section id="view-companies" class="hidden px-8 py-6">
+          <div class="page-column">
             <header class="mb-4 flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <button type="button" id="filter-active-btn" class="tab-pill">🤝 Active</button>
@@ -192,7 +192,7 @@
 
         <!-- Settings view: a stack of sections (see js/settings.js) -->
         <section id="view-settings" class="hidden px-8 py-6">
-          <div class="mx-auto max-w-2xl">
+          <div class="page-column">
             <header class="mb-6">
               <h1 class="text-lg font-medium text-gray-100" data-i18n="settings.title">Settings</h1>
               <p class="text-sm text-gray-500" data-i18n="settings.subtitle">How this copy of career-mode is set up on this computer.</p>
@@ -203,7 +203,7 @@
 
         <!-- Follow Up Applications view (central page, not popup) -->
         <section id="view-follow-up" class="hidden px-8 py-6">
-          <div class="mx-auto max-w-2xl">
+          <div class="page-column">
             <header class="mb-6">
               <h1 class="text-lg font-medium text-gray-100" data-i18n="followUp.title">Follow Up Applications</h1>
               <p class="text-sm text-gray-500" data-i18n="followUp.subtitle">Active agencies and clients, by the days since their last application — pick the
