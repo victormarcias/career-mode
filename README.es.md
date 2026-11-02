@@ -103,6 +103,7 @@ En `.claude/skills/`, cada uno con su README:
 
 ```bash
 ./backup-data.sh                    # calendario, empresas, perfil, CV, foto, profile.pdf
+./backup-data.sh --open             # lo mismo, y abre la carpeta del backup desde cualquier lado
 ./restore-backup.sh                 # carga el backup de vuelta
 ./restore-backup.sh <carpeta> --replace
 ```

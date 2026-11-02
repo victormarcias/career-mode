@@ -12,7 +12,9 @@
 # you: one copy, replaced every time and not part of history/, so old passwords don't pile up. Bring a copy back with
 #   ./restore-backup.sh <backup folder>/history/<date>
 # When it is run from a terminal it opens the backup folder at the end (`open` on macOS,
-# `xdg-open` on Linux), so you can see what was written.
+# `xdg-open` on Linux), so you can see what was written; `--open` opens it also when it is not
+# (from a pipe or a tool):
+#   ./backup-data.sh --open
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -26,6 +28,14 @@ if [ -t 2 ] && [ -z "${NO_COLOR:-}" ]; then RED=$'\033[31m'; else RED=''; fi
 
 # the files of profile/ that are yours (its README and the examples ship with the repo)
 PROFILE_FILES="profile.md outreach.md cv.pdf photo.png photo.jpg"
+
+OPEN_FOLDER=false
+for arg in "$@"; do
+  case "$arg" in
+    --open) OPEN_FOLDER=true ;;
+    *) echo "${RED}Unknown option: $arg (the only one is --open)${RESET}" >&2; exit 2 ;;
+  esac
+done
 
 BACKUP="$(.venv/bin/python server/cli.py backup-dir)"
 echo "${BLUE}💾 Backing up to ${BOLD}$BACKUP${RESET}${BLUE}…${RESET}"
@@ -95,8 +105,8 @@ else
   echo "${GREEN}✅ Kept a copy in $DEST${RESET}"
 fi
 
-# show the folder, but only when someone is looking: not from cron or a pipe
-if [ -t 1 ]; then
+# show the folder, but only when someone is looking (not from cron or a pipe), or when asked with --open
+if [ -t 1 ] || [ "$OPEN_FOLDER" = true ]; then
   if command -v open >/dev/null 2>&1; then open "$BACKUP"
   elif command -v xdg-open >/dev/null 2>&1; then xdg-open "$BACKUP" >/dev/null 2>&1 || true
   fi

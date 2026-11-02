@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- **`./backup-data.sh --open`:** opens the backup folder at the end also when the script is not run from a terminal (from a pipe or a tool); from a terminal it already did.
 - **`/follow-up-email-application`:** follows up, without asking, the applications sent by email that got no answer in 7 days or more, once each, as a reply on their own Gmail thread with the Application Follow-up Message in the language of the application, and logs each one in the Calendar as a "Follow up" note.
 - **Collapsible menu:** the sidebar can show only its icons, with the favicon in place of the logo and a tooltip on each icon. A toggle at the top right of the logo does it, and it does it by itself when the window is too narrow for the content (under 1,240 px); a choice made with the toggle holds until the window crosses that width.
 - **How an archived company was closed:** the tag of an archived company in Companies says the reason (👻 Ghosted, ❌ Rejected, 🚩 Red flag, ⏸️ On hold or 🎉 Offer), in a color like the emoji's, and the API says it with a derived `closedBy` on every company. Ghosted is an archive by hand.

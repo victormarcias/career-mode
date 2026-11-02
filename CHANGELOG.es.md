@@ -10,6 +10,7 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
 
 ### Añadido
 
+- **`./backup-data.sh --open`:** abre la carpeta del backup al terminar también cuando el script no se corre desde una terminal (desde un pipe o una herramienta); desde una terminal ya lo hacía.
 - **`/follow-up-email-application`:** hace el seguimiento, sin preguntar, de las postulaciones enviadas por email que no tuvieron respuesta en 7 días o más, una sola vez cada una, como respuesta en su mismo hilo de Gmail con el mensaje Application Follow-up en el idioma de la postulación, y registra cada una en el Calendar como una nota "Follow up".
 - **Menú colapsable:** el menú lateral puede mostrar solo sus iconos, con el favicon en lugar del logo y un tooltip en cada icono. Un botón arriba a la derecha del logo lo hace, y se colapsa solo cuando la ventana es muy angosta para el contenido (menos de 1.240 px); lo que elijas con el botón se mantiene hasta que la ventana cruce ese ancho.
 - **Cómo se cerró una empresa archivada:** el tag de una empresa archivada en Empresas dice la razón (👻 Desaparecida, ❌ Rechazo, 🚩 Alerta roja, ⏸️ En pausa o 🎉 Oferta), con un color como el del emoji, y la API lo dice con un `closedBy` derivado en cada empresa. Desaparecida es un archivo a mano.
