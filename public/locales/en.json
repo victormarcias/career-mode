@@ -134,6 +134,7 @@
   "form.saving": "Saving...",
   "form.errLinkRequired": "The Application link is required for a web application.",
   "form.errPickCompany": "Type the company.",
+  "form.archiveGhosted": "Archive (ghosted)",
   "form.confirmDelete": "Delete this event? This can't be undone.",
   "report.empty": "No news so far.",
   "report.q.hrTalked": "How many jobs did you apply to by talking with HR?",

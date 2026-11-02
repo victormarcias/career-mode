@@ -134,6 +134,7 @@
   "form.saving": "Guardando...",
   "form.errLinkRequired": "El link de la aplicación es obligatorio para una aplicación web.",
   "form.errPickCompany": "Escribe la empresa.",
+  "form.archiveGhosted": "Archivar (desaparecida)",
   "form.confirmDelete": "¿Eliminar este evento? No se puede deshacer.",
   "report.empty": "Sin novedades por ahora.",
   "report.q.hrTalked": "¿Cuántos trabajos aplicaste hablando con HR?",

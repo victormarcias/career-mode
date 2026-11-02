@@ -4,7 +4,7 @@ import { startOfWeek, addDays, formTime, toISODate, formatDayLabel, formatWeekNu
 import { companyCardLink, companyHint, escapeHtml, findCompany, openableLink, pendingLabel, setNotice, slideTransition, typeConflict, typeConflictText, typeFor } from './dom-utils.js'
 import { renderOutreach, detectApplyType } from './outreach.js'
 import { initPending, renderPending } from './pending.js'
-import { initEntityEditForm } from './entity-edit.js'
+import { archivableCompany, archiveCompany, initEntityEditForm } from './entity-edit.js'
 import { buildNotes, initApplicationForm, parseRecruiters, splitRecruiters } from './application-form.js'
 import { activeCompanies, renderCompanies, setSearch, setStatusFilter } from './companies.js'
 import { generateWeeklyReport, hideWeeklyReport, isWeeklyReportOpen, refreshWeeklyReport } from './weekly-report.js'
@@ -61,6 +61,7 @@ function initApp() {
   })
   document.getElementById('form-cancel').addEventListener('click', closeForm)
   document.getElementById('form-delete').addEventListener('click', handleFormDelete)
+  document.getElementById('form-archive').addEventListener('click', handleFormArchive)
   document.getElementById('form-overlay').addEventListener('click', (e) => {
     if (e.target.id === 'form-overlay') closeForm()
   })
@@ -482,6 +483,9 @@ function openForm(app = null) {
   const locked = app && ['application', 'archive', 'pending'].includes(app.event) ? app.event : null
   fillEventSelect(locked)
   document.getElementById('form-delete').classList.toggle('hidden', !app)
+  // Archive (ghosted) closes the event's company by hand, as the company card's Archive does.
+  archivingCompany = archivableCompany(app, companiesMap)
+  document.getElementById('form-archive').classList.toggle('hidden', !archivingCompany)
   document.getElementById('f-date').value = app ? app.date : toISODate(new Date())
   // A new event opens with the current time; an edit keeps the time the event has (the current one only if it has none).
   document.getElementById('f-time').value = formTime(app?.time)
@@ -608,6 +612,25 @@ async function handleFormSubmit(e) {
   } finally {
     submitBtn.disabled = false
     submitBtn.textContent = t('common.save')
+  }
+}
+
+let archivingCompany = null // the company the open event's Archive (ghosted) button closes
+
+async function handleFormArchive() {
+  if (!archivingCompany) return
+  if (!confirm(t('edit.confirmArchive', { name: archivingCompany.name }))) return
+  const errorEl = document.getElementById('form-error')
+  const btn = document.getElementById('form-archive')
+  setNotice(errorEl, '')
+  btn.disabled = true
+  try {
+    await archiveCompany(archivingCompany.id, t('edit.archiveNote'))
+    closeForm()
+  } catch (err) {
+    setNotice(errorEl, err.message)
+  } finally {
+    btn.disabled = false
   }
 }
 

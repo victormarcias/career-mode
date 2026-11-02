@@ -24,6 +24,14 @@ export async function archiveCompany(id, notes) {
   })
 }
 
+// The company an event's form can archive (ghosted, by hand): the event's own company, while it is still active.
+// A new event, a queued link (no company yet) and an archive itself have none.
+export function archivableCompany(app, companiesMap) {
+  if (!app || app.event === 'pending' || app.event === 'archive' || !app.companyId) return null
+  const company = companiesMap.get(app.companyId)
+  return company && company.status !== 'archived' ? company : null
+}
+
 let currentId = null // the company being edited
 let currentName = ''
 
