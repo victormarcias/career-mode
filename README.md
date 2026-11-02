@@ -93,6 +93,7 @@ In `.claude/skills/`, each with its own README:
 - `reply-recruiter`: answers a recruiter who wrote first
 - `sync-aiapply`: logs what AIApply.io got back from companies, and trashes its "Not this time" notices
 - `reply-rejected`: thanks the companies that rejected you, from your Gmail, archives the email and logs the rejection
+- `follow-up-email-application`: follows up the applications you emailed that got no answer, on their own thread, and logs it
 - `check-email`: sorts your recent Gmail and runs the skills that handle it
 - `submit-profile`: fills candidate portals from your profile
 - `write-daily-post`: writes the daily post and its image
