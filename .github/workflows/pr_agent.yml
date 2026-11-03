@@ -12,9 +12,9 @@ jobs:
       contents: read
       issues: write
       pull-requests: write
-    name: Run pr agent on every pull request, respond to user comments
+    name: Qodo
     steps:
-      - name: PR Agent action step
+      - name: The PR Agent action step
         id: pragent
         uses: the-pr-agent/pr-agent@main
         env:
