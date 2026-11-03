@@ -19,6 +19,6 @@ jobs:
         uses: the-pr-agent/pr-agent@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          config.model: '["deepseek/deepseek-v4-flash"]'
-          config.fallback_models: "deepseek/deepseek-v4-pro"
+          config.model: "deepseek/deepseek-v4-pro"
+          config.fallback_models: '["deepseek/deepseek-v4-flash"]'
           DEEPSEEK.KEY: ${{ secrets.DEEPSEEK_API_KEY }}
