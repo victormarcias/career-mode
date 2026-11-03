@@ -52,8 +52,8 @@ Through the local API at `http://localhost:8333` (docs at `/docs`; if a request 
 2. **Its process.** Take its latest `application` (or `passive_message`) event, `GET /api/events?companyId=<id>`, archived company or not. **No such event: nothing is logged**, even if the company exists. Otherwise use the same `companyId` and `viaCompanyId` as that event.
 
 What is not logged is only mentioned in the `--verbose` summary, with the company and the reason ("not in the Calendar" or "no application").
-3. **Not twice.** If the company already has a `rejection` event on that day or later, it is logged: skip it.
-4. `POST /api/events` with `event`: `rejection`, `date` and `time`: the day and the time (`HH:MM`, the user's time zone) the rejection email arrived, and `notes`: the reason when the email gives one, in a short line, else **"Other candidates."**, never "No reason given.". The company is archived by itself: a closing event as its latest one does that. The rejection stays in the Calendar on its day; archiving only moves the company out of the Active filter and out of Follow Up.
+3. **Not twice.** If the company already has a `rejection` event on the day the email arrived or later, it is logged: skip it.
+4. `POST /api/events` with `event`: `rejection`, `date`: today, and `time`: the time of the registration, now, as `HH:MM` in the user's time zone (not the time on the email, which may not be when the user got it), and `notes`: the reason when the email gives one, in a short line, else **"Other candidates."**, never "No reason given.". The company is archived by itself: a closing event as its latest one does that. The rejection stays in the Calendar on its day; archiving only moves the company out of the Active filter and out of Follow Up.
 
 Do it for every rejection that reaches this step, also when it could not be answered.
 
