@@ -225,7 +225,7 @@ def import_snapshot(session: Session, snapshot: dict, replace: bool = False) -> 
 
         def load_event(e=e):
             data = EventIn.model_validate(e)
-            columns = crud._event_columns(session, data.model_dump())
+            columns = crud._checked_event_columns(session, data)
             session.add(Event(id=crud._check_id(e.get('id') or crud.uuid.uuid4().hex[:20]), **columns))
             session.flush()
         attempt('events', e, load_event)

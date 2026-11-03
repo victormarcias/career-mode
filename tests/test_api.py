@@ -185,6 +185,37 @@ def test_event_validation(client, make_agency, make_client):
         assert client.post('/api/events', json=body).status_code == 422, body
 
 
+def test_a_patch_checks_the_links_with_the_ones_the_event_already_has(client, make_agency, make_client, make_event):
+    make_agency('Acme')
+    make_agency('Other Agency')
+    make_client('Big')
+    e = make_event(companyId='big')
+    r = client.patch('/api/events/' + e['id'], json={'viaCompanyId': 'acme'})  # its company, a client, is not sent
+    assert r.status_code == 200, r.text
+    assert (r.json()['companyId'], r.json()['viaCompanyId']) == ('big', 'acme')
+    assert client.patch('/api/events/' + e['id'], json={'viaCompanyId': 'big'}).status_code == 422  # still not an agency
+    agency_event = make_event(companyId='acme')
+    assert client.patch('/api/events/' + agency_event['id'], json={'viaCompanyId': 'other-agency'}).status_code == 422
+
+
+def test_the_agency_an_event_had_goes_when_its_company_is_no_longer_a_client(client, make_agency, make_client, make_event):
+    make_agency('Acme')
+    make_agency('Other Agency')
+    make_client('Big')
+    make_client('Small')
+    e = make_event(companyId='big', viaCompanyId='acme')
+    moved = client.patch('/api/events/' + e['id'], json={'companyId': 'small'}).json()  # to another client: kept
+    assert (moved['companyId'], moved['viaCompanyId']) == ('small', 'acme')
+    moved = client.patch('/api/events/' + e['id'], json={'companyId': 'other-agency'}).json()  # to an agency: dropped
+    assert (moved['companyId'], moved['viaCompanyId']) == ('other-agency', None)
+    e = make_event(companyId='big', viaCompanyId='acme')
+    moved = client.patch('/api/events/' + e['id'], json={'companyId': None}).json()  # to no company: dropped
+    assert (moved['companyId'], moved['viaCompanyId']) == (None, None)
+    # One the patch sends is checked as it is: an agency's event has none, and neither has an event with no company.
+    assert client.patch('/api/events/' + e['id'], json={'companyId': 'other-agency', 'viaCompanyId': 'acme'}).status_code == 422
+    assert client.patch('/api/events/' + e['id'], json={'companyId': None, 'viaCompanyId': 'acme'}).status_code == 422
+
+
 def test_blank_time_and_links_become_null(make_event):
     e = make_event(time='', jdUrl='  ', applyType='')
     assert (e['time'], e['jdUrl'], e['applyType']) == (None, None, None)

@@ -254,13 +254,19 @@ def _check_event_companies(session: Session, company_id, via_company_id):
             raise DomainError(422, 'Only an event of a client has a viaCompanyId: the company has to be a client')
 
 
-def _event_columns(session: Session, fields: dict) -> dict:
-    """API field names -> columns, checking that what the event points to exists."""
+def _event_columns(fields: dict) -> dict:
+    """API field names -> columns. What the event points to is checked by the caller, with the values the event
+    ends up with: a PATCH sends only what changes, so its fields alone are not the pair to check."""
     columns = {}
     for key, value in fields.items():
         columns['type' if key == 'event' else key] = value.value if hasattr(value, 'value') else value
-    if 'company_id' in columns or 'via_company_id' in columns:
-        _check_event_companies(session, columns.get('company_id'), columns.get('via_company_id'))
+    return columns
+
+
+def _checked_event_columns(session: Session, data: EventIn) -> dict:
+    """The columns of a whole event (a create or a replace), with what it points to checked."""
+    columns = _event_columns(data.model_dump())
+    _check_event_companies(session, columns.get('company_id'), columns.get('via_company_id'))
     return columns
 
 
@@ -272,7 +278,7 @@ def _insert_event(session: Session, event_id: str, columns: dict) -> Event:
 
 
 def create_event(session: Session, data: EventIn) -> Event:
-    event = _insert_event(session, uuid.uuid4().hex[:20], _event_columns(session, data.model_dump()))
+    event = _insert_event(session, uuid.uuid4().hex[:20], _checked_event_columns(session, data))
     session.commit()
     return event
 
@@ -284,7 +290,7 @@ def _check_passive_message(event_type, company_id):
 
 def update_event(session: Session, event_id: str, patch: EventPatch) -> Event:
     event = get_event(session, event_id)
-    columns = _event_columns(session, patch.model_dump(exclude_unset=True))
+    columns = _event_columns(patch.model_dump(exclude_unset=True))
     for key in ('date', 'type'):
         if key in columns and columns[key] is None:
             raise DomainError(422, '"%s" cannot be empty' % ('event' if key == 'type' else key))
@@ -292,8 +298,12 @@ def update_event(session: Session, event_id: str, patch: EventPatch) -> Event:
         columns['notes'] = ''
     company_id = columns['company_id'] if 'company_id' in columns else event.company_id
     via_company_id = columns['via_company_id'] if 'via_company_id' in columns else event.via_company_id
-    if via_company_id is not None and company_id is None:
-        via_company_id = columns['via_company_id'] = None  # no company, no agency in between
+    if via_company_id is not None and 'via_company_id' not in columns:
+        # The agency the event already had goes when its company is no longer a client (none, or an agency); one
+        # the patch sends is checked as it is.
+        company = session.get(Company, company_id) if company_id is not None else None
+        if company is None or company.company_type != CompanyType.client.value:
+            via_company_id = columns['via_company_id'] = None
     _check_event_companies(session, company_id, via_company_id)
     _check_passive_message(columns.get('type', event.type), company_id)
     for key, value in columns.items():
@@ -304,7 +314,7 @@ def update_event(session: Session, event_id: str, patch: EventPatch) -> Event:
 
 def replace_event(session: Session, event_id: str, data: EventIn) -> Event:
     _check_id(event_id)
-    columns = _event_columns(session, data.model_dump())
+    columns = _checked_event_columns(session, data)
     event = session.get(Event, event_id)
     if event is None:
         event = _insert_event(session, event_id, columns)

@@ -92,12 +92,15 @@ test('the search keeps the names that have what is typed, ignoring case and acce
   assert.ok(!matchesSearch('Acme', 'beta'))
 })
 
-test('an application link is opened as a web address or as an email, and nothing else is', () => {
+test('an application link is opened as a web address (with or without https://) or as an email, and nothing else is', () => {
   assert.equal(openableLink(' https://jobs.example/x?id=1 '), 'https://jobs.example/x?id=1')
   assert.equal(openableLink('http://jobs.example'), 'http://jobs.example')
   assert.equal(openableLink('jobs@example.com'), 'mailto:jobs@example.com')
   assert.equal(openableLink('mailto:jobs@example.com'), 'mailto:jobs@example.com')
-  for (const nothing of ['', '   ', null, undefined, 'javascript:alert(1)', 'data:text/html,hi', 'file:///etc/passwd', 'jobs.example/x', 'https://a b', 'two words']) {
+  assert.equal(openableLink('jobs.example/x'), 'https://jobs.example/x') // typed with no https://
+  assert.equal(openableLink(' www.jobs.example/x?id=1 '), 'https://www.jobs.example/x?id=1')
+  assert.equal(openableLink('jobs.example:8080'), 'https://jobs.example:8080')
+  for (const nothing of ['', '   ', null, undefined, 'javascript:alert(1)', 'data:text/html,hi', 'file:///etc/passwd', 'https://a b', 'two words', 'acme', 'jobs.example/a b', 'localhost:8333']) {
     assert.equal(openableLink(nothing), null, String(nothing))
   }
 })

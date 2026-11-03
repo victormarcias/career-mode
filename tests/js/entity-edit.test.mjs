@@ -19,3 +19,10 @@ test('nothing to archive: a new event, a queued link, an archive, no company or 
   assert.equal(archivableCompany({ event: 'note', companyId: 'missing' }, companies), null)
   assert.equal(archivableCompany({ event: 'note', companyId: 'old' }, companies), null)
 })
+
+test('a website or LinkedIn field takes a link typed with no https:// (a text field, not type="url")', async () => {
+  const { fieldHtml } = await import('../../public/js/entity-edit.js')
+  const html = fieldHtml({ key: 'website', label: 'companies.website', type: 'url' }, 'acme.example')
+  assert.ok(html.includes('type="text" inputmode="url"'))
+  assert.ok(!html.includes('type="url"'))
+})

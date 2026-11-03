@@ -39,7 +39,7 @@ function attr(value) {
   return escapeHtml(value).replace(/"/g, '&quot;')
 }
 
-function fieldHtml(spec, value) {
+export function fieldHtml(spec, value) {
   const id = `edit-f-${spec.key}`
   if (spec.type === 'checkbox') {
     return `
@@ -59,10 +59,13 @@ function fieldHtml(spec, value) {
       </div>
     `
   }
+  // A link is typed with no "https://" ("acme.example"), which an <input type="url"> refuses: it is a text field
+  // with the keyboard of a URL, and the card adds the https:// when it opens it (safeHref, dom-utils.js).
+  const typeAttrs = spec.type === 'url' ? 'type="text" inputmode="url"' : `type="${spec.type}"`
   return `
     <div>
       <label class="mb-1 block text-xs text-gray-500">${t(spec.label)}${spec.required ? ' <span class="req">*</span>' : ''}</label>
-      <input type="${spec.type}" id="${id}" value="${attr(value || '')}" class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"${spec.required ? ' required' : ''} />
+      <input ${typeAttrs} id="${id}" value="${attr(value || '')}" class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"${spec.required ? ' required' : ''} />
     </div>
   `
 }

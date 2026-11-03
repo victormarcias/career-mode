@@ -69,11 +69,13 @@ export function companyHint(companies, name, companyType, via = '') {
 }
 
 // Where an application link points when it is opened, or null when it is not something to open: a web address
-// as it is, and a bare email address as a mailto: link. Anything else (a script, a file, plain text) is not opened.
+// as it is, one typed with no "https://" ("jobs.example/x") with it, and a bare email address as a mailto: link.
+// Anything else (a script, a file, plain text) is not opened.
 export function openableLink(value) {
   const link = (value ?? '').trim()
   if (/^(https?:\/\/|mailto:)\S+$/i.test(link)) return link
-  return /^[^\s@/:]+@[^\s@/:]+\.[^\s@/:]+$/.test(link) ? `mailto:${link}` : null
+  if (/^[^\s@/:]+@[^\s@/:]+\.[^\s@/:]+$/.test(link)) return `mailto:${link}`
+  return /^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}(:\d+)?([/?#]\S*)?$/i.test(link) ? `https://${link}` : null
 }
 
 // Where the arrow next to a company goes: its card in Companies, or nowhere when the name typed is not a company yet.
@@ -124,6 +126,21 @@ export function escapeHtml(text) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+// A link typed into a company (website, LinkedIn, recruiter, application) as an escaped href. It is typed with no
+// "https://" ("acme.example"), so one with no scheme gets it, and a bare email address becomes a mailto: link.
+// Only http(s) and mailto may open: a "javascript:" link (or any other scheme) becomes "#". Browsers ignore
+// control characters and spaces inside a scheme, so those are dropped before it is checked; "host:8080" is a port.
+export function safeHref(url) {
+  const link = String(url ?? '').trim()
+  if (!link) return '#'
+  const scheme = link.replace(/[\u0000-\u0020]/g, '').match(/^([a-z][a-z0-9+.-]*):(?!\d)/i)
+  if (scheme) return ['http', 'https', 'mailto'].includes(scheme[1].toLowerCase()) ? escapeHtml(link) : '#'
+  if (/^[^\s@/:]+@[^\s@/:]+\.[^\s@/:]+$/.test(link)) return escapeHtml(`mailto:${link}`)
+  return escapeHtml(`https://${link.replace(/^\/+/, '')}`)
 }
 
 // A title that starts with an emoji ("🤝 Platform Reachout Message") is shown with the emoji apart, as a company

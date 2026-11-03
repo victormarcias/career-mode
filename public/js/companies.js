@@ -1,4 +1,4 @@
-import { escapeHtml, renderNotes, fadeTransition, wireAccordion } from './dom-utils.js'
+import { escapeHtml, safeHref, renderNotes, fadeTransition, wireAccordion } from './dom-utils.js'
 import { EVENT_LABELS, EVENT_COLORS, isClosingEvent } from './events.js'
 import { openEntityEdit } from './entity-edit.js'
 import { t } from './i18n.js'
@@ -83,11 +83,6 @@ export function setStatusFilter(key) {
   if (lastDeps) renderList(lastOpenId, lastDeps, 'fade')
 }
 
-// applicationLink can be a URL or a bare email address — turn the latter into a mailto: link.
-function applicationLinkHref(link) {
-  return link.includes('@') ? `mailto:${link}` : link
-}
-
 // Most recent first. A closing event (Rejection/Red Flag/On-hold/Offer) always wins a
 // same-date tie regardless of its time — it's the actual last word on that
 // application, whatever time it happens to carry (or none at all). Only
@@ -150,13 +145,13 @@ export function eventsOf(applications, company) {
   return applications.filter((app) => app.companyId === company.id || app.viaCompanyId === company.id)
 }
 
-const linkHtml = (url) => `<a href="${url}" target="_blank" rel="noreferrer" class="break-all text-blue-400 underline hover:text-blue-300">${url}</a>`
+const linkHtml = (url) => `<a href="${safeHref(url)}" target="_blank" rel="noreferrer" class="break-all text-blue-400 underline hover:text-blue-300">${escapeHtml(url)}</a>`
 
 // Exported for follow-up.js, which reuses this exact card body inside its own expandable results list: "the same
 // card as Companies", not a rebuild. `via` is the agency a client came through, when it has one.
 export function companyBodyHtml(c, matches, via) {
   const recruiters = c.recruiters?.length
-    ? c.recruiters.map((url) => `<a href="${url}" target="_blank" rel="noreferrer" class="block text-blue-400 underline hover:text-blue-300">${url}</a>`).join('')
+    ? c.recruiters.map((url) => `<a href="${safeHref(url)}" target="_blank" rel="noreferrer" class="block text-blue-400 underline hover:text-blue-300">${escapeHtml(url)}</a>`).join('')
     : `<p class="text-gray-500">${t('companies.noRecruiters')}</p>`
   const application = t('companies.application')
   return `
@@ -170,7 +165,7 @@ export function companyBodyHtml(c, matches, via) {
     <div class="mb-6 space-y-1 text-sm">${recruiters}</div>
     ${
       c.applicationLink
-        ? `<a href="${applicationLinkHref(c.applicationLink)}" target="_blank" rel="noreferrer" class="mb-6 inline-block rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white">${application} →</a>`
+        ? `<a href="${safeHref(c.applicationLink)}" target="_blank" rel="noreferrer" class="mb-6 inline-block rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white">${application} →</a>`
         : `<span class="mb-6 inline-block cursor-not-allowed rounded-full bg-gray-800 px-4 py-2 text-sm font-medium text-gray-500">${application} →</span>`
     }
     <h2 class="mb-2 mt-4 text-sm font-medium text-gray-400">${t('companies.timeline', { count: matches.length })}</h2>
