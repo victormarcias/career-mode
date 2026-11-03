@@ -53,6 +53,7 @@ If there's no limit, the full must-have stack also applies: Docker, FastAPI, Nod
 - **Work shift:** 9am–6pm in your time zone preferred. Pick "Anytime"/flexible instead if the form only allows one option.
 - **Compensation, when a form asks:** Current $4,000/mo USD, Expected $5,000+/mo USD. If the form has no compensation field, don't volunteer it — that gets negotiated per-opportunity.
 - **Expected salary range, for emails and recruiter replies:** 4,000–5,000 USD per month (contractor, USD). Stated up front in application emails (`/apply-email`) and in replies to recruiters who reach out first (`/reply-recruiter`).
+- **Expected salary for a local role (employee in your country, paid in local currency):** 2,000,000 in your local currency, net per month. `/reply-recruiter` uses it instead of the range above when the offer is local, and says it is net.
 
 ## 🎓 Self-assessment answers
 
