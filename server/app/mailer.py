@@ -4,6 +4,9 @@ It talks to the provider's SMTP server with the address and password of Settings
 EMAIL_SMTP_HOST / EMAIL_SMTP_PORT, which default to Gmail's): any provider with an SMTP server works. Gmail has no
 API key for sending, so it needs an app password; this needs no sign-in screen, no browser and no extra packages.
 Nothing is kept here: Gmail itself leaves a copy in the account's Sent folder, other providers may not.
+
+The body goes out as it is, links included. The Gmail connector, instead, rewrites every link (even one without
+https://) into a google.com/url redirect, so an email with a link is sent from here, as a reply when it answers one.
 """
 import smtplib
 import ssl
@@ -34,11 +37,16 @@ def cv_file(env_path: Path) -> Path:
     return path
 
 
-def build_message(sender: str, to: str, subject: str, body: str, from_name: Optional[str] = None, cv: Optional[Path] = None) -> EmailMessage:
+def build_message(sender: str, to: str, subject: str, body: str, from_name: Optional[str] = None, cv: Optional[Path] = None,
+                  in_reply_to: Optional[str] = None) -> EmailMessage:
     message = EmailMessage()
     message['From'] = formataddr((from_name, sender)) if from_name else sender
     message['To'] = to
     message['Subject'] = subject
+    if in_reply_to:
+        # A reply on the thread of that message: both mail apps put it under the conversation it answers
+        message['In-Reply-To'] = in_reply_to
+        message['References'] = in_reply_to
     message.set_content(body)
     if cv is not None:
         message.add_attachment(cv.read_bytes(), maintype='application', subtype='pdf', filename=cv.name)
@@ -76,7 +84,8 @@ def smtp_send(sender: str, password: str, message: EmailMessage, host: str = DEF
         raise DomainError(502, 'Could not send the email through %s: %s' % (host, err))
 
 
-def send(env_path: Path, to: str, subject: str, body: str, attach_cv: bool = True, from_name: Optional[str] = None, send_with=smtp_send) -> dict:
+def send(env_path: Path, to: str, subject: str, body: str, attach_cv: bool = True, from_name: Optional[str] = None, send_with=smtp_send,
+         in_reply_to: Optional[str] = None) -> dict:
     sender = settings.get('EMAIL_ADDRESS', env_path)
     password = settings.get('EMAIL_PASSWORD', env_path)
     if not sender or not password:
@@ -84,5 +93,5 @@ def send(env_path: Path, to: str, subject: str, body: str, attach_cv: bool = Tru
     host = settings.get('EMAIL_SMTP_HOST', env_path) or DEFAULT_HOST
     port = int(settings.get('EMAIL_SMTP_PORT', env_path) or DEFAULT_PORT)
     cv = cv_file(env_path) if attach_cv else None
-    send_with(sender, password, build_message(sender, to, subject, body, from_name, cv), host, port)
+    send_with(sender, password, build_message(sender, to, subject, body, from_name, cv, in_reply_to), host, port)
     return {'sent': True, 'from': sender, 'to': to, 'attached': cv.name if cv else None}

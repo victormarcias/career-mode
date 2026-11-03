@@ -48,6 +48,8 @@ Skip it, and say so, when:
 
 `reply` to the **application message** (the user's own message of the thread), with `body` the filled message, `replyAll` false and no `to`, `cc` or `bcc` of its own: a reply to the user's own message goes to its recipient. Check in the answer that it went to the application's recipient, and stop if it did not.
 
+**When the message has a link** (the user's text may have one), it does not go through `reply`: the Gmail connector rewrites every link into a `google.com/url` redirect. Send it with the app's `POST /api/mail/send`, to the application's recipient, with `subject` `Re: <the application's subject>`, `attachCv` false and `inReplyTo` the `Message-Id` of the application message, as the repo's `CLAUDE.md` says under "Email".
+
 ## 4. Log it
 
 Only for a follow-up that went out: `POST /api/events` with `event`: `note`, `date` and `time`: today and the time it was sent (`HH:MM`, the user's time zone), the `companyId` and `viaCompanyId` of the application, and `notes`: `Follow up` followed by the role and the address it went to (for example `Follow up: Python Developer, to ana@example.com.`). Nothing else is changed: a note does not archive the company, and the Follow Up page still counts the days from the application.

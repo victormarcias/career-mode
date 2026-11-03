@@ -15,6 +15,10 @@ class MailIn(CamelModel):
     body: str = Field(min_length=1, max_length=20000, description='Plain text, with its line breaks as they are')
     attach_cv: bool = Field(default=True, description='Attach the CV of the CV_PDF_PATH setting')
     from_name: Optional[str] = Field(default=None, max_length=100, pattern=r'^[^\r\n<>]*$', description='The name shown next to the sender address')
+    in_reply_to: Optional[str] = Field(default=None, max_length=500, pattern=r'^<[^\s<>@]+@[^\s<>@]+>$', description=(
+        'The Message-ID header of the email this answers, as <id@host>: the mail goes on that thread (In-Reply-To and References). '
+        'Give the subject as "Re: " and the subject of that email.'
+    ))
 
 
 class MailOut(CamelModel):
@@ -27,7 +31,8 @@ class MailOut(CamelModel):
 @router.post('/send', response_model=MailOut, summary='Send an email from the address in Settings',
              description=(
                  'Sends right away, from EMAIL_ADDRESS through the SMTP server of Settings, to one recipient and with no CC or BCC. '
-                 'The CV (the CV_PDF_PATH setting) is attached unless attachCv is false. Gmail keeps a copy in the Sent folder.'
+                 'The CV (the CV_PDF_PATH setting) is attached unless attachCv is false. Gmail keeps a copy in the Sent folder. '
+                 'With inReplyTo it goes as a reply, on the thread of that message. The body is sent as it is: links are not rewritten.'
              ))
 def send_mail(data: MailIn, request: Request):
-    return mailer.send(request.app.state.env_path, data.to, data.subject, data.body, data.attach_cv, data.from_name, request.app.state.send_mail)
+    return mailer.send(request.app.state.env_path, data.to, data.subject, data.body, data.attach_cv, data.from_name, request.app.state.send_mail, data.in_reply_to)

@@ -99,6 +99,31 @@ def test_there_is_no_way_to_add_a_cc_or_bcc(client, sent):
     assert sent[0][2]['Cc'] is None and sent[0][2]['Bcc'] is None
 
 
+def test_a_reply_goes_on_the_thread_of_the_message_it_answers(client, sent):
+    r = client.post('/api/mail/send', json={**GOOD, 'subject': 'Re: Full Stack Developer', 'inReplyTo': '<abc.123@mail.example.org>', 'attachCv': False})
+    assert r.status_code == 200
+    message = sent[0][2]
+    assert (message['In-Reply-To'], message['References']) == ('<abc.123@mail.example.org>', '<abc.123@mail.example.org>')
+
+
+def test_a_new_mail_has_no_thread_headers(client, sent):
+    client.post('/api/mail/send', json=GOOD)
+    assert sent[0][2]['In-Reply-To'] is None and sent[0][2]['References'] is None
+
+
+def test_a_link_in_the_body_goes_out_as_it_is(client, sent):
+    body = 'Hi Ana,\n\nMy calendar: https://calendly.example.org/jane\n\nJane'
+    client.post('/api/mail/send', json={**GOOD, 'body': body})
+    parsed = message_from_bytes(bytes(sent[0][2]), policy=policy.default)
+    assert parsed.get_body(('plain',)).get_content() == body + '\n'
+
+
+@pytest.mark.parametrize('value', ['abc@mail.example.org', '<abc>', '<a b@example.org>', '<abc@example.org>\r\nBcc: x@y.org', '<a@b@c.org>'])
+def test_a_reply_to_that_is_not_one_message_id_is_refused(client, sent, value):
+    r = client.post('/api/mail/send', json={**GOOD, 'inReplyTo': value})
+    assert r.status_code == 422 and sent == []
+
+
 def test_the_route_is_documented(client):
     assert 'post' in client.get('/openapi.json').json()['paths']['/api/mail/send']
 

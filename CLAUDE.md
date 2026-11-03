@@ -41,6 +41,10 @@ Rules for this repo only; the user's own cross-repo preferences live in their ow
 - The profile mirrors the user's latest CV, which is the source of truth: titles, bullets and each role's own "Tech:" line. When the CV changes, update the profile to match. Follow its "Rules for presenting me" section, when it has any (it is optional), everywhere (profile text, messages, forms), for instance not overselling anything the user is still learning.
 - Skills live in `.claude/skills/`, each with a README next to its `SKILL.md`.
 
+## Email
+
+- The Gmail connector rewrites every link of what it sends (`send_message` and `reply`, plain text or HTML, even a bare `example.com`) into a `google.com/url?q=...` redirect, and that is what the recipient gets. So an email with a link in it is never sent through the connector: it goes through the app's `POST /api/mail/send`, which sends the body as it is. To answer a thread from there, give `inReplyTo` the `Message-Id` of the message being answered and the subject `Re: <its subject>`: `get_message` with `RAW`, then decode the start of `raw` (base64url; the headers come first) with `python3 -c "import sys,base64,re;s=sys.stdin.read().strip();s=s[:len(s)//4*4];print(re.search(r'(?im)^message-id:\s*(<[^>]+>)',base64.urlsafe_b64decode(s).decode('utf-8','replace')).group(1))"`, piping in the first 8000 characters or so. It goes only to the sender of that message, with `attachCv` false unless the CV is wanted. An email with no link can still go through the connector.
+
 ## Outreach messages
 
 - The messages (`profile/outreach.md`, started from `profile/outreach.example.md`; `profile/README.md` explains the format) have one text per language the user writes in (the example has Spanish and English): add every language together. Skills look a message up by its title, so keep the titles.

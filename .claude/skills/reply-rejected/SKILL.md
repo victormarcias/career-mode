@@ -13,7 +13,7 @@ The user's own words, in the language of the rejection (English or Spanish; any 
 
 > Thanks for considering me and letting me know. And of course, we'll stay in touch for future opportunities.
 
-As a plain-text email, with the greeting and the sign-off around it: `Hi <first name>,` (Spanish `Hola <nombre>,`), a blank line, the sentence (in Spanish "Muchas gracias por considerarme y por avisarme. Por supuesto, estaremos en contacto para futuras oportunidades."), a blank line, `Best regards,` (Spanish `Saludos,`) and the user's first name, from the profile's Basics (`profile/profile.md`), read at run time. When the sender is not a person (a team, a company name, "Recruiting"), the greeting is just `Hi,`. Nothing else is added: no question, no feedback request, no salary, no link, no attachment.
+As a plain-text email, with the greeting and the sign-off around it: `Hi <first name>,` (Spanish `Hola <nombre>,`), a blank line, the sentence (in Spanish "Muchas gracias por considerarme y por avisarme. Por supuesto, estaremos en contacto para futuras oportunidades."), a blank line, `Best regards,` (Spanish `Saludos,`) and the user's first name, from the profile's Basics (`profile/profile.md`), read at run time. When the sender is not a person (a team, a company name, "Recruiting"), the greeting is just `Hi,`. Nothing else is added: no question, no feedback request, no salary, no link (the Gmail connector would rewrite it into a `google.com/url` redirect), no attachment.
 
 ## Gmail
 

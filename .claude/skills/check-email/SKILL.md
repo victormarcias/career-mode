@@ -37,6 +37,10 @@ Call each with the Skill tool, only for the kinds that have something, in this o
 
 A skill that stops (the app is not running, an email it can't read) is reported and the others still run.
 
+## Answering for the user
+
+When the user then asks to answer one of the threads that **need the user** (an interview time, for instance), write the reply in the language of the email and with what the user's own words or files give (the availability they gave, the links of `profile/outreach.md`), never something made up. A reply with a link goes through the app's `POST /api/mail/send` with `inReplyTo`, as the repo's `CLAUDE.md` says under "Email", never through the connector, which rewrites every link into a `google.com/url` redirect. Then show what was sent.
+
 ## 4. Finish
 
 Say nothing of what was done unless the command has `--verbose`; without it, show only what **needs the user** and the drafts of `/reply-recruiter` (the user sends them), plus any skill that stopped. With `--verbose`, say in chat, in a few lines: what each skill did (what `/sync-aiapply` logged, to whom `/reply-rejected` replied and what it logged, the drafts of `/reply-recruiter` shown above), what **needs the user**, and how many threads were left alone. Nothing is committed.

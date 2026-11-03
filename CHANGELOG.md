@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- **Links in emails stay as they are:** the Gmail connector rewrites every link it sends into a `google.com/url` redirect, so a reply with a link (from `/check-email` when the user asks to answer a thread, or a `/follow-up-email-application` message with a link) goes through the app's `POST /api/mail/send`, which now takes `inReplyTo` (the `Message-Id` of the email it answers) to send it on that thread.
 - **Companies tabs follow the company:** typing a name in the search picks the Active or Archived tab it is found in, and a link to a company (the building in the Calendar form, a "via" link) opens the tab it is in.
 - **Company arrow in the Calendar form:** it is a building icon that goes to the company's card in Companies, instead of an arrow that opened its website or LinkedIn page in another tab; the card shows them.
 - **Company in every new event:** the Update form, the New application form and the Google Calendar sync ask for one Company, with an Agency (default) or Client tag next to it. A client has an optional Via agency. Typing the name of a company that exists picks it, and its tag follows. A name that already exists with the other tag is refused, so a company is not created twice.

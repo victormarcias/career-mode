@@ -22,6 +22,7 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
 
 ### Cambiado
 
+- **Los links de los emails quedan como son:** el conector de Gmail reescribe cada link que envía como una redirección de `google.com/url`, así que una respuesta con un link (de `/check-email` cuando el usuario pide contestar un hilo, o un mensaje de `/follow-up-email-application` con un link) sale por el `POST /api/mail/send` de la app, que ahora acepta `inReplyTo` (el `Message-Id` del email que contesta) para enviarla en ese hilo.
 - **Las pestañas de Empresas siguen a la empresa:** al escribir un nombre en el buscador se elige la pestaña Activas o Archivadas donde está, y un link a una empresa (el edificio del formulario del Calendario, un link "via") abre la pestaña en la que está.
 - **Flecha de Company en el formulario del Calendario:** es un icono de edificio que lleva a la ficha de la empresa en Empresas, en vez de una flecha que abría su web o su página de LinkedIn en otra pestaña; la ficha las muestra.
 - **Empresa en cada evento nuevo:** el formulario de Update, el de New application y la sincronización con Google Calendar piden una sola Empresa, con una etiqueta Agency (por defecto) o Client al lado. Un client tiene un campo opcional A través de una agency. Al escribir el nombre de una empresa que ya existe se elige esa, y su etiqueta la sigue. Un nombre que ya existe con la otra etiqueta se rechaza, así no se crea una empresa dos veces.
