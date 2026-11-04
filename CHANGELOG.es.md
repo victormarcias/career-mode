@@ -23,6 +23,7 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
 
 ### Cambiado
 
+- **Colores de los eventos en el Calendario:** una application es una píldora blanca, y la HR intro verde oscuro con texto blanco y el teléfono rojo ☎️, para que resalte como la entrevista técnica. Con la página abierta, una entrevista (HR intro, técnica o cultural) tiene un borde rojo que aparece y se desvanece lento desde 10 minutos antes de su hora hasta 30 minutos después.
 - **`/apply-pending`:** aplica también a puestos híbridos y presenciales, borra sin preguntar un link cuyo proceso tiene una entrevista con IA en cualquier etapa, y anota una página general de búsquedas (una lista de puestos, un alta como talento) en el perfil para `/submit-profile` en lugar de dejarla pendiente.
 - **Los links de los emails quedan como son:** el conector de Gmail reescribe cada link que envía como una redirección de `google.com/url`, así que una respuesta con un link (de `/check-email` cuando el usuario pide contestar un hilo, o un mensaje de `/follow-up-email-application` con un link) sale por el `POST /api/mail/send` de la app, que ahora acepta `inReplyTo` (el `Message-Id` del email que contesta) para enviarla en ese hilo.
 - **Las pestañas de Empresas siguen a la empresa:** al escribir un nombre en el buscador se elige la pestaña Activas o Archivadas donde está, y un link a una empresa (el edificio del formulario del Calendario, un link "via") abre la pestaña en la que está.

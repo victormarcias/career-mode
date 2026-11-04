@@ -162,6 +162,22 @@ input[type='search']::-webkit-search-cancel-button {
   outline-offset: 1px;
 }
 
+/* An interview about to start, or going on (interviewAlertOn in js/events.js): a red border that fades slowly in
+   and out. A box-shadow, so the pill doesn't move; still red, without the fade, for someone who turns off motion. */
+.event-pill.interview-alert {
+  box-shadow: 0 0 0 2px #111827, 0 0 0 4px rgb(239 68 68);
+  animation: interview-alert-fade 2.4s ease-in-out infinite;
+}
+
+@keyframes interview-alert-fade {
+  0%, 100% { box-shadow: 0 0 0 2px #111827, 0 0 0 4px rgb(239 68 68 / 1); }
+  50% { box-shadow: 0 0 0 2px #111827, 0 0 0 4px rgb(239 68 68 / 0.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .event-pill.interview-alert { animation: none; }
+}
+
 /* The sidebar collapses to its icons (js/sidebar.js): the favicon replaces the logo and the toggle goes under it. */
 #sidebar.has-transition {
   transition: width 0.2s ease;

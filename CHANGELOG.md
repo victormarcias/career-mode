@@ -23,6 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- **Event colors in the Calendar:** an application is a white pill, and the HR intro a strong dark green with white text and the red telephone ☎️, so it stands out like the tech interview. While the page is open, an interview (HR intro, tech or culture) gets a red border that fades slowly in and out from 10 minutes before its time until 30 minutes after it.
 - **`/apply-pending`:** applies to hybrid and on-site roles too, removes without asking a link whose process has an AI interview at any stage, and notes a general careers page (a list of openings, a talent signup) in the profile for `/submit-profile` instead of leaving it pending.
 - **Links in emails stay as they are:** the Gmail connector rewrites every link it sends into a `google.com/url` redirect, so a reply with a link (from `/check-email` when the user asks to answer a thread, or a `/follow-up-email-application` message with a link) goes through the app's `POST /api/mail/send`, which now takes `inReplyTo` (the `Message-Id` of the email it answers) to send it on that thread.
 - **Companies tabs follow the company:** typing a name in the search picks the Active or Archived tab it is found in, and a link to a company (the building in the Calendar form, a "via" link) opens the tab it is in.

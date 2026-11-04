@@ -1,5 +1,5 @@
 import { api, subscribe } from './api.js'
-import { EVENT_TYPES, EVENT_LABELS, EVENT_COLORS, EVENT_COLOR_HIGHLIGHT } from './events.js'
+import { EVENT_TYPES, EVENT_LABELS, EVENT_COLORS, EVENT_COLOR_HIGHLIGHT, INTERVIEW_ALERT_CLASS, interviewAlertOn } from './events.js'
 import { startOfWeek, addDays, formTime, toISODate, formatDayLabel, formatWeekNumber, formatWeekRange, currentOrNextBusinessWeekStart } from './dates.js'
 import { companyCardLink, companyHint, escapeHtml, findCompany, openableLink, pendingLabel, setNotice, slideTransition, typeConflict, typeConflictText, typeFor } from './dom-utils.js'
 import { renderOutreach, detectApplyType } from './outreach.js'
@@ -284,6 +284,18 @@ function shownInCalendar(app) {
 }
 
 
+// Puts the red alert border on the interviews that start in 10 minutes or less, until 30 minutes after they
+// start, and takes it off the others. Run on every render and every 30 seconds while the page is open.
+function refreshInterviewAlerts() {
+  const byId = new Map(applications.map((app) => [app.id, app]))
+  document.querySelectorAll('#week-grid .event-pill').forEach((pill) => {
+    const app = byId.get(pill.dataset.appId)
+    const on = Boolean(app) && interviewAlertOn(app)
+    pill.classList.toggle(INTERVIEW_ALERT_CLASS, on)
+  })
+}
+setInterval(refreshInterviewAlerts, 30000)
+
 function renderWeek() {
   // This Week is on while the week shown is the current one.
   document.getElementById('today').classList.toggle('active', toISODate(weekStart) === toISODate(currentOrNextBusinessWeekStart(new Date())))
@@ -342,6 +354,7 @@ function renderWeek() {
       `
       const group = agencyKey(app)
       pill.dataset.agencyId = group
+      pill.dataset.appId = app.id
       pill.dataset.colorLight = color
       pill.addEventListener('click', () => openForm(app))
       if (group) {
@@ -369,6 +382,7 @@ function renderWeek() {
     col.appendChild(list)
     grid.appendChild(col)
   }
+  refreshInterviewAlerts()
 }
 
 // ---------- Update form ----------
