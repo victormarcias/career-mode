@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-04
+
 ### Added
 
 - **Archive (ghosted) in an event's form:** a button left of Delete, in the form that edits an event, archives that event's company by hand (👻 Ghosted), as the company card's Archive does. It shows while the company is active, and not on a queued link or an archive.
@@ -20,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **`/reply-rejected`:** finds the rejections companies sent to the user's Gmail and replies to each one, once, thanking them and saying they will stay in touch, archives the email, and logs the rejection in the Calendar.
 - **`/check-email`:** sorts the recent Gmail and runs `/sync-aiapply`, `/reply-rejected` and `/reply-recruiter` on what it finds.
 - **`/wake-up`:** the start-of-day routine in one command: runs `/check-email` and then `/apply-pending`.
+- **Open questions from the profile:** `/apply-pending`, `/apply-site` and `/submit-profile` answer a form's open questions about how the user works (AI use, process, testing, assessments) from a new "How I work" section of `profile/profile.md`, instead of stopping to ask.
 
 ### Changed
 
@@ -90,6 +93,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 Initial release.
 
-[Unreleased]: https://github.com/victormarcias/career-mode/compare/0.1.1...HEAD
+[Unreleased]: https://github.com/victormarcias/career-mode/compare/0.2.0...HEAD
+[0.2.0]: https://github.com/victormarcias/career-mode/compare/0.1.1...0.2.0
 [0.1.1]: https://github.com/victormarcias/career-mode/compare/0.1...0.1.1
 [0.1]: https://github.com/victormarcias/career-mode/releases/tag/0.1
