@@ -99,6 +99,17 @@ Candidate portals where the full profile above has already been built out. Check
 
 - (none yet) e.g. **Example Portal** — [portal.example/profile](https://portal.example/profile)
 
+## 🧭 How I work (for open questions: AI use, process, testing, assessments)
+
+The same workflow for every application, adapted to the stack the posting names. The skills write open answers from this and the CV, without asking.
+
+- **AI tools:** an AI coding assistant every day for features, tests and refactors; a chat assistant for writing and review.
+- **AI vs me:** AI drafts boilerplate, tests and docs; I own the requirements, the design and the review of every diff.
+- **Before coding:** read the requirement, write acceptance criteria, check the existing code, then give the assistant a scoped task.
+- **Verifying output:** read the diff before committing, run the tests (pytest, CI on every push), check UI changes in the running app.
+- **Testing:** unit tests written in the same change as the code, CI on every push.
+- **Safe data with AI:** no secrets or personal data in prompts; keys in a gitignored `.env`.
+
 ## 📝 Short bio (for a form's free-text "about you" field)
 
 ```
