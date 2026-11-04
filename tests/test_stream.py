@@ -48,11 +48,11 @@ def test_a_change_is_announced_whoever_makes_it(live_server, how):
 
     def change():
         if how == 'api':
-            httpx.post(base + '/api/agencies', json={'name': 'Acme'})
+            httpx.post(base + '/api/companies', json={'name': 'Acme', 'companyType': 'agency'})
         else:  # what a skill or the CLI does: write to the file directly
             conn = sqlite3.connect(db_path)
             with conn:
-                conn.execute("INSERT INTO agencies (id, name) VALUES ('direct', 'Direct')")
+                conn.execute("INSERT INTO companies (id, name, company_type) VALUES ('direct', 'Direct', 'client')")
             conn.close()
 
     with httpx.stream('GET', base + '/api/stream', timeout=10) as response:

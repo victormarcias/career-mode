@@ -4,51 +4,140 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-const { companyHint, setNotice } = await import('../../public/js/dom-utils.js')
-const { activeCompanyNames } = await import('../../public/js/companies.js')
+const { companyHint, companyCardLink, findCompany, openableLink, setNotice, statusLine, typeConflict, typeFor } = await import('../../public/js/dom-utils.js')
+const { activeCompanies, companyCounts, inTab, matchesSearch, statusTag, tabForCompany, tabForSearch } = await import('../../public/js/companies.js')
+
+const companies = [
+  { id: 'acme', name: 'Acme', companyType: 'agency' },
+  { id: 'beta', name: 'Beta', companyType: 'client' },
+]
 
 test('the hint says which companies would be created, and nothing when they all exist', () => {
-  const agencies = [{ id: 'acme', name: 'Acme' }]
-  const clients = [{ id: 'beta', name: 'Beta' }]
-  assert.equal(companyHint(agencies, clients, 'acme', 'BETA'), '') // found ignoring case
-  assert.equal(companyHint(agencies, clients, 'Newco', ''), 'Will create the new agency "Newco".')
-  assert.equal(companyHint(agencies, clients, '', 'Gamma'), 'Will create the new client "Gamma".')
-  assert.equal(companyHint(agencies, clients, 'Newco', 'Gamma'), 'Will create the new agency "Newco" and the new client "Gamma".')
-  assert.equal(companyHint(agencies, clients, '', ''), '')
+  assert.equal(companyHint(companies, 'ACME', 'agency'), '') // found ignoring case
+  assert.equal(companyHint(companies, 'beta', 'client'), '')
+  assert.equal(companyHint(companies, 'Newco', 'agency'), 'Will create the new agency "Newco".')
+  assert.equal(companyHint(companies, 'Gamma', 'client'), 'Will create the new client "Gamma".')
+  assert.equal(companyHint(companies, 'Gamma', 'client', 'Acme'), 'Will create the new client "Gamma".') // its agency exists
+  assert.equal(companyHint(companies, 'Beta', 'client', 'Newco'), 'Will create the new agency "Newco".')
+  assert.equal(companyHint(companies, 'Gamma', 'client', 'Newco'), 'Will create the new agency "Newco" and the new client "Gamma".')
+  assert.equal(companyHint(companies, 'Newco', 'agency', 'ignored'), 'Will create the new agency "Newco".') // an agency has no via
+  assert.equal(companyHint(companies, '', 'agency'), '')
 })
 
-test('a name matches by its id too, not only by its name', () => {
-  assert.equal(companyHint([{ id: 'cwssg', name: 'CW Strategic Solutions Group' }], [], 'CW Strategic Solutions Group', ''), '')
-  assert.equal(companyHint([{ id: 'acme-inc', name: 'ACME, Inc.' }], [], 'Acme Inc', ''), '')
+test('a name that is already the other type is said, not made twice', () => {
+  assert.equal(companyHint(companies, 'Acme', 'client'), '"Acme" is already an agency.')
+  assert.equal(companyHint(companies, 'Beta', 'agency'), '"Beta" is already a client.')
+  assert.equal(companyHint(companies, 'Gamma', 'client', 'Beta'), '"Beta" is already a client.') // the agency it came through has to be one
+  assert.equal(typeConflict(companies, 'Acme', 'client'), 'agency')
+  assert.equal(typeConflict(companies, 'Acme', 'agency'), null)
+  assert.equal(typeConflict(companies, 'Newco', 'client'), null)
+  assert.equal(typeConflict(companies, '', 'client'), null)
 })
 
-test('the company fields suggest only the active agencies and clients', () => {
-  const agencies = [
-    { id: 'acme', name: 'Acme', status: 'active' },
-    { id: 'old', name: 'Old Agency', status: 'archived' },
+test('the type follows the name of a company that exists, and stays for one that does not', () => {
+  assert.equal(typeFor(companies, 'acme', 'client'), 'agency')
+  assert.equal(typeFor(companies, 'BETA', 'agency'), 'client')
+  assert.equal(typeFor(companies, 'Newco', 'client'), 'client')
+  assert.equal(typeFor(companies, '', 'agency'), 'agency')
+})
+
+test('a company is found by its name ignoring case, or by the id its slug gives, whatever its type', () => {
+  assert.equal(findCompany(companies, ' beta ').id, 'beta')
+  assert.equal(findCompany(companies, 'Newco'), null)
+  assert.equal(findCompany([{ id: 'cwssg', name: 'CW Strategic Solutions Group', companyType: 'agency' }], 'CW Strategic Solutions Group').id, 'cwssg')
+  assert.equal(findCompany([{ id: 'acme-inc', name: 'ACME, Inc.', companyType: 'agency' }], 'Acme Inc').id, 'acme-inc')
+})
+
+test('the company fields suggest only the active companies', () => {
+  const list = [
+    { id: 'acme', name: 'Acme', companyType: 'agency', status: 'active' },
+    { id: 'old', name: 'Old Agency', companyType: 'agency', status: 'archived' },
+    { id: 'open', name: 'Open Co', companyType: 'client', status: 'active' },
+    { id: 'closed', name: 'Closed Co', companyType: 'client', status: 'archived' },
   ]
-  const clients = [
-    { id: 'open', name: 'Open Co' }, // its latest event does not close it
-    { id: 'closed', name: 'Closed Co' }, // its latest event is a rejection
-    { id: 'back', name: 'Back Co' }, // was rejected, then came back
-    { id: 'fresh', name: 'Fresh Co' }, // no events yet
+  assert.deepEqual(activeCompanies(list).map((c) => c.name), ['Acme', 'Open Co'])
+  assert.deepEqual(activeCompanies([]), [])
+})
+
+test('the tabs count the active and the archived companies', () => {
+  const list = [{ status: 'active' }, { status: 'archived' }, { status: 'active' }, { status: 'archived' }, { status: 'archived' }]
+  assert.deepEqual(companyCounts(list), { active: 2, archived: 3 })
+  assert.deepEqual(companyCounts([]), { active: 0, archived: 0 })
+})
+
+test('a company is listed under the tab of its status', () => {
+  assert.deepEqual(['active', 'archived', null].map((key) => inTab({ status: 'archived' }, key)), [false, true, true])
+  assert.deepEqual(['active', 'archived', null].map((key) => inTab({ status: 'active' }, key)), [true, false, true])
+})
+
+test('the tag of an archived company says how it was closed, with the emoji of the event and a text in its color', () => {
+  const tag = (closedBy) => statusTag({ status: 'archived', closedBy })
+  const looks = (closedBy) => [tag(closedBy).emoji, tag(closedBy).text]
+  assert.deepEqual(looks('ghosted'), ['👻', 'Ghosted'])
+  assert.deepEqual(looks('rejection'), ['❌', 'Rejected'])
+  assert.deepEqual(looks('red_flag'), ['🚩', 'Red flag'])
+  assert.deepEqual(looks('on_hold'), ['⏸️', 'On hold'])
+  assert.deepEqual(looks('offer'), ['🎉', 'Offer'])
+  assert.deepEqual(looks(null), ['👻', 'Ghosted'])  // an archive by hand is the default
+  assert.equal(tag('rejection').classes, 'bg-gray-800 text-red-400')  // the capsule is always the dark one; the text has the color
+  assert.equal(tag('ghosted').classes, 'bg-gray-800 text-gray-300')  // whitish gray, like the ghost
+  assert.deepEqual(statusTag({ status: 'active', closedBy: null }), { emoji: '', text: 'Active', classes: 'bg-gray-800 text-emerald-400' })
+})
+
+test('the search keeps the names that have what is typed, ignoring case and accents', () => {
+  assert.ok(matchesSearch('Hire Hangar', 'hang'))
+  assert.ok(matchesSearch('Café & Co', 'CAFE'))
+  assert.ok(matchesSearch('Silver.dev', ' silver '))
+  assert.ok(matchesSearch('Acme', ''))  // nothing typed lists everything
+  assert.ok(!matchesSearch('Acme', 'beta'))
+})
+
+test('an application link is opened as a web address (with or without https://) or as an email, and nothing else is', () => {
+  assert.equal(openableLink(' https://jobs.example/x?id=1 '), 'https://jobs.example/x?id=1')
+  assert.equal(openableLink('http://jobs.example'), 'http://jobs.example')
+  assert.equal(openableLink('jobs@example.com'), 'mailto:jobs@example.com')
+  assert.equal(openableLink('mailto:jobs@example.com'), 'mailto:jobs@example.com')
+  assert.equal(openableLink('jobs.example/x'), 'https://jobs.example/x') // typed with no https://
+  assert.equal(openableLink(' www.jobs.example/x?id=1 '), 'https://www.jobs.example/x?id=1')
+  assert.equal(openableLink('jobs.example:8080'), 'https://jobs.example:8080')
+  for (const nothing of ['', '   ', null, undefined, 'javascript:alert(1)', 'data:text/html,hi', 'file:///etc/passwd', 'https://a b', 'two words', 'acme', 'jobs.example/a b', 'localhost:8333']) {
+    assert.equal(openableLink(nothing), null, String(nothing))
+  }
+})
+
+test('a typed name picks the Active or Archived tab it is found in', () => {
+  const list = [
+    { name: 'Acme', status: 'active' },
+    { name: 'Beta Corp', status: 'archived' },
+    { name: 'Beta Labs', status: 'active' },
   ]
-  const events = [
-    { id: '1', clientId: 'open', event: 'hr_intro', date: '2026-10-01', time: '10:00' },
-    { id: '2', clientId: 'closed', event: 'hr_intro', date: '2026-10-01', time: '10:00' },
-    { id: '3', clientId: 'closed', event: 'rejection', date: '2026-10-05', time: '10:00' },
-    { id: '4', clientId: 'back', event: 'rejection', date: '2026-10-02', time: '10:00' },
-    { id: '5', clientId: 'back', event: 'hr_intro', date: '2026-10-08', time: '10:00' },
-  ]
-  assert.deepEqual(activeCompanyNames(agencies, clients, events), { agencies: ['Acme'], clients: ['Open Co', 'Back Co', 'Fresh Co'] })
-  assert.deepEqual(activeCompanyNames([], [], []), { agencies: [], clients: [] })
+  assert.equal(tabForSearch(list, 'corp', 'active'), 'archived')  // only archived has it
+  assert.equal(tabForSearch(list, 'acme', 'archived'), 'active')
+  assert.equal(tabForSearch(list, 'beta', 'active'), 'active')  // the tab already has a match: it stays
+  assert.equal(tabForSearch(list, 'zzz', 'archived'), 'archived')  // nowhere: it stays
+  assert.equal(tabForSearch(list, '', 'archived'), 'archived')  // nothing typed
+  assert.equal(tabForSearch(list, 'corp', null), null)  // showing everything already
+})
+
+test('a company is opened in the tab it is in', () => {
+  assert.equal(tabForCompany({ status: 'archived' }, 'active'), 'archived')
+  assert.equal(tabForCompany({ status: 'active' }, 'archived'), 'active')
+  assert.equal(tabForCompany({ status: 'archived' }, 'archived'), 'archived')
+  assert.equal(tabForCompany({ status: 'archived' }, null), null)  // showing everything
+})
+
+test('the arrow next to a company goes to its card in Companies, else nowhere', () => {
+  assert.equal(companyCardLink({ id: 'acme', name: 'Acme' }), '#companies/acme')
+  assert.equal(companyCardLink({ id: 'a b/c', name: 'Odd' }), '#companies/a%20b%2Fc')
+  assert.equal(companyCardLink(undefined), null)
+  assert.equal(companyCardLink(null), null)
 })
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 function fakeNotice() {
   const classes = new Set()
-  return { textContent: '', classes, classList: { add: (c) => classes.add(c), remove: (c) => classes.delete(c) } }
+  return { textContent: '', classes, classList: { add: (...cs) => cs.forEach((c) => classes.add(c)), remove: (...cs) => cs.forEach((c) => classes.delete(c)) } }
 }
 
 test('a notice folds open with its text, and folds shut keeping the text until it is gone', async () => {
@@ -72,4 +161,25 @@ test('a notice that opens again while folding keeps its new text', async () => {
   await sleep(300)
   assert.equal(el.textContent, 'two')
   assert.ok(el.classes.has('is-open'))
+})
+
+test('a sync status folds away after a while, but a line with a link stays so it can be clicked', async () => {
+  const el = { ...fakeNotice(), children: [], append(child) { this.children.push(child) } }
+  const hadDocument = 'document' in globalThis
+  if (!hadDocument) globalThis.document = { createElement: () => ({}) }
+  try {
+    const say = statusLine(el, 50)
+    say('success', 'Done.')
+    assert.ok(el.classes.has('text-green-400'))
+    await sleep(350)
+    assert.equal(el.textContent, '', 'a success goes on its own')
+
+    say('error', 'Not set up yet.', { href: '#settings', label: 'Go to Settings' })
+    assert.ok(el.classes.has('text-red-400') && !el.classes.has('text-green-400'))
+    await sleep(350)
+    assert.equal(el.textContent, 'Not set up yet.', 'the line with the link stays')
+    assert.equal(el.children[0].href, '#settings')
+  } finally {
+    if (!hadDocument) delete globalThis.document
+  }
 })

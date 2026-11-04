@@ -6,7 +6,7 @@ import { test } from 'node:test'
 globalThis.fetch = async () => {
   throw new Error('no network in these tests')
 }
-const { codeHtml, envPayload, fieldHtml, toggleReveal } = await import('../../public/js/settings.js')
+const { codeHtml, envPayload, fieldHtml, groupsHtml, toggleReveal } = await import('../../public/js/settings.js')
 
 const key = { name: 'GEMINI_API_KEY', label: 'Gemini API key', description: 'd', secret: true, restartRequired: false, default: null, isSet: true, value: null, length: 12 }
 const port = { name: 'EMAIL_SMTP_PORT', label: 'SMTP port', description: 'd', secret: false, restartRequired: true, default: '465', isSet: true, value: '587', length: null }
@@ -173,4 +173,13 @@ test('a choice is sent only when it differs from what is saved, or from English 
   assert.deepEqual(envPayload([language], { APP_LANGUAGE: { typed: 'es' } }), { APP_LANGUAGE: 'es' })
   assert.deepEqual(envPayload([{ ...language, isSet: true, value: 'es' }], { APP_LANGUAGE: { typed: 'es' } }), {})
   assert.deepEqual(envPayload([{ ...language, isSet: true, value: 'es' }], { APP_LANGUAGE: { typed: 'en' } }), { APP_LANGUAGE: 'en' })
+})
+
+test('the lines of the list divide groups of settings, the ones that share the start of their name', () => {
+  const named = (name) => ({ ...port, name })
+  const names = ['APP_LANGUAGE', 'CV_PDF_PATH', 'EMAIL_ADDRESS', 'EMAIL_PASSWORD', 'GEMINI_API_KEY', 'GOOGLE_CALENDAR_ID', 'GOOGLE_TASKS_CLIENT_ID']
+  const groups = groupsHtml(names.map(named)).split('<div class="space-y-3 py-4 first:pt-0').slice(1)
+  assert.equal(groups.length, 5)
+  const fieldsOf = (html) => [...html.matchAll(/name="([A-Z_]+)"/g)].map((m) => m[1])
+  assert.deepEqual(groups.map(fieldsOf), [['APP_LANGUAGE'], ['CV_PDF_PATH'], ['EMAIL_ADDRESS', 'EMAIL_PASSWORD'], ['GEMINI_API_KEY'], ['GOOGLE_CALENDAR_ID', 'GOOGLE_TASKS_CLIENT_ID']])
 })

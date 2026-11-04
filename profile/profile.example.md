@@ -53,6 +53,7 @@ If there's no limit, the full must-have stack also applies: Docker, FastAPI, Nod
 - **Work shift:** 9am–6pm in your time zone preferred. Pick "Anytime"/flexible instead if the form only allows one option.
 - **Compensation, when a form asks:** Current $4,000/mo USD, Expected $5,000+/mo USD. If the form has no compensation field, don't volunteer it — that gets negotiated per-opportunity.
 - **Expected salary range, for emails and recruiter replies:** 4,000–5,000 USD per month (contractor, USD). Stated up front in application emails (`/apply-email`) and in replies to recruiters who reach out first (`/reply-recruiter`).
+- **Expected salary for a local role (employee in your country, paid in local currency):** 2,000,000 in your local currency, net per month. `/reply-recruiter` uses it instead of the range above when the offer is local, and says it is net.
 
 ## 🎓 Self-assessment answers
 
@@ -97,6 +98,17 @@ Some portals have a "build your profile" step with its own Photo, Experience, Re
 Candidate portals where the full profile above has already been built out. Check whether a portal is on this list before starting from scratch — if it is, update the existing profile instead of duplicating it. When a new portal turns out to be a full profile builder, add it here.
 
 - (none yet) e.g. **Example Portal** — [portal.example/profile](https://portal.example/profile)
+
+## 🧭 How I work (for open questions: AI use, process, testing, assessments)
+
+The same workflow for every application, adapted to the stack the posting names. The skills write open answers from this and the CV, without asking.
+
+- **AI tools:** an AI coding assistant every day for features, tests and refactors; a chat assistant for writing and review.
+- **AI vs me:** AI drafts boilerplate, tests and docs; I own the requirements, the design and the review of every diff.
+- **Before coding:** read the requirement, write acceptance criteria, check the existing code, then give the assistant a scoped task.
+- **Verifying output:** read the diff before committing, run the tests (pytest, CI on every push), check UI changes in the running app.
+- **Testing:** unit tests written in the same change as the code, CI on every push.
+- **Safe data with AI:** no secrets or personal data in prompts; keys in a gitignored `.env`.
 
 ## 📝 Short bio (for a form's free-text "about you" field)
 

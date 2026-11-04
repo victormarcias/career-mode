@@ -56,7 +56,11 @@ function fakeElement() {
   const el = {
     value: '', textContent: '', innerHTML: '', className: '', disabled: false, focused: 0, resets: 0,
     classes: new Set(),
-    classList: { add: (...c) => c.forEach((x) => el.classes.add(x)), remove: (...c) => c.forEach((x) => el.classes.delete(x)) },
+    classList: {
+      add: (...c) => c.forEach((x) => el.classes.add(x)),
+      remove: (...c) => c.forEach((x) => el.classes.delete(x)),
+      toggle: (name, on) => (on ? el.classes.add(name) : el.classes.delete(name)),
+    },
     addEventListener: (type, fn) => (handlers[type] = fn),
     fire: (type, event = {}) => handlers[type]({ preventDefault() {}, ...event }),
     focus() { el.focused += 1 },
@@ -78,6 +82,13 @@ test('the page shows how many are queued and the list, oldest first', () => {
   renderPending([queued('b', 'https://b.example/x', '2026-10-09'), queued('a', 'https://a.example/x', '2026-10-01'), note])
   assert.equal(el('pending-meta').textContent, '2 queued')
   assert.ok(el('pending-list').innerHTML.indexOf('a.example') < el('pending-list').innerHTML.indexOf('b.example'))
+  assert.ok(!el('pending-block').classes.has('hidden'))
+})
+
+test('the list under the Calendar is hidden while nothing is queued', () => {
+  const el = page()
+  renderPending([note])
+  assert.ok(el('pending-block').classes.has('hidden'))
 })
 
 test('typing something that is not a link warns at once, and clears when it is one or the box is empty', () => {

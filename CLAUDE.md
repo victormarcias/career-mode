@@ -1,6 +1,6 @@
 # career-mode — repo rules
 
-Rules for this repo only; the user's own cross-repo preferences live in their own global instructions. How to run the app and the structure are in `README.md`; the data model is `server/app/models.py`. `README.es.md` is its Spanish version: when one changes, change the other in the same edit. Each skill has a README next to its `SKILL.md`.
+Rules for this repo only; the user's own cross-repo preferences live in their own global instructions. How to run the app and the structure are in `README.md`; the data model is `server/app/models.py`. `README.es.md` is its Spanish version, and `CHANGELOG.es.md` is the Spanish version of `CHANGELOG.md`: when one changes, change the other in the same edit. Each skill has a README next to its `SKILL.md`.
 
 ## Config
 
@@ -16,9 +16,10 @@ Rules for this repo only; the user's own cross-repo preferences live in their ow
 ## Data
 
 - The database is SQLite, with Alembic migrations. Change `server/app/models.py` and run `alembic revision --autogenerate` (from the `server/` folder: `../.venv/bin/alembic revision --autogenerate -m "what changed"`; read the generated file before committing). `public/js/events.js` mirrors the event types and the closing events: change them together.
-- `events`, `agencies` and `clients` are the tables, linked with real foreign keys. Clients have no stored status: whether one is archived is derived from its latest closing event. Closing events (Rejection, Red Flag, On-hold, Offer, archive) are decided by the server (`CLOSING_EVENTS` in `models.py`): creating one archives the agency and any other new event reactivates it, so just create the event with the right type.
-- An event's company name is derived from its agency or client, never stored. A `passive_message` event always has an agency.
-- An application's recruiter and link belong on the event, never on the agency or client profile.
+- `events` and `companies` are the tables, linked with real foreign keys. A company is an agency or a client (`companyType`), in one table, so its name is unique whichever it is. A company has no stored status: it is archived when its latest event closes the process, and active again with any later one, derived by the server (`company_status` in `server/app/crud.py`). Closing events (Rejection, Red Flag, On-hold, Offer, archive) are decided by the server (`CLOSING_EVENTS` in `models.py`), so just create the event with the right type.
+- An event has a `companyId` (its client, or its agency when there is no client) and, for a client that came through an agency, a `viaCompanyId`. Its label (`companyLabel`: the company's name, or "Agency → Client") is derived from them, never stored. A `passive_message` event always has a company.
+- Every form that takes a company asks for one name with an Agency (default) or Client type, and a client may have its agency in Via agency. A name that exists with the other type is refused, never duplicated: the server refuses it too (409), through the one `/api/companies`.
+- An application's recruiter and link belong on the event, never on the company profile.
 - Skills and scripts read and write through the API (`http://localhost:8333`, docs at `/docs`; `./run-local.sh` starts the server), never by opening the SQLite file directly: the API applies the rules above.
 
 ## Checks
@@ -39,6 +40,10 @@ Rules for this repo only; the user's own cross-repo preferences live in their ow
 - Read `profile/profile.md` whenever a task needs personal data, and never copy any of it into a tracked file, a test, a skill or an example: tests and examples use invented people and companies, and skills say where to read a value, never what it is. The server serves only `profile/outreach.md` and `profile/profile.md` (or their examples) from there, to the Outreach tab and the My Profile page, which only show them, and the picture (`profile/photo.*`) to Settings.
 - The profile mirrors the user's latest CV, which is the source of truth: titles, bullets and each role's own "Tech:" line. When the CV changes, update the profile to match. Follow its "Rules for presenting me" section, when it has any (it is optional), everywhere (profile text, messages, forms), for instance not overselling anything the user is still learning.
 - Skills live in `.claude/skills/`, each with a README next to its `SKILL.md`.
+
+## Email
+
+- The Gmail connector rewrites every link of what it sends (`send_message` and `reply`, plain text or HTML, even a bare `example.com`) into a `google.com/url?q=...` redirect, and that is what the recipient gets. So an email with a link in it is never sent through the connector: it goes through the app's `POST /api/mail/send`, which sends the body as it is. To answer a thread from there, give `inReplyTo` the `Message-Id` of the message being answered and the subject `Re: <its subject>`: `get_message` with `RAW`, then decode the start of `raw` (base64url; the headers come first) with `python3 -c "import sys,base64,re;s=sys.stdin.read().strip();s=s[:len(s)//4*4];print(re.search(r'(?im)^message-id:\s*(<[^>]+>)',base64.urlsafe_b64decode(s).decode('utf-8','replace')).group(1))"`, piping in the first 8000 characters or so. It goes only to the sender of that message, with `attachCv` false unless the CV is wanted. An email with no link can still go through the connector.
 
 ## Outreach messages
 

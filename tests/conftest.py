@@ -61,21 +61,22 @@ def live_server(db_path):
 
 
 @pytest.fixture
-def make_agency(client):
-    def make(name='Acme', **extra):
-        r = client.post('/api/agencies', json={'name': name, **extra})
+def make_company(client):
+    def make(name='Acme', companyType='agency', **extra):
+        r = client.post('/api/companies', json={'name': name, 'companyType': companyType, **extra})
         assert r.status_code == 201, r.text
         return r.json()
     return make
 
 
 @pytest.fixture
-def make_client(client):
-    def make(name='Big Client', **extra):
-        r = client.post('/api/clients', json={'name': name, **extra})
-        assert r.status_code == 201, r.text
-        return r.json()
-    return make
+def make_agency(make_company):
+    return lambda name='Acme', **extra: make_company(name, 'agency', **extra)
+
+
+@pytest.fixture
+def make_client(make_company):
+    return lambda name='Big Client', **extra: make_company(name, 'client', **extra)
 
 
 @pytest.fixture

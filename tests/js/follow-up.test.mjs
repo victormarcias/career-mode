@@ -35,58 +35,57 @@ test('with no application at all it falls back to the last event of any kind, an
   assert.equal(lastApplicationDate([]), null)
 })
 
+const company = (id, name, extra = {}) => [id, { id, name, companyType: 'agency', status: 'active', viaCompanyId: null, ...extra }]
+
 test('an agency that applied again recently is not stale: the days count from the newest application', () => {
-  const acme = { id: 'acme', name: 'Acme Staffing', status: 'active' }
   const deps = {
-    agenciesMap: new Map([['acme', acme]]),
-    clientsMap: new Map(),
-    applications: [ev('a', 'application', 60, { agencyId: 'acme' }), ev('b', 'application', 3, { agencyId: 'acme' })],
+    companiesMap: new Map([company('acme', 'Acme Staffing')]),
+    applications: [ev('a', 'application', 60, { companyId: 'acme' }), ev('b', 'application', 3, { companyId: 'acme' })],
   }
   assert.deepEqual(computeStale(30, deps), [])
   const found = computeStale(2, deps)
   assert.equal(found.length, 1)
   assert.equal(found[0].days, 3)
-  assert.equal(found[0].entity.id, 'acme')
+  assert.equal(found[0].company.id, 'acme')
 })
 
 test('the days of an old application show up at the threshold, whatever came before it', () => {
-  const globex = { id: 'globex', name: 'Globex', status: 'active' }
   const deps = {
-    agenciesMap: new Map([['globex', globex]]),
-    clientsMap: new Map(),
-    applications: [ev('a', 'note', 100, { agencyId: 'globex' }), ev('b', 'application', 35, { agencyId: 'globex' })],
+    companiesMap: new Map([company('globex', 'Globex')]),
+    applications: [ev('a', 'note', 100, { companyId: 'globex' }), ev('b', 'application', 35, { companyId: 'globex' })],
   }
   const found = computeStale(30, deps)
   assert.equal(found.length, 1)
   assert.equal(found[0].days, 35)
 })
 
-test('an archived agency and a client whose last event closed the process are left out', () => {
-  const closed = { id: 'old', name: 'Old Agency', status: 'archived' }
-  const hooli = { id: 'hooli', name: 'Hooli', viaAgencyId: null }
+test('an archived company is left out, agency or client', () => {
   const deps = {
-    agenciesMap: new Map([['old', closed]]),
-    clientsMap: new Map([['hooli', hooli]]),
+    companiesMap: new Map([company('old', 'Old Agency', { status: 'archived' }), company('hooli', 'Hooli', { companyType: 'client', status: 'archived' })]),
     applications: [
-      ev('a', 'application', 50, { agencyId: 'old' }),
-      ev('b', 'application', 50, { clientId: 'hooli' }),
-      ev('c', 'rejection', 40, { clientId: 'hooli' }),
+      ev('a', 'application', 50, { companyId: 'old' }),
+      ev('b', 'application', 50, { companyId: 'hooli' }),
+      ev('c', 'rejection', 40, { companyId: 'hooli' }),
     ],
   }
   assert.deepEqual(computeStale(0, deps), [])
 })
 
 test('a client counts its own applications, and keeps its agency for the card', () => {
-  const via = { id: 'acme', name: 'Acme Staffing', status: 'active' }
-  const initech = { id: 'initech', name: 'Initech', viaAgencyId: 'acme' }
   const deps = {
-    agenciesMap: new Map([['acme', via]]),
-    clientsMap: new Map([['initech', initech]]),
-    applications: [ev('a', 'application', 45, { clientId: 'initech' }), ev('b', 'passive_message', 12, { clientId: 'initech' })],
+    companiesMap: new Map([company('acme', 'Acme Staffing'), company('initech', 'Initech', { companyType: 'client', viaCompanyId: 'acme' })]),
+    applications: [ev('a', 'application', 45, { companyId: 'initech', viaCompanyId: 'acme' }), ev('b', 'passive_message', 12, { companyId: 'initech', viaCompanyId: 'acme' })],
+  }
+  const found = computeStale(10, deps).find((r) => r.company.id === 'initech')
+  assert.equal(found.days, 12)
+  assert.equal(found.via.name, 'Acme Staffing')
+})
+
+test('an agency also counts the applications of its clients that came through it', () => {
+  const deps = {
+    companiesMap: new Map([company('acme', 'Acme Staffing'), company('initech', 'Initech', { companyType: 'client', viaCompanyId: 'acme' })]),
+    applications: [ev('a', 'application', 20, { companyId: 'initech', viaCompanyId: 'acme' })],
   }
   const found = computeStale(10, deps)
-  assert.equal(found.length, 1)
-  assert.equal(found[0].kind, 'client')
-  assert.equal(found[0].days, 12)
-  assert.equal(found[0].via.name, 'Acme Staffing')
+  assert.deepEqual(found.map((r) => [r.company.id, r.days]).sort(), [['acme', 20], ['initech', 20]])
 })

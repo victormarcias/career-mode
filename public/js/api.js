@@ -3,7 +3,7 @@
 
 import { t } from './i18n.js'
 
-const COLLECTIONS = ['events', 'agencies', 'clients']
+const COLLECTIONS = ['events', 'companies']
 
 // The server answers errors as {"detail": "message"} (a refusal) or {"detail": [...]}
 // (a field that didn't validate). Either way, turn it into one sentence for the UI.
@@ -113,6 +113,11 @@ export const settings = {
 export const calendar = {
   preview: (start, end) => request('POST', '/api/calendar/preview', { start, end }),
   sync: (start, end, events) => write('POST', '/api/calendar/sync', { start, end, events }),
+}
+
+// Google Tasks (the three GOOGLE_TASKS_* settings): queues the job links of the open tasks as pending applications.
+export const googleTasks = {
+  sync: () => write('POST', '/api/google-tasks/sync'),
 }
 
 export const api = {

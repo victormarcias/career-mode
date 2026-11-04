@@ -26,7 +26,7 @@ Nada personal sale de tu computadora: git ignora `profile/`, `data/`, `backup/` 
 ## Features
 
 ### Calendario
-Registra cada aplicación en una vista semanal, desde el primer mensaje hasta la oferta o el rechazo: aplicaciones, mensajes de recruiters, entrevistas, notas. Agrega o edita eventos desde la misma página. El **Weekly Report** cuenta lo que enviaste esa semana (por email o por plataforma) y lo que avanzó. **Sync Google Calendar** trae tus entrevistas de HR, técnicas y de cultura desde tu propio calendario.
+Registra cada aplicación en una vista semanal, desde el primer mensaje hasta la oferta o el rechazo: aplicaciones, mensajes de recruiters, entrevistas, notas. Agrega o edita eventos desde la misma página. El **Weekly Report** cuenta lo que enviaste esa semana (por email o por plataforma) y lo que avanzó. **Sync Google Calendar** trae tus entrevistas de HR, técnicas y de cultura desde tu propio calendario, y **Sync Google Tasks** pone en cola en Pending los links de empleo guardados en tus Google Tasks.
 
 <p align="center">
   <img src="docs/screenshots/es/calendar.png" alt="Calendar">
@@ -71,7 +71,7 @@ Los mensajes que más envías (aplicación, cover letter, respuesta de rechazo y
 </p>
 
 ### Ajustes
-Todo lo que necesitan la app y los skills, en una sola lista: idioma (English o español), cuenta de correo, CV, Google Calendar y foto. Las claves y contraseñas quedan ocultas hasta que haces clic en el ojo.
+Todo lo que necesitan la app y los skills, en una sola lista: idioma (English o español), cuenta de correo, CV, Google Calendar, Google Tasks y foto. Las claves y contraseñas quedan ocultas hasta que haces clic en el ojo.
 
 <p align="center">
   <img src="docs/screenshots/es/settings.png" alt="Settings" width="560">
@@ -91,6 +91,11 @@ En `.claude/skills/`, cada uno con su README:
 - `apply-email`: envía una aplicación por email, con el CV adjunto
 - `apply-site`: completa el formulario de postulación de una empresa
 - `reply-recruiter`: responde a un recruiter que escribió primero
+- `sync-aiapply`: registra lo que AIApply.io recibió de las empresas y manda a la papelera sus avisos "Not this time"
+- `reply-rejected`: agradece a las empresas que te rechazaron, desde tu Gmail, archiva el mail y registra el rechazo
+- `follow-up-email-application`: hace el seguimiento de las postulaciones que enviaste por email sin respuesta, en su mismo hilo, y lo registra
+- `check-email`: ordena tu Gmail reciente y ejecuta los skills que se ocupan de cada cosa
+- `wake-up`: arranca el día: ejecuta `check-email` y después `apply-pending`
 - `submit-profile`: completa portales de candidatos con tu perfil
 - `write-daily-post`: escribe el post diario y su imagen
 - `commit`: commitea tus cambios en la rama actual, corto y a tu nombre
@@ -99,6 +104,7 @@ En `.claude/skills/`, cada uno con su README:
 
 ```bash
 ./backup-data.sh                    # calendario, empresas, perfil, CV, foto, profile.pdf
+./backup-data.sh --open             # lo mismo, y abre la carpeta del backup desde cualquier lado
 ./restore-backup.sh                 # carga el backup de vuelta
 ./restore-backup.sh <carpeta> --replace
 ```

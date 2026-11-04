@@ -87,6 +87,29 @@ ENV_VARS = [  # in alphabetical order, which is how Settings lists them
         'which also works for a private one.',
         secret=True,
     ),
+    EnvVar(
+        'GOOGLE_TASKS_CLIENT_ID',
+        'Google Tasks client ID',
+        'What the Google Tasks button reads: it queues the links of your open tasks and marks those tasks as done. In the Google Cloud Console enable the Google Tasks API, '
+        'set up the OAuth consent screen (add yourself as a test user) and create an OAuth client ID of type Web application, with '
+        '`https://developers.google.com/oauthplayground` as an authorized redirect URI. This is its client ID.',
+        secret=True,
+    ),
+    EnvVar(
+        'GOOGLE_TASKS_CLIENT_SECRET',
+        'Google Tasks client secret',
+        'The secret of that OAuth client.',
+        secret=True,
+    ),
+    EnvVar(
+        'GOOGLE_TASKS_REFRESH_TOKEN',
+        'Google Tasks refresh token',
+        'In the OAuth Playground (`https://developers.google.com/oauthplayground`), open its settings, tick "Use your own OAuth '
+        'credentials" and paste the client ID and secret above. Write the scope `https://www.googleapis.com/auth/tasks`, '
+        'authorize, press "Exchange authorization code for tokens" and paste the refresh token here. While the consent screen is '
+        'in Testing, Google expires it after 7 days: publish the app to keep it.',
+        secret=True,
+    ),
 ]
 # What a variable used to be called: an install that still has the old name keeps working, and saving the new name removes it.
 LEGACY_NAMES = {'GOOGLE_CALENDAR_ID': 'CALENDAR_ID'}

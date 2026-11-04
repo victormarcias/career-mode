@@ -1,6 +1,6 @@
 import { t } from './i18n.js'
 
-// Agency/client ids are the slugified name. The server builds them the same way
+// Company ids are the slugified name. The server builds them the same way
 // (server/app/crud.py), so this is only for matching a typed name against an id.
 function slugify(text) {
   return text
@@ -12,7 +12,7 @@ function slugify(text) {
     .replace(/(^-|-$)/g, '')
 }
 
-// Finds the existing agency/client a typed name refers to: by name (ignoring case
+// Finds the existing company a typed name refers to: by name (ignoring case
 // and surrounding spaces) first, then by the id slugify() would give it. Looking
 // only at the slug misses a company whose id was set some other way (e.g. "cwssg" for
 // "CW Strategic Solutions Group"), and creating a second one for it. `items` are
@@ -24,20 +24,93 @@ export function resolveCompany(items, name) {
   return found ? { id: found.id, name: found.name ?? wanted, isNew: false } : { id: slugify(wanted), name: wanted, isNew: true }
 }
 
-// What a form says about the company it is about to save: which of the typed names the app doesn't have yet
-// and will create. Empty when every name is already there. `agencies` and `clients` are {id, name} lists.
-export function companyHint(agencies, clients, agencyName, clientName) {
-  const agency = (agencyName ?? '').trim()
-  const client = (clientName ?? '').trim()
-  const newAgency = agency && resolveCompany(agencies, agency).isNew
-  const newClient = client && resolveCompany(clients, client).isNew
-  if (newAgency && newClient) return t('hint.both', { agency, client })
+// A form takes one company: a name and its type, Agency or Client. `companies` is the list of {id, name, companyType}.
+// The company a typed name already is, whatever its type, or null: by name (ignoring case), else by the id its slug gives.
+export function findCompany(companies, name) {
+  const wanted = (name ?? '').trim()
+  if (!wanted) return null
+  const found = resolveCompany(companies, wanted)
+  return found.isNew ? null : companies.find((c) => c.id === found.id)
+}
+
+// The type a typed name goes by: the type of the company it names when it exists, else `current`.
+// Typing the name of an existing company is picking it, so its type follows.
+export function typeFor(companies, name, current) {
+  return findCompany(companies, name)?.companyType ?? current
+}
+
+// The type the company a name names has when it is not `companyType`, else null: saving it would make a second
+// company with the same name. A company is an agency or a client, never both.
+export function typeConflict(companies, name, companyType) {
+  const found = findCompany(companies, name)
+  return found && found.companyType !== companyType ? found.companyType : null
+}
+
+// The sentence that says a name is already the other type.
+export function typeConflictText(name, existing) {
+  return t(existing === 'agency' ? 'hint.isAgency' : 'hint.isClient', { name: name.trim() })
+}
+
+// What a form says about the company it is about to save: which names the app doesn't have yet and will create, or that
+// a name already is the other type. `via` is the agency a client came through. Empty when every name is already there.
+export function companyHint(companies, name, companyType, via = '') {
+  const company = (name ?? '').trim()
+  const agency = companyType === 'client' ? (via ?? '').trim() : ''
+  const conflict = typeConflict(companies, company, companyType)
+  if (conflict) return typeConflictText(company, conflict)
+  const viaConflict = agency ? typeConflict(companies, agency, 'agency') : null
+  if (viaConflict) return typeConflictText(agency, viaConflict)
+  const newCompany = company && !findCompany(companies, company)
+  const newAgency = agency && !findCompany(companies, agency)
+  if (newCompany && newAgency) return t('hint.both', { agency, client: company })
+  if (newCompany) return t(companyType === 'agency' ? 'hint.agency' : 'hint.client', { name: company })
   if (newAgency) return t('hint.agency', { name: agency })
-  if (newClient) return t('hint.client', { name: client })
   return ''
 }
 
+// Where an application link points when it is opened, or null when it is not something to open: a web address
+// as it is, one typed with no "https://" ("jobs.example/x") with it, and a bare email address as a mailto: link.
+// Anything else (a script, a file, plain text) is not opened.
+export function openableLink(value) {
+  const link = (value ?? '').trim()
+  if (/^(https?:\/\/|mailto:)\S+$/i.test(link)) return link
+  if (/^[^\s@/:]+@[^\s@/:]+\.[^\s@/:]+$/.test(link)) return `mailto:${link}`
+  return /^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}(:\d+)?([/?#]\S*)?$/i.test(link) ? `https://${link}` : null
+}
+
+// Where the arrow next to a company goes: its card in Companies, or nowhere when the name typed is not a company yet.
+export function companyCardLink(company) {
+  return company?.id ? `#companies/${encodeURIComponent(company.id)}` : null
+}
+
 const NOTICE_MS = 200 // as long as the fold in style.css (.notice)
+
+// A notice with a link after it, such as "not set up yet" and "Go to Settings".
+export function setNoticeWithLink(el, text, href, label) {
+  setNotice(el, text)
+  const link = document.createElement('a')
+  link.href = href
+  link.className = 'ml-2 underline'
+  link.textContent = label
+  el.append(link)
+}
+
+const STATUS_COLORS = { error: 'text-red-400', success: 'text-green-400', muted: 'text-gray-500' }
+
+// The status line of a sync button: say(kind, text) shows `text` in the color of its kind ('error', 'success' or
+// 'muted'). An error or a success folds away after `hideMs`; a muted line ("Reading...") stays until the next one,
+// and so does a line with a link ({ href, label }), so there is time to click it.
+export function statusLine(el, hideMs) {
+  let hideTimer = null
+  return (kind, text, link = null) => {
+    el.classList.remove(...Object.values(STATUS_COLORS))
+    el.classList.add(STATUS_COLORS[kind] ?? STATUS_COLORS.muted)
+    clearTimeout(hideTimer)
+    if (link) return setNoticeWithLink(el, text, link.href, link.label)
+    setNotice(el, text)
+    if (kind !== 'muted') hideTimer = setTimeout(() => setNotice(el, ''), hideMs)
+  }
+}
 
 // Shows a notice line (a hint, an error, a status) with `text`, or folds it away when `text` is empty. The line
 // grows and shrinks vertically (see .notice in style.css) instead of popping in; the old text stays while it
@@ -70,6 +143,21 @@ export function escapeHtml(text) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+// A link typed into a company (website, LinkedIn, recruiter, application) as an escaped href. It is typed with no
+// "https://" ("acme.example"), so one with no scheme gets it, and a bare email address becomes a mailto: link.
+// Only http(s) and mailto may open: a "javascript:" link (or any other scheme) becomes "#". Browsers ignore
+// control characters and spaces inside a scheme, so those are dropped before it is checked; "host:8080" is a port.
+export function safeHref(url) {
+  const link = String(url ?? '').trim()
+  if (!link) return '#'
+  const scheme = link.replace(/[\u0000-\u0020]/g, '').match(/^([a-z][a-z0-9+.-]*):(?!\d)/i)
+  if (scheme) return ['http', 'https', 'mailto'].includes(scheme[1].toLowerCase()) ? escapeHtml(link) : '#'
+  if (/^[^\s@/:]+@[^\s@/:]+\.[^\s@/:]+$/.test(link)) return escapeHtml(`mailto:${link}`)
+  return escapeHtml(`https://${link.replace(/^\/+/, '')}`)
 }
 
 // A title that starts with an emoji ("🤝 Platform Reachout Message") is shown with the emoji apart, as a company

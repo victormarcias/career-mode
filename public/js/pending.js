@@ -61,6 +61,7 @@ export function renderPending(applications) {
   const items = queuedLinks(applications)
   document.getElementById('pending-meta').textContent = t('pending.count', { count: items.length })
   document.getElementById('pending-list').innerHTML = listHtml(items)
+  document.getElementById('pending-block').classList.toggle('hidden', !items.length)
 }
 
 // `onOpenEvent(app)` opens a queued link's form (the pencil), to edit or delete it.

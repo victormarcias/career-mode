@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from .. import google_calendar, settings
 from ..crud import DomainError
 from ..deps import get_session
-from ..models import EventType
+from ..models import CompanyType, EventType
 from ..schemas import CamelModel, OptionalText
 
 router = APIRouter(prefix='/api/calendar', tags=['calendar'])
@@ -23,8 +23,9 @@ class Range(CamelModel):
 class Chosen(CamelModel):
     key: str = Field(description='The `key` the preview gave the event')
     type: EventType = Field(description='hr_intro, tech_interview or culture_interview')
-    agency: OptionalText = Field(default=None, description='A new event needs an agency or a client, by name; one that does not exist is created')
-    client: OptionalText = None
+    company: OptionalText = Field(default=None, description='A new event needs a company, by name; one that does not exist is created')
+    company_type: Optional[CompanyType] = Field(default=None, description='agency (the default) or client: what a new company is, and what an existing one must already be')
+    via: OptionalText = Field(default=None, description='For a client: the agency it came through, by name; one that does not exist is created')
 
 
 class SyncIn(Range):
@@ -37,8 +38,9 @@ class PreviewEvent(CamelModel):
     notes: str = Field(description='What the event\'s notes would hold: the Google event\'s title and description')
     date: str
     time: str
-    agency: Optional[str] = Field(description='The agency to offer (from the description\'s "Company:" line), or the one a moved event has')
-    client: Optional[str]
+    company: Optional[str] = Field(description='The company to offer (from the description\'s "Company:" line), or the one a moved event has')
+    company_type: Optional[CompanyType]
+    via: Optional[str] = Field(description='For a client: the agency it came through')
     action: str = Field(description='"new" or "moved" (already logged, but its day or time changed in Google)')
     type: EventType = Field(description='What to log it as: tech_interview when the title says "tech", culture_interview when it says "culture", else hr_intro')
 
@@ -74,7 +76,7 @@ def preview(data: Range, session: SessionDep, request: Request):
 
 @router.post('/sync', response_model=SyncOut, summary='Log the chosen Google Calendar events of a date range',
              description=(
-                 'Each event is logged once (its calendar id is kept on the event) with the type and the agency or client chosen '
+                 'Each event is logged once (its calendar id is kept on the event) with the type and the company chosen '
                  'for it (one that does not exist is created), and its notes are the Google event\'s title and description. One '
                  'that moved only gets its new date and time. Anything not listed in `events` is left alone.'
              ))
@@ -83,5 +85,5 @@ def sync(data: SyncIn, session: SessionDep, request: Request):
     if wrong:
         raise DomainError(422, 'An event of the calendar can only be an hr_intro, a tech_interview or a culture_interview, not "%s"' % wrong[0])
     text = _calendar_text(data, request)
-    chosen = {c.key: google_calendar.Choice(c.type, c.agency, c.client) for c in data.events}
+    chosen = {c.key: google_calendar.Choice(c.type, c.company, c.company_type.value if c.company_type else None, c.via) for c in data.events}
     return google_calendar.apply_range(session, text, data.start, data.end, chosen)
