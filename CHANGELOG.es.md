@@ -19,9 +19,11 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
 - **`/sync-aiapply`:** lee las notificaciones de AIApply.io en Gmail y registra cada respuesta positiva de una empresa (una invitación a entrevista, un assessment, un seguimiento) como una application web, una sola vez, con la empresa como agency o como client. Sus avisos "Not this time" pasan a la papelera cuando ya no queda nada por registrar de ellos.
 - **`/reply-rejected`:** busca los rechazos que las empresas enviaron al Gmail del usuario y responde a cada uno, una sola vez, agradeciendo y diciendo que seguirán en contacto, archiva el mail y registra el rechazo en el Calendar.
 - **`/check-email`:** ordena el Gmail reciente y ejecuta `/sync-aiapply`, `/reply-rejected` y `/reply-recruiter` sobre lo que encuentra.
+- **`/wake-up`:** la rutina de inicio del día en un solo comando: ejecuta `/check-email` y después `/apply-pending`.
 
 ### Cambiado
 
+- **`/apply-pending`:** aplica también a puestos híbridos y presenciales, borra sin preguntar un link cuyo proceso tiene una entrevista con IA en cualquier etapa, y anota una página general de búsquedas (una lista de puestos, un alta como talento) en el perfil para `/submit-profile` en lugar de dejarla pendiente.
 - **Los links de los emails quedan como son:** el conector de Gmail reescribe cada link que envía como una redirección de `google.com/url`, así que una respuesta con un link (de `/check-email` cuando el usuario pide contestar un hilo, o un mensaje de `/follow-up-email-application` con un link) sale por el `POST /api/mail/send` de la app, que ahora acepta `inReplyTo` (el `Message-Id` del email que contesta) para enviarla en ese hilo.
 - **Las pestañas de Empresas siguen a la empresa:** al escribir un nombre en el buscador se elige la pestaña Activas o Archivadas donde está, y un link a una empresa (el edificio del formulario del Calendario, un link "via") abre la pestaña en la que está.
 - **Flecha de Company en el formulario del Calendario:** es un icono de edificio que lleva a la ficha de la empresa en Empresas, en vez de una flecha que abría su web o su página de LinkedIn en otra pestaña; la ficha las muestra.

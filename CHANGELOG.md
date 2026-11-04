@@ -19,9 +19,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **`/sync-aiapply`:** reads the AIApply.io notifications in Gmail and logs each positive reply from a company (an interview invitation, an assessment, a follow-up) as a web application, once, with the company as an agency or a client. Its "Not this time" notices are moved to the trash once there is nothing left to log from them.
 - **`/reply-rejected`:** finds the rejections companies sent to the user's Gmail and replies to each one, once, thanking them and saying they will stay in touch, archives the email, and logs the rejection in the Calendar.
 - **`/check-email`:** sorts the recent Gmail and runs `/sync-aiapply`, `/reply-rejected` and `/reply-recruiter` on what it finds.
+- **`/wake-up`:** the start-of-day routine in one command: runs `/check-email` and then `/apply-pending`.
 
 ### Changed
 
+- **`/apply-pending`:** applies to hybrid and on-site roles too, removes without asking a link whose process has an AI interview at any stage, and notes a general careers page (a list of openings, a talent signup) in the profile for `/submit-profile` instead of leaving it pending.
 - **Links in emails stay as they are:** the Gmail connector rewrites every link it sends into a `google.com/url` redirect, so a reply with a link (from `/check-email` when the user asks to answer a thread, or a `/follow-up-email-application` message with a link) goes through the app's `POST /api/mail/send`, which now takes `inReplyTo` (the `Message-Id` of the email it answers) to send it on that thread.
 - **Companies tabs follow the company:** typing a name in the search picks the Active or Archived tab it is found in, and a link to a company (the building in the Calendar form, a "via" link) opens the tab it is in.
 - **Company arrow in the Calendar form:** it is a building icon that goes to the company's card in Companies, instead of an arrow that opened its website or LinkedIn page in another tab; the card shows them.
