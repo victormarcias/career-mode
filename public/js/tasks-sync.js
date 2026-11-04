@@ -1,5 +1,5 @@
 import { googleTasks, settings } from './api.js'
-import { setNotice, setNoticeWithLink } from './dom-utils.js'
+import { statusLine } from './dom-utils.js'
 import { t } from './i18n.js'
 
 const STATUS_MS = 8000
@@ -21,15 +21,7 @@ export function tasksSummary({ found, queued }) {
 export function initTasksSync(buttonId = 'sync-tasks-btn', statusId = 'sync-status') {
   const button = document.getElementById(buttonId)
   const status = document.getElementById(statusId)
-  let hideTimer = null
-
-  const say = (kind, text) => {
-    status.classList.remove('text-red-400', 'text-green-400', 'text-gray-500')
-    status.classList.add(kind === 'error' ? 'text-red-400' : kind === 'success' ? 'text-green-400' : 'text-gray-500')
-    setNotice(status, text)
-    clearTimeout(hideTimer)
-    if (kind !== 'muted') hideTimer = setTimeout(() => setNotice(status, ''), STATUS_MS)
-  }
+  const say = statusLine(status, STATUS_MS)
 
   button.addEventListener('click', async () => {
     button.disabled = true
@@ -37,8 +29,7 @@ export function initTasksSync(buttonId = 'sync-tasks-btn', statusId = 'sync-stat
       // Without its settings the button says so, and where to set them.
       const vars = await settings.env().catch(() => null)
       if (vars && !tasksConfigured(vars)) {
-        say('error', '')
-        return setNoticeWithLink(status, t('sync.tasksNotSet'), '#settings', t('sync.goToSettings'))
+        return say('error', t('sync.tasksNotSet'), { href: '#settings', label: t('sync.goToSettings') })
       }
       say('muted', t('sync.tasksReading'))
       const result = await googleTasks.sync()

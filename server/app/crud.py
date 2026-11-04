@@ -162,6 +162,16 @@ def _still_an_agency_of(session: Session, company_id: str):
                           % (clients, '' if clients == 1 else 's', events, '' if events == 1 else 's'))
 
 
+def _still_a_client_through_an_agency(session: Session, company_id: str):
+    """Why a client can't become an agency: some of its events came through an agency, and an agency's events have
+    no via. Refused rather than dropped, so the record of who brought the process is never lost."""
+    events = session.scalar(select(func.count()).select_from(Event)
+                            .where(Event.company_id == company_id, Event.via_company_id.is_not(None)))
+    if events:
+        raise DomainError(409, 'It has %d event%s that came through an agency: they have to change first'
+                          % (events, '' if events == 1 else 's'))
+
+
 def update_company(session: Session, company_id: str, patch: CompanyPatch) -> Company:
     company = _get(session, Company, company_id, 'Company')
     changes = patch.model_dump(exclude_unset=True)
@@ -177,6 +187,8 @@ def update_company(session: Session, company_id: str, patch: CompanyPatch) -> Co
     new_type = changes.get('company_type', company.company_type)
     if new_type == CompanyType.client.value and company.company_type == CompanyType.agency.value:
         _still_an_agency_of(session, company_id)
+    if new_type == CompanyType.agency.value and company.company_type == CompanyType.client.value:
+        _still_a_client_through_an_agency(session, company_id)
     if new_type == CompanyType.agency.value and 'via_company_id' not in changes:
         changes['via_company_id'] = None  # an agency has none: becoming one drops it
     _check_via(session, new_type, changes.get('via_company_id', company.via_company_id), company_id)
@@ -198,6 +210,8 @@ def replace_company(session: Session, company_id: str, data: CompanyIn) -> Compa
     company = session.get(Company, company_id)
     if company is not None and company.company_type == CompanyType.agency.value and fields['company_type'] == CompanyType.client.value:
         _still_an_agency_of(session, company_id)
+    if company is not None and company.company_type == CompanyType.client.value and fields['company_type'] == CompanyType.agency.value:
+        _still_a_client_through_an_agency(session, company_id)
     _check_via(session, fields['company_type'], fields['via_company_id'], company_id)
     if company is None:
         company = Company(id=company_id)

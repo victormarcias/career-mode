@@ -4,7 +4,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-const { companyHint, companyCardLink, findCompany, openableLink, setNotice, typeConflict, typeFor } = await import('../../public/js/dom-utils.js')
+const { companyHint, companyCardLink, findCompany, openableLink, setNotice, statusLine, typeConflict, typeFor } = await import('../../public/js/dom-utils.js')
 const { activeCompanies, companyCounts, inTab, matchesSearch, statusTag, tabForCompany, tabForSearch } = await import('../../public/js/companies.js')
 
 const companies = [
@@ -137,7 +137,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 function fakeNotice() {
   const classes = new Set()
-  return { textContent: '', classes, classList: { add: (c) => classes.add(c), remove: (c) => classes.delete(c) } }
+  return { textContent: '', classes, classList: { add: (...cs) => cs.forEach((c) => classes.add(c)), remove: (...cs) => cs.forEach((c) => classes.delete(c)) } }
 }
 
 test('a notice folds open with its text, and folds shut keeping the text until it is gone', async () => {
@@ -161,4 +161,25 @@ test('a notice that opens again while folding keeps its new text', async () => {
   await sleep(300)
   assert.equal(el.textContent, 'two')
   assert.ok(el.classes.has('is-open'))
+})
+
+test('a sync status folds away after a while, but a line with a link stays so it can be clicked', async () => {
+  const el = { ...fakeNotice(), children: [], append(child) { this.children.push(child) } }
+  const hadDocument = 'document' in globalThis
+  if (!hadDocument) globalThis.document = { createElement: () => ({}) }
+  try {
+    const say = statusLine(el, 50)
+    say('success', 'Done.')
+    assert.ok(el.classes.has('text-green-400'))
+    await sleep(350)
+    assert.equal(el.textContent, '', 'a success goes on its own')
+
+    say('error', 'Not set up yet.', { href: '#settings', label: 'Go to Settings' })
+    assert.ok(el.classes.has('text-red-400') && !el.classes.has('text-green-400'))
+    await sleep(350)
+    assert.equal(el.textContent, 'Not set up yet.', 'the line with the link stays')
+    assert.equal(el.children[0].href, '#settings')
+  } finally {
+    if (!hadDocument) delete globalThis.document
+  }
 })

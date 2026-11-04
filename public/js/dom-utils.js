@@ -85,9 +85,6 @@ export function companyCardLink(company) {
 
 const NOTICE_MS = 200 // as long as the fold in style.css (.notice)
 
-// Shows a notice line (a hint, an error, a status) with `text`, or folds it away when `text` is empty. The line
-// grows and shrinks vertically (see .notice in style.css) instead of popping in; the old text stays while it
-// folds, and is cleared once it is gone.
 // A notice with a link after it, such as "not set up yet" and "Go to Settings".
 export function setNoticeWithLink(el, text, href, label) {
   setNotice(el, text)
@@ -98,6 +95,26 @@ export function setNoticeWithLink(el, text, href, label) {
   el.append(link)
 }
 
+const STATUS_COLORS = { error: 'text-red-400', success: 'text-green-400', muted: 'text-gray-500' }
+
+// The status line of a sync button: say(kind, text) shows `text` in the color of its kind ('error', 'success' or
+// 'muted'). An error or a success folds away after `hideMs`; a muted line ("Reading...") stays until the next one,
+// and so does a line with a link ({ href, label }), so there is time to click it.
+export function statusLine(el, hideMs) {
+  let hideTimer = null
+  return (kind, text, link = null) => {
+    el.classList.remove(...Object.values(STATUS_COLORS))
+    el.classList.add(STATUS_COLORS[kind] ?? STATUS_COLORS.muted)
+    clearTimeout(hideTimer)
+    if (link) return setNoticeWithLink(el, text, link.href, link.label)
+    setNotice(el, text)
+    if (kind !== 'muted') hideTimer = setTimeout(() => setNotice(el, ''), hideMs)
+  }
+}
+
+// Shows a notice line (a hint, an error, a status) with `text`, or folds it away when `text` is empty. The line
+// grows and shrinks vertically (see .notice in style.css) instead of popping in; the old text stays while it
+// folds, and is cleared once it is gone.
 export function setNotice(el, text) {
   clearTimeout(el._noticeTimer)
   if (text) {

@@ -95,6 +95,18 @@ def test_the_type_can_be_changed_unless_the_agency_is_still_in_use(client, make_
     make_event(companyId='big', viaCompanyId=None)
 
 
+def test_a_client_whose_events_came_through_an_agency_cannot_become_an_agency(client, make_agency, make_client, make_event):
+    make_agency('Acme')
+    make_client('Big', viaCompanyId='acme')
+    make_event(companyId='big', viaCompanyId='acme')
+    r = client.patch('/api/companies/big', json={'companyType': 'agency'})
+    assert r.status_code == 409 and '1 event that came through an agency' in r.json()['detail']
+    r = client.put('/api/companies/big', json={'name': 'Big', 'companyType': 'agency'})
+    assert r.status_code == 409
+    assert client.get('/api/companies/big').json()['companyType'] == 'client'  # nothing changed
+    assert client.delete('/api/companies/acme').status_code == 409  # Acme still brought that process
+
+
 def test_the_list_filters_by_type(client, make_agency, make_client):
     make_agency('Acme')
     make_client('Big')

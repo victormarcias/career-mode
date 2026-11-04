@@ -1,7 +1,7 @@
 import { calendar, settings } from './api.js'
 import { addDays, toISODate } from './dates.js'
 import { EVENT_LABELS } from './events.js'
-import { companyHint, escapeHtml, findCompany, setNotice, setNoticeWithLink, typeConflict, typeConflictText, typeFor } from './dom-utils.js'
+import { companyHint, escapeHtml, findCompany, setNotice, statusLine, typeConflict, typeConflictText, typeFor } from './dom-utils.js'
 import { t } from './i18n.js'
 
 // What an event of the calendar can be logged as (the server accepts only these two).
@@ -134,16 +134,9 @@ export function initCalendarSync({ getWeekStart, getCompanies }) {
   const list = document.getElementById('sync-list')
   const confirm = document.getElementById('sync-confirm')
   const popupError = document.getElementById('sync-error')
-  let hideTimer = null
   let pending = null // {start, end, items} while the popup is open
 
-  const say = (kind, text) => {
-    status.classList.remove('text-red-400', 'text-green-400', 'text-gray-500')
-    status.classList.add(kind === 'error' ? 'text-red-400' : kind === 'success' ? 'text-green-400' : 'text-gray-500')
-    setNotice(status, text)
-    clearTimeout(hideTimer)
-    if (kind !== 'muted') hideTimer = setTimeout(() => setNotice(status, ''), STATUS_MS)
-  }
+  const say = statusLine(status, STATUS_MS)
 
   const openPopup = () => {
     button.classList.add('active') // pressed while its popup is open
@@ -196,8 +189,7 @@ export function initCalendarSync({ getWeekStart, getCompanies }) {
     button.disabled = true
     try {
       if (!(await calendarIsSet())) {
-        say('error', '')
-        return setNoticeWithLink(status, t('sync.calendarNotSet'), '#settings', t('sync.goToSettings'))
+        return say('error', t('sync.calendarNotSet'), { href: '#settings', label: t('sync.goToSettings') })
       }
       say('muted', t('sync.reading'))
       const plan = await calendar.preview(start, end)
