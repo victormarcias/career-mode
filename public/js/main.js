@@ -12,7 +12,6 @@ import { initFollowUp, renderFollowUp } from './follow-up.js'
 import { renderSettings } from './settings.js'
 import { renderProfile } from './profile-view.js'
 import { initCalendarSync } from './calendar-sync.js'
-import { initTasksSync } from './tasks-sync.js'
 import { initI18n, t } from './i18n.js'
 import { initSidebar } from './sidebar.js'
 
@@ -77,8 +76,6 @@ function initApp() {
   initApplicationForm({ getCompanies: () => Array.from(companiesMap.values()) })
   initFollowUp(companiesDeps)
   initCalendarSync({ getWeekStart: () => weekStart, getCompanies: () => Array.from(companiesMap.values()) })
-  initTasksSync()
-  initTasksSync('pending-tasks-btn', 'pending-tasks-status')
 
   subscribe('events', (rows) => {
     applications = rows

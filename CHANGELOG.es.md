@@ -22,6 +22,9 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
 
 ### Eliminado
 
+- **Sync Google Tasks:** el botón del Calendar, la sección de la página Pending,
+  la ruta `/api/google-tasks/sync` y los tres ajustes `GOOGLE_TASKS_*`. Los
+  links se encolan desde la página Pending.
 - **`/sync-aiapply`:** eliminado.
 - **`/check-email`, `/wake-up` y `/follow-up-email-application`:** ahora son
   `/digest-email`; `/apply-pending` se ejecuta solo.

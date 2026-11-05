@@ -98,11 +98,6 @@
                 class="state-pill flex h-[38px] w-[38px] items-center justify-center rounded-full border disabled:cursor-not-allowed disabled:opacity-40">
                 <img src="navigation/google-calendar.png" alt="" class="h-5 w-5" draggable="false" />
               </button>
-              <button id="sync-tasks-btn" type="button" title="Sync Google Tasks"
-                aria-label="Sync Google Tasks" data-i18n-title="sync.tasksTitle" data-i18n-aria-label="sync.tasksTitle"
-                class="state-pill flex h-[38px] w-[38px] items-center justify-center rounded-full border disabled:cursor-not-allowed disabled:opacity-40">
-                <img src="navigation/google-tasks.svg" alt="" class="h-5 w-5" draggable="false" />
-              </button>
               <button id="weekly-report-btn" type="button" aria-pressed="false"
                 class="state-pill rounded-full border px-4 py-2 text-sm font-medium" data-i18n="calendar.weeklyReport">
                 📊 Weekly Report
@@ -127,7 +122,7 @@
           </div>
         </section>
 
-        <!-- Pending view (central page): the form that queues a link, and Google Tasks (see js/pending.js); the queued links are under the Calendar -->
+        <!-- Pending view (central page): the form that queues a link (see js/pending.js); the queued links are under the Calendar -->
         <section id="view-pending" class="hidden px-8 py-6">
           <div class="page-column">
             <header class="mb-6">
@@ -152,14 +147,6 @@
               <p id="apply-url-error" class="notice text-xs text-red-400"></p>
               <p id="apply-feedback" class="hidden items-center gap-2 text-xs"></p>
             </form>
-
-            <h2 class="mt-8 text-base font-medium text-gray-100" data-i18n="pending.tasksTitle">Google Tasks</h2>
-            <p class="mb-3 text-sm text-gray-500" data-i18n="pending.tasksHelp">Queue the job links saved in your open Google Tasks.</p>
-            <div class="flex items-center gap-3">
-              <button id="pending-tasks-btn" type="button"
-                class="rounded-full bg-gray-100 px-5 py-2 text-sm font-medium text-gray-900 hover:bg-white disabled:opacity-50" data-i18n="sync.tasksTitle">Sync Google Tasks</button>
-              <p id="pending-tasks-status" class="notice min-w-0 flex-1 text-xs" role="status"></p>
-            </div>
           </div>
         </section>
 

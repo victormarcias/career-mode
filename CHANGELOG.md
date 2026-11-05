@@ -22,6 +22,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Removed
 
+- **Sync Google Tasks:** the Calendar's button, the Pending page's section, the
+  `/api/google-tasks/sync` route and the three `GOOGLE_TASKS_*` settings. Links
+  are queued from the Pending page.
 - **`/sync-aiapply`:** removed.
 - **`/check-email`, `/wake-up` and `/follow-up-email-application`:** they are
   now `/digest-email`; `/apply-pending` runs on its own.

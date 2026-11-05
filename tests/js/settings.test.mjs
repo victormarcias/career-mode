@@ -177,9 +177,9 @@ test('a choice is sent only when it differs from what is saved, or from English 
 
 test('the lines of the list divide groups of settings, the ones that share the start of their name', () => {
   const named = (name) => ({ ...port, name })
-  const names = ['APP_LANGUAGE', 'CV_PDF_PATH', 'EMAIL_ADDRESS', 'EMAIL_PASSWORD', 'GEMINI_API_KEY', 'GOOGLE_CALENDAR_ID', 'GOOGLE_TASKS_CLIENT_ID']
+  const names = ['APP_LANGUAGE', 'CV_PDF_PATH', 'EMAIL_ADDRESS', 'EMAIL_PASSWORD', 'GEMINI_API_KEY', 'GOOGLE_CALENDAR_ID']
   const groups = groupsHtml(names.map(named)).split('<div class="space-y-3 py-4 first:pt-0').slice(1)
   assert.equal(groups.length, 5)
   const fieldsOf = (html) => [...html.matchAll(/name="([A-Z_]+)"/g)].map((m) => m[1])
-  assert.deepEqual(groups.map(fieldsOf), [['APP_LANGUAGE'], ['CV_PDF_PATH'], ['EMAIL_ADDRESS', 'EMAIL_PASSWORD'], ['GEMINI_API_KEY'], ['GOOGLE_CALENDAR_ID', 'GOOGLE_TASKS_CLIENT_ID']])
+  assert.deepEqual(groups.map(fieldsOf), [['APP_LANGUAGE'], ['CV_PDF_PATH'], ['EMAIL_ADDRESS', 'EMAIL_PASSWORD'], ['GEMINI_API_KEY'], ['GOOGLE_CALENDAR_ID']])
 })
