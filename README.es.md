@@ -95,7 +95,7 @@ En `.claude/skills/`, cada uno con su README:
 - `reply-rejected`: agradece a las empresas que te rechazaron, desde tu Gmail, archiva el mail y registra el rechazo
 - `follow-up-email-application`: hace el seguimiento de las postulaciones que enviaste por email sin respuesta, en su mismo hilo, y lo registra
 - `check-email`: ordena tu Gmail reciente y ejecuta los skills que se ocupan de cada cosa
-- `wake-up`: arranca el día: ejecuta `check-email` y después `apply-pending`
+- `wake-up`: arranca el día: ejecuta `check-email`, `follow-up-email-application` y `apply-pending`
 - `submit-profile`: completa portales de candidatos con tu perfil
 - `write-daily-post`: escribe el post diario y su imagen
 - `commit`: commitea tus cambios en la rama actual, corto y a tu nombre

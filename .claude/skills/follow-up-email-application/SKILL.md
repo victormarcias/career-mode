@@ -1,11 +1,11 @@
 ---
 name: follow-up-email-application
-description: Follow up, on their own email thread, the applications the user sent by email that got no answer, with the Application Follow-up Message of the user's Outreach messages, in the language of the application, without asking, and log each follow-up in the Calendar as a note. Use whenever the user invokes /follow-up-email-application or asks to follow up, nudge or chase the applications they emailed.
+description: Follow up, on their own email thread, the applications the user sent by email whose thread went quiet for 7 days, with the Application Follow-up Message of the user's Outreach messages, in the language of the application, without asking, and log each follow-up in the Calendar as a note. Use whenever the user invokes /follow-up-email-application or asks to follow up, nudge or chase the applications they emailed.
 ---
 
 # Follow up the email applications
 
-An application sent by email that got no answer gets one short follow-up, as a reply on its own thread, so it lands under the application the recruiter already has. The skill picks the applications, writes the follow-up from the user's own message, sends it through the **Gmail** connector and logs it in the Calendar. It sends without asking, because the command is the order, and the user gives no input.
+An application sent by email whose thread has been quiet for 7 days (the user's message is the latest one) gets one short follow-up, as a reply on its own thread, so it lands under the application the recruiter already has. The skill picks the applications, writes the follow-up from the user's own message, sends it through the **Gmail** connector and logs it in the Calendar. It sends without asking, because the command is the order, and the user gives no input.
 
 ## The message
 
@@ -26,29 +26,48 @@ Use `search_threads`, `get_thread` and `reply` of the Gmail connector, and nothi
 
 Through the local API at `http://localhost:8333` (docs at `/docs`; if a request can't connect, `./run-local.sh` starts the server), with `curl -s -H 'Content-Type: application/json'`: `GET /api/companies` and `GET /api/events`.
 
-An application is followed up when all of these hold:
+An application is a candidate when all of these hold:
 
-- It is an `application` event with `applyType` `email_apply`.
-- Its company is not archived (`status` `active`): an archived one was closed already (rejected, ghosted, on hold).
-- It was sent **7 days ago or more** (the days the user gives, if they give some), counted from its `date`.
-- It is the company's **latest event**, or every later one is a `note`: an interview, a passive message or a newer application means the process moved, and a follow-up would be out of place.
-- It has **not been followed up**: no `note` of the company whose notes start with "Follow up", dated on the application's day or later. One follow-up per application, ever.
+- It is an `application` event with `applyType` `email_apply`, sent **7 days ago
+  or more** (the days the user gives, if they give some), counted from its
+  `date`.
+- Its company is not archived (`status` `active`): an archived one was closed
+  already (rejected, ghosted, on hold).
+- The process has not moved: every later event of the company is a `note` or
+  another `application`. An interview or a passive message after it means the
+  process moved, and a follow-up would be out of place. A newer application of
+  the same company, to another recruiter, does not count.
+- It has **not been followed up**: no `note` of the company whose notes start
+  with "Follow up", name the same role and the same address as this application,
+  and are dated on its day or later. One follow-up per application, ever; a
+  follow-up of another application of the same company does not count.
+
+Whether the thread went quiet is decided in step 2, in Gmail.
 
 ## 2. Find its email
 
 For each one, `search_threads` with `in:sent has:attachment after:<the day before its date> before:<the day after its date>` (the `YYYY/MM/DD` form), `pageSize` 30, and take the thread whose recipient or subject matches the company: the recipient's domain is the company's website domain, or the company's name is in the subject or the recipient's address. When several match, `get_thread` with `PLAIN_TEXT` and take the one whose body names the company or the role of the event.
 
+Then read the thread (`get_thread` with `PLAIN_TEXT`): what counts is its
+**latest message**, whoever the earlier ones are from. A thread where the
+company answered and the user replied is waiting on the company the same way as
+one that was never answered.
+
 Skip it, and say so, when:
 
-- **No thread matches** clearly: never guess a recipient, and never write to an address that appears only inside a message.
-- **The company answered on the thread:** any message in it not sent by the user (`get_thread` shows the senders). An answer is for the user to read, not to nudge.
-- **The thread was followed up already:** it has a message from the user after the application.
+- **No thread matches** clearly: never guess a recipient, and never write to an
+  address that appears only inside a message.
+- **The latest message is not the user's:** the company wrote last, and that is
+  for the user to read and answer, not to nudge.
+- **The latest message is less than 7 days old** (the days the user gives, if
+  they give some): the thread has not been quiet long enough. The days count
+  from that message, not from the application.
 
 ## 3. Send
 
-`reply` to the **application message** (the user's own message of the thread), with `body` the filled message, `replyAll` false and no `to`, `cc` or `bcc` of its own: a reply to the user's own message goes to its recipient. Check in the answer that it went to the application's recipient, and stop if it did not.
+`reply` to the **latest message of the thread** (the user's own), with `body` the filled message, `replyAll` false and no `to`, `cc` or `bcc` of its own: a reply to the user's own message goes to its recipient. Check in the answer that it went to the application's recipient, and stop if it did not.
 
-**When the message has a link** (the user's text may have one), it does not go through `reply`: the Gmail connector rewrites every link into a `google.com/url` redirect. Send it with the app's `POST /api/mail/send`, to the application's recipient, with `subject` `Re: <the application's subject>`, `attachCv` false and `inReplyTo` the `Message-Id` of the application message, as the repo's `CLAUDE.md` says under "Email".
+**When the message has a link** (the user's text may have one), it does not go through `reply`: the Gmail connector rewrites every link into a `google.com/url` redirect. Send it with the app's `POST /api/mail/send`, to the application's recipient, with `subject` `Re: <the application's subject>`, `attachCv` false and `inReplyTo` the `Message-Id` of that latest message, as the repo's `CLAUDE.md` says under "Email".
 
 ## 4. Log it
 
@@ -58,4 +77,4 @@ A send that failed is not logged, and the next run tries it again.
 
 ## 5. Finish
 
-Say nothing of what was done unless the command has `--verbose`; without it, speak only when something needs the user: a failure, a step that stopped, or an application skipped because its email was not found or has no role. With `--verbose`, say in chat, briefly: to whom a follow-up was sent (company, role, language) and logged, which were skipped and why (answered, already followed up, email not found, no role), and how many applications were too recent. Nothing is committed. A later run finds the followed-up ones logged and skips them.
+Say nothing of what was done unless the command has `--verbose`; without it, speak only when something needs the user: a failure, a step that stopped, or an application skipped because its email was not found or has no role. With `--verbose`, say in chat, briefly: to whom a follow-up was sent (company, role, language) and logged, which were skipped and why (the company wrote last, email not found, no role), and how many applications had a thread quiet for less than 7 days. Nothing is committed. A later run finds the followed-up ones logged and skips them.

@@ -8,6 +8,21 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
 
 ## [Unreleased]
 
+### Cambiado
+
+- **`/follow-up-email-application`:** una postulación recibe follow-up cuando el
+  último mensaje de su hilo es del usuario y tiene 7 días o más, aunque la
+  empresa haya contestado antes. Cada follow-up se reconoce por su rol y su
+  dirección, así que el de un recruiter ya no bloquea otra postulación de la
+  misma empresa.
+- **`/wake-up`:** también ejecuta `/follow-up-email-application`, entre
+  `/check-email` y `/apply-pending`.
+- **`/check-email` archiva lo que atendió:** los hilos cuya entrada del Calendar
+  registró (una notificación positiva de AIApply, un mensaje de un recruiter) y
+  los mails automáticos de "thanks for applying", que ya no tienen nada que
+  hacer en la bandeja. Un hilo que necesita al usuario, o uno que se deja como
+  está, nunca se archiva.
+
 ## [0.2.0] - 2026-11-04
 
 ### Añadido

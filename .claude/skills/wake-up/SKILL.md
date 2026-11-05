@@ -1,6 +1,6 @@
 ---
 name: wake-up
-description: The user's start-of-day routine in one command: runs /check-email and then /apply-pending, one after the other. Use whenever the user invokes /wake-up or asks to start the day, run the morning routine or do the daily round.
+description: The user's start-of-day routine in one command: runs /check-email, /follow-up-email-application and /apply-pending, one after the other. Use whenever the user invokes /wake-up or asks to start the day, run the morning routine or do the daily round.
 ---
 
 # Start the day
@@ -10,7 +10,8 @@ One command for the start of the day. It does nothing by itself: it runs the ski
 ## The steps
 
 1. `/check-email`: sorts the recent Gmail and runs the skills that handle it. Pass on the days the user gave, if any.
-2. `/apply-pending`, with no link: works through the queue of pending applications.
+2. `/follow-up-email-application`: follows up the email applications that got no answer, once each. It runs after `/check-email` so that an answer or a rejection that just came in is logged first, and the application is skipped.
+3. `/apply-pending`, with no link: works through the queue of pending applications.
 
 Pass `--verbose` to each step when the command has it. A new step is one more line in this list, in the place it should run.
 

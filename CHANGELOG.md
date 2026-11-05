@@ -8,6 +8,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- **`/follow-up-email-application`:** an application is followed up when the
+  latest message of its thread is the user's and is 7 days old or more, even if
+  the company had answered before. Each follow-up is recognized by its role and
+  address, so one for a recruiter no longer blocks another application of the
+  same company.
+- **`/wake-up`:** also runs `/follow-up-email-application`, between
+  `/check-email` and `/apply-pending`.
+- **`/check-email` archives what it handled:** the threads whose Calendar entry
+  it logged (a positive AIApply notification, a recruiter message) and the
+  automatic "thanks for applying" confirmations, which have nothing left to do
+  in the inbox. A thread that needs the user, or one left alone, is never
+  archived.
+
 ## [0.2.0] - 2026-11-04
 
 ### Added

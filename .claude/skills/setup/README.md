@@ -1,12 +1,15 @@
 # setup
 
-Gets a fresh fork or clone of career-mode working, step by step, asking for each thing with options and a way to skip.
+Gets a fresh fork or clone of career-mode working, step by step, asking for each
+thing with options and a way to skip. It checks the requirements (macOS or
+Linux, Python 3.10+, `git`, `curl`, `gh`), starts the app with `./run-local.sh`,
+offers to keep the copy as a public fork or a private repo after checking that
+`profile/`, `data/` and `.env` are ignored, and then asks one question at a time
+for the CV, the profile (through `/read-cv`), the messages, the picture, the
+email account, the Google Calendar ID and the Gemini key.
 
-- **Checks:** macOS or Linux (WSL on Windows), Python 3.10+, `git`, `curl` and, for the next step, `gh`.
-- **Starts the app** with `./run-local.sh` and talks to it through its API from then on.
-- **Where your copy lives:** if you cloned someone else's repository, it offers a public **fork** (linked to the original, to pull updates), a **private copy**, or leaving it as it is. Before it creates or pushes anything it checks that `profile/`, `data/` and `.env` are ignored by git, and it never commits or pushes later unless you ask.
-- **Your own setup**, one question at a time, each skippable: the CV (a PDF of at most 1 MB, copied to `profile/cv.pdf`), the profile (through `/read-cv`: its long list of questions can be skipped for now, and what is skipped is left `(not set)` and asked for later), your messages (from your backup, from a document, or drafted from your profile), your profile picture, your email address and password (so the applications are sent by email from the app; it can send a test email to your own address), the Google Calendar ID and the Gemini key (both optional), and a word on the Chrome extension that only the web forms need.
-- **Safe by construction:** keys and calendar addresses go to the API in a request body and are never repeated back; it never opens a Job Board Platform's profiles or company pages; nothing personal goes in a tracked file.
-- **Use it:** `/setup`, the first time and whenever you want to finish what you skipped. It is safe to run again: it skips what is already done.
-
+Keys and addresses go to the API in a request body and are never repeated back,
+nothing personal goes in a tracked file, and it never commits or pushes unless
+asked. It is safe to run again: it skips what is already done. Run it as
+`/setup` the first time and whenever the skipped parts should be finished.
 Instructions: [SKILL.md](SKILL.md).
