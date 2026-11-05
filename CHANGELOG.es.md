@@ -8,20 +8,23 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
 
 ## [Unreleased]
 
-### Cambiado
+### Añadido
 
-- **`/follow-up-email-application`:** una postulación recibe follow-up cuando el
-  último mensaje de su hilo es del usuario y tiene 7 días o más, aunque la
-  empresa haya contestado antes. Cada follow-up se reconoce por su rol y su
-  dirección, así que el de un recruiter ya no bloquea otra postulación de la
-  misma empresa.
-- **`/wake-up`:** también ejecuta `/follow-up-email-application`, entre
-  `/check-email` y `/apply-pending`.
-- **`/check-email` archiva lo que atendió:** los hilos cuya entrada del Calendar
-  registró (una notificación positiva de AIApply, un mensaje de un recruiter) y
-  los mails automáticos de "thanks for applying", que ya no tienen nada que
-  hacer en la bandeja. Un hilo que necesita al usuario, o uno que se deja como
-  está, nunca se archiva.
+- **`/digest-email`:** un solo comando para el correo: hace lo que hacía
+  `/check-email`, etiqueta con `Interviews` los hilos que proponen o confirman
+  una entrevista, con `Rejected` los rechazos, con `Needs Attention` los que le
+  piden algo al usuario, hace el seguimiento de las postulaciones por email cuyo
+  hilo quedó en silencio 7 días (el último mensaje es del usuario y tiene 7 días
+  o más, aunque la empresa haya contestado antes) y las etiqueta `Follow Up`, y
+  termina con una tabla de Name, Subject y Action. Cada follow-up se reconoce
+  por su rol y su dirección, así que el de un recruiter no bloquea otra
+  postulación de la misma empresa.
+
+### Eliminado
+
+- **`/sync-aiapply`:** eliminado.
+- **`/check-email`, `/wake-up` y `/follow-up-email-application`:** ahora son
+  `/digest-email`; `/apply-pending` se ejecuta solo.
 
 ## [0.2.0] - 2026-11-04
 

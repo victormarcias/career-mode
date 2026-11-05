@@ -12,5 +12,5 @@ reason is given. It skips the reply, but still logs, for a thread already
 answered, a `no-reply` sender and AIApply's notices. It replies only to the
 sender, adds no link or question, and is silent unless the command has
 `--verbose`. It touches Gmail and the career-mode database. Called by
-[check-email](../check-email/README.md), and it also works on its own.
+[digest-email](../digest-email/README.md), and it also works on its own.
 Instructions: [SKILL.md](SKILL.md).

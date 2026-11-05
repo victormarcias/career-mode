@@ -1,6 +1,6 @@
 ---
 name: reply-rejected
-description: Find the rejection emails companies sent the user in Gmail, reply to each one, once, with a short thanks that says they will stay in touch, and log the rejection in the Calendar. Use whenever the user invokes /reply-rejected or asks to answer or log the rejections they got, and as a step of /check-email.
+description: Find the rejection emails companies sent the user in Gmail, reply to each one, once, with a short thanks that says they will stay in touch, and log the rejection in the Calendar. Use whenever the user invokes /reply-rejected or asks to answer or log the rejections they got, and as a step of /digest-email.
 ---
 
 # Reply to the rejections

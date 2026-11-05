@@ -91,11 +91,8 @@ In `.claude/skills/`, each with its own README:
 - `apply-email`: sends an application by email, CV attached
 - `apply-site`: fills a company's application form
 - `reply-recruiter`: answers a recruiter who wrote first
-- `sync-aiapply`: logs what AIApply.io got back from companies, and trashes its "Not this time" notices
 - `reply-rejected`: thanks the companies that rejected you, from your Gmail, archives the email and logs the rejection
-- `follow-up-email-application`: follows up the applications you emailed that got no answer, on their own thread, and logs it
-- `check-email`: sorts your recent Gmail and runs the skills that handle it
-- `wake-up`: starts the day: runs `check-email`, `follow-up-email-application` and `apply-pending`
+- `digest-email`: sorts your recent Gmail, runs the skills that handle it, tags the interviews, follows up the applications that went quiet and shows a table of what it did
 - `submit-profile`: fills candidate portals from your profile
 - `write-daily-post`: writes the daily post and its image
 - `commit`: commits your changes on the current branch, short and under your name
