@@ -1,6 +1,6 @@
 # career-mode — repo rules
 
-Rules for this repo only; the user's own cross-repo preferences live in their own global instructions. How to run the app and the structure are in `README.md`; the data model is `server/app/models.py`. `README.es.md` is its Spanish version, and `CHANGELOG.es.md` is the Spanish version of `CHANGELOG.md`: when one changes, change the other in the same edit. Each skill has a README next to its `SKILL.md`.
+Rules for this repo only. How to run the app and the structure are in `README.md`; the data model is `server/app/models.py`. `README.es.md` is its Spanish version, and `CHANGELOG.es.md` is the Spanish version of `CHANGELOG.md`: when one changes, change the other in the same edit. Each skill has a README next to its `SKILL.md`.
 
 ## Config
 
@@ -27,12 +27,6 @@ Rules for this repo only; the user's own cross-repo preferences live in their ow
 - `./run-tests.sh` runs pytest on the server (`tests/test_*.py`) and `node --test` on the front end (`tests/js/`, where `setup.mjs` loads the English texts first), and `.github/workflows/tests.yml` runs it on every push. A change comes with its test; say plainly what was and wasn't checked. The front end functions a test needs are `export`ed from their module.
 - Tests use invented people and companies only. `tests/test_no_personal_data.py` fails when anything from the real `profile/profile.md` is in a tracked file, and is skipped where there is no such file (a fresh clone, CI).
 - `./run-local.sh` starts the server (and sets up `.venv`); `./stop.sh` stops it. The server isn't restarted by editing JS, HTML or CSS (those are served as they are), but a change to `server/` needs a restart.
-
-## Git
-
-- Work in this checkout, on the branch already checked out: never create, switch or rename a branch (the user makes their own) and never use a worktree.
-- Never commit on your own: leave the changes in the working tree so the user reads the diff first, and commit only when they ask, with the default git author, one short line and no Claude co-author.
-- Never push: the user does.
 
 ## The user's own data
 
