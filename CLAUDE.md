@@ -31,7 +31,7 @@ Rules for this repo only; the user's own cross-repo preferences live in their ow
 ## Git
 
 - Work in this checkout, on the branch already checked out: never create, switch or rename a branch (the user makes their own) and never use a worktree.
-- Never commit on your own: leave the changes in the working tree so the user reads the diff first, and commit only when they run `/commit` (`.claude/skills/commit`: default author, one short line, no Claude co-author).
+- Never commit on your own: leave the changes in the working tree so the user reads the diff first, and commit only when they ask, with the default git author, one short line and no Claude co-author.
 - Never push: the user does.
 
 ## The user's own data
