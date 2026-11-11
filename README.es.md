@@ -115,6 +115,10 @@ Van a `backup/`, que git ignora. También guarda una copia de tu `.env` (`backup
 
 Cubren solo la integridad de los datos (las reglas de la base, la ida y vuelta del backup, las reglas de empresas y eventos); el resto de la app no tiene tests. Usan solo datos inventados, y `tests/test_no_personal_data.py` verifica que nada de tu `profile/` termine en un archivo que git rastrea.
 
+## Demo
+
+Hay una demo con datos inventados en [victormarcias.online/demo/career-mode](https://victormarcias.online/demo/career-mode). Para correrla en tu computadora, `./demo/run-demo.sh` (ver [demo/README.md](demo/README.md)).
+
 ## Licencia
 
 [MIT](LICENSE).
