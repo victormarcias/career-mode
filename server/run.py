@@ -10,7 +10,7 @@ import uvicorn
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from app.database import DEFAULT_DB_PATH  # noqa: E402
 from app.main import create_app  # noqa: E402
-from app.settings import DEFAULT_PORT, load_env_file  # noqa: E402
+from app.settings import DEFAULT_PORT, ENV_PATH, load_env_file  # noqa: E402
 
 
 def bind(host, port):
@@ -21,13 +21,16 @@ def bind(host, port):
 
 
 def main():
-    load_env_file()  # PORT can live in .env
     parser = argparse.ArgumentParser(description='career-mode: the app and its API, on localhost.')
-    parser.add_argument('--port', type=int, default=int(os.environ.get('PORT', DEFAULT_PORT)))
+    parser.add_argument('--port', type=int, default=None, help='default: PORT in .env, or %s' % DEFAULT_PORT)
     parser.add_argument('--db', default=str(DEFAULT_DB_PATH), help='SQLite file (created if missing)')
     parser.add_argument('--profile-dir', default=None, help='folder with profile.md and outreach.md (default: profile/)')
     parser.add_argument('--env', default=None, help='the .env that Settings reads and writes (default: .env)')
     args = parser.parse_args()
+
+    load_env_file(args.env or ENV_PATH)  # PORT can live in it, and --env picks which one
+    if args.port is None:
+        args.port = int(os.environ.get('PORT', DEFAULT_PORT))
 
     sockets = []
     try:
