@@ -147,14 +147,19 @@ def person(rng, lang):
     return '%s %s' % (rng.choice(FIRST_NAMES), rng.choice(LAST_NAMES)), rng.choice(TITLES_ES if lang == 'es' else TITLES_EN)
 
 
-def pick_time(rng, day_times, date_str):
-    """A time for date_str not already used that day (slots are 30 minutes apart)."""
+def pick_time(rng, day_times, date_str, after=None):
+    """Minutes-of-day for date_str, unused that day (slots are 30 minutes apart) and, if given, after `after`:
+    so two stages of the same process sharing a date still show in the order they happened."""
     used = day_times.setdefault(date_str, [])
     slots = [h * 60 + m for h in range(WORKDAY_START_HOUR, WORKDAY_END_HOUR) for m in range(0, 60, SLOT_MINUTES)]
+    if after is not None:
+        slots = [s for s in slots if s > after]
     rng.shuffle(slots)
-    chosen = next((s for s in slots if s not in used), slots[0])  # double up rather than fail if the day is full
+    chosen = next((s for s in slots if s not in used), None)
+    if chosen is None:  # the day is full, or nothing is free after `after`: double up rather than fail
+        chosen = slots[0] if slots else after + SLOT_MINUTES
     used.append(chosen)
-    return '%02d:%02d' % divmod(chosen, 60)
+    return chosen
 
 
 def build(today, seed):
@@ -198,7 +203,7 @@ def build(today, seed):
         who, title = person(rng, lang)
         role = rng.choice(ROLES)
         day = rng.randint(t - 2, t) if stages == ['pending'] else rng.randint(0, max(0, t - len(stages)))
-        slot = 0
+        prev_date, prev_minutes = None, None
         for i, kind in enumerate(stages):
             if i:
                 day += rng.randint(1, 3)
@@ -206,7 +211,14 @@ def build(today, seed):
             d = day if (kind in FUTURE_OK and is_last) else min(day, t)
             d = min(d, 13)
             date_str = (week_start + dt.timedelta(days=d)).isoformat()
-            at = None if kind == 'pending' else pick_time(rng, day_times, date_str)
+            if kind == 'pending':
+                at = None
+            else:
+                # if this stage clamped onto the same day as the previous one, keep it later than it
+                after = prev_minutes if date_str == prev_date else None
+                minutes = pick_time(rng, day_times, date_str, after)
+                at = '%02d:%02d' % divmod(minutes, 60)
+                prev_date, prev_minutes = date_str, minutes
             link, apply_type, notes = '', '', ''
             if kind in ('application', 'pending'):
                 if rng.random() < 0.25 and kind == 'application':
