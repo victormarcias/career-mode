@@ -78,7 +78,6 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
 - **CLI:** comandos `profile-pdf` y `outreach-pdf` en `server/cli.py`.
 - **Skills:**
   - `/commit`: hace commit en la rama actual con el autor por defecto y un mensaje de una línea, y nunca hace push.
-  - `/write-daily-post` guarda cada post en `profile/daily-posts/` con una línea de tema y un `log.csv` que elige el siguiente tema.
 - **Tests y CI:** una suite de pytest para el servidor, una de Node para el front end, `run-tests.sh` y un workflow de GitHub Actions que ejecuta ambas en cada push. Un test falla cuando algo del perfil real aparece en un archivo versionado.
 - **Proyecto:** `.github/FUNDING.yml` y una sección de Git en `CLAUDE.md`.
 
@@ -93,7 +92,6 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
   - Lee JD Posts de LinkedIn, primero con WebFetch y después en Claude in Chrome, y abre Chrome para cualquier otra página que no pueda leer.
 - **`/apply-email` y `/apply-site`:** ambos informan si la aplicación se envió o por qué se detuvo. `/apply-site` se detiene ante captchas y cuentas por crear, deja el formulario abierto cuando se atasca y responde por sí mismo las preguntas del formulario.
 - **`/reply-recruiter`:** una entrada de Calendar por conversación, solo las tecnologías por las que pregunta el recruiter, y sin necesidad de leer otro skill.
-- **`/write-daily-post`:** el prompt de la imagen pide ortografía correcta y texto mínimo, el texto del post se muestra junto a la imagen, y una imagen mala se descarta y su tema se reutiliza.
 - **`/setup`:** ofrece el `outreach.md` del backup y puede enviar un email de prueba a la dirección del propio usuario.
 
 ### Eliminado

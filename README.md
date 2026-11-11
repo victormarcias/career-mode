@@ -94,7 +94,6 @@ In `.claude/skills/`, each with its own README:
 - `reply-rejected`: thanks the companies that rejected you, from your Gmail, archives the email and logs the rejection
 - `digest-email`: sorts your recent Gmail, runs the skills that handle it, tags the interviews, follows up the applications that went quiet and shows a table of what it did
 - `submit-profile`: fills candidate portals from your profile
-- `write-daily-post`: writes the daily post and its image
 - `commit`: commits your changes on the current branch, short and under your name
 
 ## Backups

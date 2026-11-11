@@ -132,9 +132,9 @@ test('saving after only looking sends nothing; editing what the eye loaded does'
 // ---------- filenames and commands as code ----------
 
 test('text between backticks becomes code, the rest is plain', () => {
-  const html = codeHtml('Used by the `daily-post` skill (`scripts/generate_daily_image.py`) to draw it.')
+  const html = codeHtml('Used by the `some-skill` skill (`scripts/example.py`) to draw it.')
   assert.equal((html.match(/<code /g) ?? []).length, 2)
-  assert.match(html, /<code [^>]*>daily-post<\/code> skill \(<code [^>]*>scripts\/generate_daily_image\.py<\/code>\) to draw it\./)
+  assert.match(html, /<code [^>]*>some-skill<\/code> skill \(<code [^>]*>scripts\/example\.py<\/code>\) to draw it\./)
   assert.doesNotMatch(html, /`/)
 })
 
@@ -151,8 +151,8 @@ test('a lone backtick, or one that spans lines, is left as it is', () => {
 
 test('the field descriptions show their filenames and the default as code', () => {
   // a name the locale files do not know, so the description given is the one shown
-  const html = fieldHtml({ ...key, name: 'SOME_NEW_VARIABLE', description: 'Used by the `daily-post` skill (`scripts/generate_daily_image.py`).' })
-  assert.match(html, /<code [^>]*>scripts\/generate_daily_image\.py<\/code>/)
+  const html = fieldHtml({ ...key, name: 'SOME_NEW_VARIABLE', description: 'Used by the `some-skill` skill (`scripts/example.py`).' })
+  assert.match(html, /<code [^>]*>scripts\/example\.py<\/code>/)
   assert.match(fieldHtml(port), /Default: <code [^>]*>465<\/code>\./)
 })
 

@@ -6,7 +6,7 @@ import pytest
 SERVED = ['/', '/index.html', '/style.css', '/js/main.js', '/js/i18n.js', '/navigation/favicon.png', '/locales/en.json', '/locales/es.json']
 NOT_SERVED = [
     '/data/career-mode.db', '/.env', '/server/app/main.py', '/server/alembic.ini', '/backup/companies.json',
-    '/scripts/generate_daily_image.py', '/.git/config', '/README.md', '/requirements.txt', '/.venv/pyvenv.cfg',
+    '/.git/config', '/README.md', '/requirements.txt', '/.venv/pyvenv.cfg',
     '/.claude/settings.local.json', '/.claude/skills/apply-email/SKILL.md', '/.claude/skills/apply-email/../../settings.local.json',
     '/js/../.env', '/%2e%2e/.env', '/js/%2e%2e/%2e%2e/.env', '/public/../data/career-mode.db',
     '/public/index.html', '/public/js/main.js',  # public/ is the root now, not a folder to ask for
