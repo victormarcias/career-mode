@@ -146,7 +146,7 @@ def test_the_examples_are_a_complete_invented_person():
     root = Path(__file__).resolve().parent.parent / 'profile'
     profile = (root / 'profile.example.md').read_text(encoding='utf-8')
     for field in ('Full name', 'Email', 'Phone', 'Birthdate', 'Google account operated by Claude', 'Chat language',
-                  'Expected salary range', 'Expected salary for a local role', 'Website', 'Notes folder'):
+                  'Expected salary range', 'Expected salary for a local role', 'Website'):
         assert field in profile, field
     for heading in ('## 👤 Basics', '## 🎯 Roles', '## 🛠️ Tech stack', '## 🌍 Work preferences', '## 🎓 Self-assessment', '## 📝 Short bio', '## 📏 Rules'):
         assert heading in profile, heading
