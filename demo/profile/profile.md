@@ -1,22 +1,22 @@
 # Profile
 
-The demo's profile: an invented person (Lucía Marín) with invented contacts, so nothing here is real. Every link and address uses the reserved `.example` domain.
+The demo's profile: an invented person (Miguel Sastre) with invented contacts, so nothing here is real. Every link and address uses the reserved `.example` domain (the email's `teatrosueño` is just a joke on top of it).
 
 ## 👤 Basics
 
-- **Full name:** Lucía Marín
+- **Full name:** Miguel Sastre
 - **Location:** Valle Sereno, Fantasia
 - **Citizenship / work authorization:** Fantasia
 - **Time zone:** UTC-03:00
-- **Email — everything (outreach, CV, applications, portal signups):** lucia.marin@example.com
+- **Email — everything (outreach, CV, applications, portal signups):** miguel.sastre@teatrosueño.example
 - **Phone:** +54 555 010 0123
 - **Preferred contact method:** Email
 - **Birthdate:** 03/09/1991 (some portals ask)
 - **Phone, portal format (no spaces):** +545550100123
 - **Chat language:** Spanish, English
-- **LinkedIn:** [linkedin.example/in/lucia-marin](https://linkedin.example/in/lucia-marin)
-- **GitHub:** github.example/lucia-marin
-- **Website:** [lucia-marin.example](https://lucia-marin.example)
+- **LinkedIn:** [linkedin.example/in/miguel-sastre](https://linkedin.example/in/miguel-sastre)
+- **GitHub:** github.example/miguel-sastre
+- **Website:** [miguel-sastre.example](https://miguel-sastre.example)
 - **Education:** Systems Engineering (completed, 2009–2014, Universidad de Valle Sereno)
 - **Experience:** 10+ years, remote teams in the U.S. and Europe
 
@@ -85,13 +85,13 @@ Technologies known best, with expertise level and years (from the CV's per-role 
     - Built the customer portal for a logistics client, from the first prototype to 15,000 monthly users.
   - **Software Developer, Cerro Alto Consulting** — Feb 2014–Jul 2016, On-site. Tech: Python, JavaScript, PostgreSQL.
     - Maintained internal tools for a regional bank.
-- **Repos:** github.example/lucia-marin
+- **Repos:** github.example/miguel-sastre
 - **Education:** Systems Engineering — Universidad de Valle Sereno — Fantasia — Complete, 2014.
 
 ## 🔗 Sites with a duplicated LinkedIn-style profile
 
-- **Example Talent Portal** — [talent.example/lucia-marin](https://talent.example/lucia-marin)
-- **Demo Jobs Network** — [jobs.example/in/lucia-marin](https://jobs.example/in/lucia-marin)
+- **Example Talent Portal** — [talent.example/miguel-sastre](https://talent.example/miguel-sastre)
+- **Demo Jobs Network** — [jobs.example/in/miguel-sastre](https://jobs.example/in/miguel-sastre)
 
 ## 🏘️ Talent communities and portals
 

@@ -1,12 +1,12 @@
 # Demo
 
-See it working, with invented data only: **[victormarcias.online/demo/career-mode](https://victormarcias.online/demo/career-mode)**
+See it working, with fantasy data only: **[victormarcias.online/demo/career-mode](https://victormarcias.online/demo/career-mode)**
 
 The demo is career-mode with a made-up person and made-up job search, so it can be shown to anyone:
 
 - **100 invented companies**, half with English names and notes and half Spanish: agencies and clients, some of them through an agency. Nothing in them is real, and every link uses the reserved `.example` domain.
 - **Events of every type** (applications, recruiters who wrote first, interviews, offers, rejections, red flags, links in the queue...), all of them in the last two weeks, with every type in the current week. The dates are worked out from today every time the demo starts, so the Calendar always opens on a busy week.
-- **An invented profile and messages** (`demo/profile/`: Lucía Marín, her CV facts, and the six outreach messages in Spanish and English).
+- **An invented profile and messages** (`demo/profile/`: Miguel Sastre, his CV facts, and the six outreach messages in Spanish and English).
 - **No `.env`**: Settings shows nothing set, so nothing can be read from your computer or sent from it.
 
 ## Run it yourself
