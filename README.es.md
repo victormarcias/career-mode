@@ -7,7 +7,7 @@ Un seguidor de búsqueda laboral privado y para una sola persona, que corre en t
 ## Stack
 
 - **FastAPI** sirve la app y una API JSON (docs en `/docs`)
-- **SQLite** con SQLAlchemy, Pydantic y Alembic
+- **SQLite** con SQLAlchemy y Pydantic
 - HTML/CSS/JS plano en `public/`, con Tailwind desde su CDN: sin bundler, sin framework
 
 ## Empezar rápido
@@ -113,7 +113,7 @@ Van a `backup/`, que git ignora. También guarda una copia de tu `.env` (`backup
 ./run-tests.sh   # pytest para el servidor, node --test para el front end
 ```
 
-Usan solo datos inventados, y `tests/test_no_personal_data.py` verifica que nada de tu `profile/` termine en un archivo que git rastrea.
+Cubren solo la integridad de los datos (las reglas de la base, la ida y vuelta del backup, las reglas de empresas y eventos); el resto de la app no tiene tests. Usan solo datos inventados, y `tests/test_no_personal_data.py` verifica que nada de tu `profile/` termine en un archivo que git rastrea.
 
 ## Licencia
 

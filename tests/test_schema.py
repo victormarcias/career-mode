@@ -98,3 +98,11 @@ def test_calendar_event_id_is_unique_when_set(sql):
     event(sql, id='c')  # several NULLs are fine
     with pytest.raises(IntegrityError):
         event(sql, id='d', calendar_event_id='g1')
+
+
+def test_a_database_made_with_an_older_schema_is_refused_with_a_way_out(sql, db_path):
+    from app.database import create_schema
+    create_schema(db_path)  # up to date: nothing happens, and running it again is harmless
+    sql('ALTER TABLE companies DROP COLUMN notes')
+    with pytest.raises(RuntimeError, match=r'companies\.notes.*export the backup'):
+        create_schema(db_path)

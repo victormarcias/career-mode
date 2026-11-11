@@ -7,7 +7,7 @@ A private, single-user job search tracker that runs on your own computer: one SQ
 ## Stack
 
 - **FastAPI** serves the app and a JSON API (docs at `/docs`)
-- **SQLite** with SQLAlchemy, Pydantic and Alembic
+- **SQLite** with SQLAlchemy and Pydantic
 - Plain HTML/CSS/JS in `public/`, with Tailwind from its CDN: no bundler, no framework
 
 ## Quick start
@@ -113,7 +113,7 @@ They go to `backup/`, which git ignores. It also keeps one copy of your `.env` (
 ./run-tests.sh   # pytest for the server, node --test for the front end
 ```
 
-They use invented data only, and `tests/test_no_personal_data.py` checks that nothing from your `profile/` ends up in a file git tracks.
+They cover only the integrity of the data (the database rules, the backup round trip, the company and event rules); the rest of the app has no tests. They use invented data only, and `tests/test_no_personal_data.py` checks that nothing from your `profile/` ends up in a file git tracks.
 
 ## License
 

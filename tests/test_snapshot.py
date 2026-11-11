@@ -2,13 +2,13 @@
 import pytest
 
 from app import snapshot
-from app.database import make_engine, migrate, session_factory
+from app.database import create_schema, make_engine, session_factory
 
 
 @pytest.fixture
 def session(tmp_path):
     path = tmp_path / 'snap.db'
-    migrate(path)
+    create_schema(path)
     engine = make_engine(path)
     with session_factory(engine)() as s:
         yield s
@@ -56,32 +56,6 @@ def test_importing_twice_skips_what_is_already_there(session):
     assert (second['companies'], second['events'], len(second['skipped'])) == (0, 0, 2)
 
 
-def test_the_older_backups_of_agencies_and_clients_still_load(session):
-    """Agencies and clients as two lists (and the Firestore `applications`): they become companies, and an event of a client
-    keeps its agency as the via. An agency and a client that shared an id or a name no longer can."""
-    data = {
-        'agencies': [{'id': 'acme', 'name': 'Acme', 'type': 'staffing', 'status': 'archived', 'recruiters': ['https://x']}],
-        'clients': [
-            {'id': 'big', 'name': 'Big', 'notes': 'a client', 'viaAgencyId': 'acme'},
-            {'id': 'acme', 'name': 'ACME'},  # the same id and name as the agency
-        ],
-        'applications': [
-            {'id': 'e1', 'date': '2026-10-01', 'event': 'rejection', 'agencyId': 'acme', 'clientId': 'big', 'companyLabel': 'Acme'},
-            {'id': 'e2', 'date': '2026-10-02', 'event': 'note', 'agencyId': 'acme'},
-            {'id': 'e3', 'date': '2026-10-03', 'event': 'note', 'clientId': 'acme'},
-        ],
-    }
-    report = snapshot.import_snapshot(session, data)
-    assert (report['companies'], report['events'], report['skipped']) == (3, 3, [])
-    exported = snapshot.export_snapshot(session)
-    companies = {c['id']: c for c in exported['companies']}
-    assert (companies['acme']['companyType'], companies['acme']['notes'], companies['acme']['recruiters']) == ('agency', 'staffing', ['https://x'])
-    assert (companies['big']['companyType'], companies['big']['viaCompanyId']) == ('client', 'acme')
-    assert (companies['acme-2']['companyType'], companies['acme-2']['name']) == ('client', 'ACME (client)')
-    events = {e['id']: (e['companyId'], e['viaCompanyId']) for e in exported['events']}
-    assert events == {'e1': ('big', 'acme'), 'e2': ('acme', None), 'e3': ('acme-2', None)}
-
-
 def test_csv_export_is_two_files_and_loads_back_the_same_data(client, make_agency, make_client, make_event, session):
     make_agency('Acme', recruiters=['https://x/1', 'https://x/2'], applicationLink='a@b.co')
     make_client('Big', viaCompanyId='acme', notes='line one\nline two, with "quotes"')
@@ -101,15 +75,6 @@ def test_csv_export_is_two_files_and_loads_back_the_same_data(client, make_agenc
     assert warnings == []
     snapshot.import_snapshot(session, parsed, replace=True)
     assert snapshot.export_snapshot(session) == exported
-
-
-def test_the_older_csv_files_load_too():
-    companies = 'kind,id,name,type,via_agency_id\nagency,a,A,staffing,\nclient,c,C,,a\n'
-    calendar = 'id,date,event,agency_id,client_id\ne1,2026-10-01,note,a,c\ne2,2026-10-02,note,a,\n'
-    parsed, warnings = snapshot.parse_csv(calendar, companies)
-    assert warnings == []
-    assert [(c['id'], c['companyType'], c['notes'], c['viaCompanyId']) for c in parsed['companies']] == [('a', 'agency', 'staffing', None), ('c', 'client', None, 'a')]
-    assert [(e['id'], e['agencyId'], e['clientId']) for e in parsed['events']] == [('e1', 'a', 'c'), ('e2', 'a', None)]  # import_snapshot turns them into company and via
 
 
 def test_csv_import_tolerates_excel_bom_and_crlf_and_reports_bad_rows():

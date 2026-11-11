@@ -1,4 +1,4 @@
-"""Fixtures: every test gets its own empty database, migrated by Alembic like a real start."""
+"""Fixtures: every test gets its own empty database, created like a real start."""
 import threading
 import time
 
@@ -24,7 +24,7 @@ def env_path(tmp_path):
 
 @pytest.fixture
 def client(db_path, env_path):
-    """The app in-process (no network). Its lifespan runs, so the migrations do too."""
+    """The app in-process (no network). Its lifespan runs, so the tables are created too."""
     with TestClient(create_app(db_path, allowed_hosts=LOCAL_HOSTS + ('testserver',), env_path=env_path)) as c:
         yield c
 
