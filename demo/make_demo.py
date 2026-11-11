@@ -202,7 +202,8 @@ def build(today, seed):
         for i, kind in enumerate(stages):
             if i:
                 day += rng.randint(1, 3)
-            d = day if kind in FUTURE_OK else min(day, t)
+            is_last = i == len(stages) - 1
+            d = day if (kind in FUTURE_OK and is_last) else min(day, t)
             d = min(d, 13)
             date_str = (week_start + dt.timedelta(days=d)).isoformat()
             at = None if kind == 'pending' else pick_time(rng, day_times, date_str)
