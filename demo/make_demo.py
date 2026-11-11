@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Makes the demo's data: 100 invented companies (half with English names and notes, half Spanish) and their
+"""Makes the demo's data: 50 invented companies (half with English names and notes, half Spanish) and their
 events, as the two CSV files the app imports (calendar.csv and companies.csv).
 
     python demo/make_demo.py [DIR]      DIR defaults to demo/data
@@ -21,6 +21,13 @@ EVENT_TYPES = [
     'on_hold', 'offer', 'rejection', 'red_flag', 'archive', 'pending',
 ]
 FUTURE_OK = {'hr_intro', 'tech_filter', 'tech_interview', 'culture_interview', 'pending'}  # the rest already happened
+
+COMPANIES_PER_LANG = 25  # English + Spanish
+AGENCIES = 18
+CLIENTS = 32
+WORKDAY_START_HOUR = 8
+WORKDAY_END_HOUR = 19  # exclusive
+SLOT_MINUTES = 30
 
 # --- invented names -------------------------------------------------------------------------------------------
 
@@ -140,15 +147,26 @@ def person(rng, lang):
     return '%s %s' % (rng.choice(FIRST_NAMES), rng.choice(LAST_NAMES)), rng.choice(TITLES_ES if lang == 'es' else TITLES_EN)
 
 
+def pick_time(rng, day_times, date_str):
+    """A time for date_str not already used that day (slots are 30 minutes apart)."""
+    used = day_times.setdefault(date_str, [])
+    slots = [h * 60 + m for h in range(WORKDAY_START_HOUR, WORKDAY_END_HOUR) for m in range(0, 60, SLOT_MINUTES)]
+    rng.shuffle(slots)
+    chosen = next((s for s in slots if s not in used), slots[0])  # double up rather than fail if the day is full
+    used.append(chosen)
+    return '%02d:%02d' % divmod(chosen, 60)
+
+
 def build(today, seed):
     rng = random.Random(seed)
-    # --- companies: 50 English, 50 Spanish; 35 agencies, 65 clients, a third of the clients through an agency
+    # --- companies: COMPANIES_PER_LANG English, COMPANIES_PER_LANG Spanish; AGENCIES agencies, CLIENTS clients,
+    # a third of the clients through an agency
     names = []
     for first, last, lang in ((EN_FIRST, EN_LAST, 'en'), (ES_FIRST, ES_LAST, 'es')):
-        picks = rng.sample(first, 50)
-        names += [('%s %s' % (picks[i], rng.choice(last)), lang) for i in range(50)]
+        picks = rng.sample(first, COMPANIES_PER_LANG)
+        names += [('%s %s' % (picks[i], rng.choice(last)), lang) for i in range(COMPANIES_PER_LANG)]
     rng.shuffle(names)
-    kinds = ['agency'] * 35 + ['client'] * 65
+    kinds = ['agency'] * AGENCIES + ['client'] * CLIENTS
     rng.shuffle(kinds)
     companies = []
     for (name, lang), kind in zip(names, kinds):
@@ -173,6 +191,7 @@ def build(today, seed):
     t = (today - week_start).days  # today, counted from last Monday (7 to 13)
     weights = [w for w, _ in TEMPLATES]
     events = []
+    day_times = {}
     for c in companies:
         stages = rng.choices([s for _, s in TEMPLATES], weights)[0]
         lang = c['lang']
@@ -185,7 +204,8 @@ def build(today, seed):
                 day += rng.randint(1, 3)
             d = day if kind in FUTURE_OK else min(day, t)
             d = min(d, 13)
-            at = None if kind == 'pending' else '%02d:%02d' % (9 + min(i, 8), rng.choice([0, 15, 30, 45]))
+            date_str = (week_start + dt.timedelta(days=d)).isoformat()
+            at = None if kind == 'pending' else pick_time(rng, day_times, date_str)
             link, apply_type, notes = '', '', ''
             if kind in ('application', 'pending'):
                 if rng.random() < 0.25 and kind == 'application':
@@ -204,7 +224,7 @@ def build(today, seed):
             else:
                 notes = rng.choice(OUTCOME[kind][lang])
             events.append({
-                'id': '%020x' % rng.getrandbits(80), 'date': (week_start + dt.timedelta(days=d)).isoformat(), 'time': at or '',
+                'id': '%020x' % rng.getrandbits(80), 'date': date_str, 'time': at or '',
                 'type': kind, 'company': c, 'apply_type': apply_type, 'jd_url': link, 'notes': notes,
             })
     return companies, events
@@ -214,6 +234,15 @@ def this_week_types(today, events):
     monday = today - dt.timedelta(days=today.weekday())
     sunday = monday + dt.timedelta(days=6)
     return {e['type'] for e in events if monday.isoformat() <= e['date'] <= sunday.isoformat()}
+
+
+def well_spaced(events):
+    """Whether every same-day pair of timed events is at least 30 minutes apart."""
+    by_day = {}
+    for e in events:
+        if e['time']:
+            by_day.setdefault(e['date'], []).append(int(e['time'][:2]) * 60 + int(e['time'][3:]))
+    return all(b - a >= 30 for times in by_day.values() for a, b in zip(sorted(times), sorted(times)[1:]))
 
 
 def write(directory, companies, events):
@@ -236,10 +265,10 @@ def main():
     today = dt.date.today()
     for seed in range(1, 500):  # the first seed that puts every event type in this week
         companies, events = build(today, seed)
-        if this_week_types(today, events) >= set(EVENT_TYPES):
+        if this_week_types(today, events) >= set(EVENT_TYPES) and well_spaced(events):
             break
     else:
-        sys.exit('No seed put every event type in this week.')
+        sys.exit('No seed put every event type in this week, 30 minutes apart.')
     write(directory, companies, events)
     print('Demo data for %s (seed %d): %d companies, %d events, in %s' % (today, seed, len(companies), len(events), directory))
 

@@ -4,6 +4,10 @@ A private, single-user job search tracker that runs on your own computer: one SQ
 
 [Español](README.es.md)
 
+## Live demo
+
+Try it with fantasy data, no setup needed: **[victormarcias.online/demo/career-mode](https://victormarcias.online/demo/career-mode)**.
+
 ## Stack
 
 - **FastAPI** serves the app and a JSON API (docs at `/docs`)
@@ -114,10 +118,6 @@ They go to `backup/`, which git ignores. It also keeps one copy of your `.env` (
 ```
 
 They cover only the integrity of the data (the database rules, the backup round trip, the company and event rules); the rest of the app has no tests. They use invented data only, and `tests/test_no_personal_data.py` checks that nothing from your `profile/` ends up in a file git tracks.
-
-## Demo
-
-A demo with invented data is at [victormarcias.online/demo/career-mode](https://victormarcias.online/demo/career-mode). To run it on your computer, `./demo/run-demo.sh` (see [demo/README.md](demo/README.md)).
 
 ## License
 
