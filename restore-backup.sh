@@ -7,7 +7,7 @@
 #                                                first (asks to confirm; -y skips)
 #
 # The backup folder is backup/. DIR has
-# calendar.csv and companies.csv (the older JSON backups work too) and, from the newer
+# calendar.csv and companies.csv and, from the newer
 # backups, a profile/ folder (profile.md, outreach.md, cv.pdf, photo.*, daily-posts/). Without --replace
 # nothing is overwritten: what is already in the database or in profile/ is skipped and
 # reported. With --replace the current data and profile files are first copied to
