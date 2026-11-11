@@ -1,5 +1,7 @@
 # Nothing goes into the image, or up to the cloud build, but what demo/Dockerfile copies.
-*
+# /* (not *) so the negations below re-include server/, public/ and demo/ whole, not just
+# their top-level entry: a bare * would also match their own contents at every nested level.
+/*
 !requirements.txt
 !server
 !public
