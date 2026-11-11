@@ -84,3 +84,9 @@ def test_csv_import_tolerates_excel_bom_and_crlf_and_reports_bad_rows():
     assert len(warnings) == 1 and 'line 4' in warnings[0]
     with pytest.raises(ValueError):
         snapshot.parse_csv('nothing,useful\n1,2\n')
+
+
+def test_a_companies_file_without_company_type_is_refused_once_not_row_by_row():
+    old = 'kind,id,name\nagency,acme,Acme\nclient,beta,Beta\n'  # the column an older export called it
+    with pytest.raises(ValueError, match='company_type'):
+        snapshot.parse_csv(None, old)

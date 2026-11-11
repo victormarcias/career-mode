@@ -97,7 +97,7 @@ def parse_csv(calendar: str = None, companies: str = None):
     ready for import_snapshot(); a row that can't be read is left out and reported."""
     data = {'companies': [], 'events': []}
     warnings = []
-    for number, row in _read_csv(companies, ('id', 'name'), 'companies.csv') if companies else ():
+    for number, row in _read_csv(companies, ('id', 'name', 'company_type'), 'companies.csv') if companies else ():
         company_type = (row.get('company_type') or '').lower()
         if company_type not in ('agency', 'client'):
             warnings.append('companies.csv line %d: company_type must be agency or client, not %r; row left out' % (number, company_type))
