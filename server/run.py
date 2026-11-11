@@ -25,6 +25,8 @@ def main():
     parser = argparse.ArgumentParser(description='career-mode: the app and its API, on localhost.')
     parser.add_argument('--port', type=int, default=int(os.environ.get('PORT', DEFAULT_PORT)))
     parser.add_argument('--db', default=str(DEFAULT_DB_PATH), help='SQLite file (created if missing)')
+    parser.add_argument('--profile-dir', default=None, help='folder with profile.md and outreach.md (default: profile/)')
+    parser.add_argument('--env', default=None, help='the .env that Settings reads and writes (default: .env)')
     args = parser.parse_args()
 
     sockets = []
@@ -40,7 +42,7 @@ def main():
         print('IPv6 listener on ::1:%d unavailable (%s): serving IPv4 only' % (args.port, err), file=sys.stderr)
 
     print('career-mode on http://localhost:%d  (database: %s, API docs: /docs)' % (args.port, os.path.abspath(args.db)), flush=True)
-    uvicorn.Server(uvicorn.Config(create_app(args.db), log_level='warning')).run(sockets=sockets)
+    uvicorn.Server(uvicorn.Config(create_app(args.db, env_path=args.env, profile_dir=args.profile_dir), log_level='warning')).run(sockets=sockets)
 
 
 if __name__ == '__main__':

@@ -1,0 +1,8 @@
+# Nothing goes into the image, or up to the cloud build, but what demo/Dockerfile copies.
+*
+!requirements.txt
+!server
+!public
+!demo
+demo/data
+**/__pycache__
