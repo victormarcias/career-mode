@@ -33,6 +33,13 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
 - **`/check-email`, `/wake-up` y `/follow-up-email-application`:** ahora son
   `/digest-email`; `/apply-pending` se ejecuta solo.
 
+### Corregido
+
+- **Calendar:** la vista semanal ahora ordena los eventos de cada día
+  estrictamente por hora; antes los agrupaba primero por tipo de evento
+  (aplicación, nota, etapas de entrevista...) y recién dentro de cada grupo
+  ordenaba por hora.
+
 ## [0.2.0] - 2026-11-04
 
 ### Añadido

@@ -33,6 +33,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **`/check-email`, `/wake-up` and `/follow-up-email-application`:** they are
   now `/digest-email`; `/apply-pending` runs on its own.
 
+### Fixed
+
+- **Calendar:** the week view now sorts each day's events strictly by time; it
+  used to group them by event type first (application, note, interview
+  stages...) and only sort by time within each group.
+
 ## [0.2.0] - 2026-11-04
 
 ### Added
