@@ -20,6 +20,10 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
   por su rol y su dirección, así que el de un recruiter no bloquea otra
   postulación de la misma empresa.
 
+- **Demo:** `demo/` tiene una demo con datos inventados (100 empresas en inglés y español, eventos de todos los
+  tipos en las últimas dos semanas, un perfil y mensajes inventados), que se inicia con `./demo/run-demo.sh` en su
+  propio puerto, base de datos y perfil y sin `.env`. `server/run.py` acepta `--profile-dir` y `--env` para eso.
+
 ### Eliminado
 
 - **Sync Google Tasks:** el botón del Calendar, la sección de la página Pending,

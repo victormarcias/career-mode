@@ -145,7 +145,7 @@ function pictureRowHtml() {
 // The photo is the one file kept in profile/ (PROFILE_PICTURE_FILE): shown with its name and size, and replaced or removed right away.
 function renderPhotoBlock(el, photo, message = null) {
   const preview = photo
-    ? `<img src="/profile-files/photo?v=${encodeURIComponent(photo.updated)}" alt="" class="h-14 w-14 shrink-0 rounded-full border border-gray-700 object-cover" />`
+    ? `<img src="profile-files/photo?v=${encodeURIComponent(photo.updated)}" alt="" class="h-14 w-14 shrink-0 rounded-full border border-gray-700 object-cover" />`
     : '<span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-gray-700 bg-gray-800 text-xl">👤</span>'
   const current = photo
     ? `<span class="text-gray-100">${escapeHtml(photo.name)}</span> <span class="text-gray-500">· ${sizeText(photo.size)}</span>`

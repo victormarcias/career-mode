@@ -4,6 +4,10 @@ Un seguidor de búsqueda laboral privado y para una sola persona, que corre en t
 
 [English](README.md)
 
+## Demo en vivo
+
+Probala con datos inventados, sin instalar nada: **[victormarcias.online/demo/career-mode](https://victormarcias.online/demo/career-mode)**.
+
 ## Stack
 
 - **FastAPI** sirve la app y una API JSON (docs en `/docs`)

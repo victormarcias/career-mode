@@ -4,6 +4,10 @@ A private, single-user job search tracker that runs on your own computer: one SQ
 
 [Español](README.es.md)
 
+## Live demo
+
+Try it with fantasy data, no setup needed: **[victormarcias.online/demo/career-mode](https://victormarcias.online/demo/career-mode)**.
+
 ## Stack
 
 - **FastAPI** serves the app and a JSON API (docs at `/docs`)
