@@ -8,6 +8,10 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
 
 ## [Unreleased]
 
+### Cambiado
+
+- **Proyecto:** las instrucciones para agentes viven en `AGENTS.md`, que lee cualquier agente; `CLAUDE.md` solo lo importa.
+
 ## [0.3.0] - 2026-11-12
 
 ### Añadido

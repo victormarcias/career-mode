@@ -32,7 +32,7 @@ def create_schema(db_path=None):
 
     There are no migrations: the database always has the latest schema. When a model changes, an
     existing file keeps the old one, so this refuses to start and says how to rebuild it
-    (export the backup, delete the file, start again, import the backup; see CLAUDE.md).
+    (export the backup, delete the file, start again, import the backup; see AGENTS.md).
     """
     engine = make_engine(db_path or DEFAULT_DB_PATH)  # also makes the data/ folder a fresh clone doesn't have
     try:

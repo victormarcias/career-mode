@@ -4,7 +4,7 @@ Companies (agencies and clients, in one table) and events reference each other w
 the database itself refuses a dangling reference, a duplicate company name or a
 passive message with no company. There are no migrations: the server creates the
 tables from here, and a database made with an older version is rebuilt from the
-backup (see CLAUDE.md).
+backup (see AGENTS.md).
 """
 from enum import Enum
 from typing import Optional
