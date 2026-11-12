@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Career Mode 🖥️ 🤖 🏢</title>
+  <title>Career Mode</title>
   <link rel="icon" type="image/png" href="navigation/favicon.png" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="style.css" />
@@ -16,12 +16,17 @@
       <!-- Sidebar -->
       <nav id="sidebar" class="flex w-56 shrink-0 flex-col border-r border-gray-800 bg-gray-900 px-3 py-4">
         <div class="relative mb-4">
-          <img src="navigation/logo.png" alt="career-mode" class="sidebar-logo mx-auto h-28 w-28 select-none" draggable="false" />
-          <img src="navigation/favicon.png" alt="career-mode" class="sidebar-favicon mx-auto h-8 w-8 select-none" draggable="false" />
-          <button id="sidebar-toggle" type="button" aria-expanded="true" title="Collapse menu" aria-label="Collapse menu"
+          <img src="navigation/logo.png" alt="career-mode" class="sidebar-logo mx-auto h-28 w-28 select-none"
+            draggable="false" />
+          <img src="navigation/favicon.png" alt="career-mode" class="sidebar-favicon mx-auto h-8 w-8 select-none"
+            draggable="false" />
+          <button id="sidebar-toggle" type="button" aria-expanded="true" title="Collapse menu"
+            aria-label="Collapse menu"
             class="absolute right-0 top-0 flex h-7 w-7 items-center justify-center rounded-full text-gray-500 hover:bg-gray-800 hover:text-gray-100">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-5 w-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5" />
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.5" class="h-5 w-5">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5" />
             </svg>
           </button>
         </div>
@@ -77,8 +82,8 @@
         <section id="view-calendar" class="hidden px-8 py-6">
           <header class="mb-6 flex items-center justify-between">
             <div class="flex items-center gap-3">
-              <button id="today"
-                class="state-pill rounded-full border px-3 py-1 text-xs" data-i18n="calendar.thisWeek">This Week</button>
+              <button id="today" class="state-pill rounded-full border px-3 py-1 text-xs"
+                data-i18n="calendar.thisWeek">This Week</button>
               <button id="prev-week"
                 class="rounded-full border border-gray-800 px-3 py-1 text-sm text-gray-400 hover:border-gray-700 hover:bg-gray-800 hover:text-gray-50">←</button>
               <h1 id="week-label" class="text-lg font-medium text-gray-100"></h1>
@@ -88,7 +93,8 @@
             </div>
             <div class="flex items-center gap-2">
               <button id="new-application-btn" type="button"
-                class="state-pill rounded-full border px-4 py-2 text-sm font-medium" data-i18n="calendar.newApplication">
+                class="state-pill rounded-full border px-4 py-2 text-sm font-medium"
+                data-i18n="calendar.newApplication">
                 + Application
               </button>
               <button id="new-event-btn" type="button"
@@ -113,13 +119,15 @@
             <div id="weekly-report-section" class="mx-auto hidden max-w-[470px]">
               <h2 class="text-lg font-semibold text-gray-100" data-i18n="report.title">Weekly Report</h2>
               <p id="weekly-report-meta" class="mb-4 text-sm text-gray-500"></p>
-              <div id="weekly-report-content" class="static-page rounded-2xl border border-gray-800 bg-gray-900 p-4"></div>
+              <div id="weekly-report-content" class="static-page rounded-2xl border border-gray-800 bg-gray-900 p-4">
+              </div>
             </div>
           </div>
 
           <!-- The queued links, under the week: shown only while there is any (see js/pending.js) -->
           <div id="pending-block" class="mt-8 hidden w-fit max-w-2xl">
-            <h2 class="mb-2 text-base font-medium text-gray-100" data-i18n="pending.applications">Pending Applications</h2>
+            <h2 class="mb-2 text-base font-medium text-gray-100" data-i18n="pending.applications">Pending Applications
+            </h2>
             <div id="pending-list" class="rounded-2xl border border-gray-800 bg-gray-900 p-2"></div>
           </div>
         </section>
@@ -133,18 +141,20 @@
             </header>
 
             <h2 class="text-base font-medium text-gray-100" data-i18n="pending.queueTitle">Queue application links</h2>
-            <p class="mb-3 text-sm text-gray-500" data-i18n-html="pending.queueHelp">Add the links to the queue, one per line, to apply in bulk later using
+            <p class="mb-3 text-sm text-gray-500" data-i18n-html="pending.queueHelp">Add the links to the queue, one per
+              line, to apply in bulk later using
               <code class="code">/apply-pending</code>
             </p>
 
             <form id="apply-form" class="space-y-3">
               <div class="flex items-start gap-2">
-                <textarea id="apply-url" rows="4" placeholder="JD Post links, one per line" data-i18n-placeholder="pending.placeholder"
-                  autocomplete="off" spellcheck="false"
+                <textarea id="apply-url" rows="4" placeholder="JD Post links, one per line"
+                  data-i18n-placeholder="pending.placeholder" autocomplete="off" spellcheck="false"
                   class="min-w-0 flex-1 resize-y rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"
                   required></textarea>
                 <button type="submit" id="apply-form-submit"
-                  class="rounded-full bg-gray-100 px-5 py-2 text-sm font-medium text-gray-900 hover:bg-white disabled:opacity-50" data-i18n="pending.queue">Queue</button>
+                  class="rounded-full bg-gray-100 px-5 py-2 text-sm font-medium text-gray-900 hover:bg-white disabled:opacity-50"
+                  data-i18n="pending.queue">Queue</button>
               </div>
               <p id="apply-url-error" class="notice text-xs text-red-400"></p>
               <p id="apply-feedback" class="hidden items-center gap-2 text-xs"></p>
@@ -165,7 +175,8 @@
           <div class="page-column">
             <header class="mb-6">
               <h1 class="text-lg font-medium text-gray-100" data-i18n="profile.title">My Profile</h1>
-              <p class="text-sm text-gray-500" data-i18n="profile.subtitle">What the skills read to fill a form or write to a recruiter. It stays on
+              <p class="text-sm text-gray-500" data-i18n="profile.subtitle">What the skills read to fill a form or write
+                to a recruiter. It stays on
                 this computer.</p>
             </header>
             <div id="profile-content"></div>
@@ -179,8 +190,9 @@
               <div class="flex items-center gap-2">
                 <button type="button" id="filter-active-btn" class="tab-pill">🤝 Active</button>
                 <button type="button" id="filter-archived-btn" class="tab-pill">📦 Archived</button>
-                <input type="search" id="company-search" placeholder="Search company" data-i18n-placeholder="companies.search"
-                  aria-label="Search company" data-i18n-aria-label="companies.search" autocomplete="off"
+                <input type="search" id="company-search" placeholder="Search company"
+                  data-i18n-placeholder="companies.search" aria-label="Search company"
+                  data-i18n-aria-label="companies.search" autocomplete="off"
                   class="ml-2 w-56 rounded-full border border-gray-700 bg-gray-800 px-4 py-1.5 text-sm text-gray-100" />
               </div>
             </header>
@@ -193,7 +205,8 @@
           <div class="page-column">
             <header class="mb-6">
               <h1 class="text-lg font-medium text-gray-100" data-i18n="settings.title">Settings</h1>
-              <p class="text-sm text-gray-500" data-i18n="settings.subtitle">How this copy of career-mode is set up on this computer.</p>
+              <p class="text-sm text-gray-500" data-i18n="settings.subtitle">How this copy of career-mode is set up on
+                this computer.</p>
             </header>
             <div id="settings-content" class="space-y-6"></div>
           </div>
@@ -204,18 +217,21 @@
           <div class="page-column">
             <header class="mb-6">
               <h1 class="text-lg font-medium text-gray-100" data-i18n="followUp.title">Follow Up Applications</h1>
-              <p class="text-sm text-gray-500" data-i18n="followUp.subtitle">Active agencies and clients, by the days since their last application — pick the
+              <p class="text-sm text-gray-500" data-i18n="followUp.subtitle">Active agencies and clients, by the days
+                since their last application — pick the
                 ones to archive.</p>
             </header>
 
             <div class="mb-6 flex items-end gap-2">
               <div class="flex-1">
-                <label for="follow-up-days" class="mb-1 block text-xs text-gray-500" data-i18n="followUp.days">Days since the last application</label>
+                <label for="follow-up-days" class="mb-1 block text-xs text-gray-500" data-i18n="followUp.days">Days
+                  since the last application</label>
                 <input type="number" id="follow-up-days" value="0" min="0"
                   class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" />
               </div>
               <div>
-                <label for="follow-up-sort" class="mb-1 block text-xs text-gray-500" data-i18n="followUp.sortBy">Sort by</label>
+                <label for="follow-up-sort" class="mb-1 block text-xs text-gray-500" data-i18n="followUp.sortBy">Sort
+                  by</label>
                 <select id="follow-up-sort"
                   class="select-chevron appearance-none rounded-lg border border-gray-700 bg-gray-800 py-2 pl-3 pr-9 text-sm text-gray-100">
                   <option value="days" data-i18n="followUp.sortOldest">Days (oldest first)</option>
@@ -224,14 +240,16 @@
                 </select>
               </div>
               <button id="follow-up-fetch-btn" type="button"
-                class="rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white" data-i18n="followUp.fetch">Fetch</button>
+                class="rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white"
+                data-i18n="followUp.fetch">Fetch</button>
             </div>
 
             <div id="follow-up-content"></div>
 
             <div class="mt-4 flex justify-end">
               <button id="follow-up-archive-btn" type="button"
-                class="hidden rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500" data-i18n="followUp.archiveSelected">Archive
+                class="hidden rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500"
+                data-i18n="followUp.archiveSelected">Archive
                 selected</button>
             </div>
           </div>
@@ -252,7 +270,8 @@
       <p id="sync-error" class="notice mt-3 text-xs text-red-400" role="alert"></p>
       <div class="mt-3 flex justify-end gap-2 pt-1">
         <button type="button" id="sync-cancel"
-          class="rounded-full border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-gray-50" data-i18n="common.cancel">Cancel</button>
+          class="rounded-full border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-gray-50"
+          data-i18n="common.cancel">Cancel</button>
         <button type="submit" id="sync-confirm"
           class="rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white disabled:opacity-50"></button>
       </div>
@@ -307,14 +326,17 @@
       </div>
 
       <div id="f-company-wrap">
-        <p class="mb-1 block text-xs text-gray-500">🏢 <span data-i18n="form.company">Company</span> <span class="req">*</span></p>
+        <p class="mb-1 block text-xs text-gray-500">🏢 <span data-i18n="form.company">Company</span> <span
+            class="req">*</span></p>
         <div class="flex gap-2">
-          <input type="text" id="f-company" list="company-list" placeholder="Company" data-i18n-placeholder="form.company" autocomplete="off"
+          <input type="text" id="f-company" list="company-list" placeholder="Company"
+            data-i18n-placeholder="form.company" autocomplete="off"
             class="min-w-0 flex-1 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" />
           <a id="f-company-open" href="#" title="Open in Companies" data-i18n-title="form.openCompany"
             aria-label="Open in Companies" data-i18n-aria-label="form.openCompany"
             class="hidden h-[38px] w-[38px] shrink-0 items-center justify-center rounded-lg border border-gray-700 bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-100">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-5 w-5">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.5" class="h-5 w-5">
               <path stroke-linecap="round" stroke-linejoin="round"
                 d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21" />
             </svg>
@@ -325,7 +347,8 @@
             <option value="client" data-i18n="form.client">Client</option>
           </select>
         </div>
-        <input type="text" id="f-via" list="agency-list" placeholder="Via agency" data-i18n-placeholder="form.via" autocomplete="off"
+        <input type="text" id="f-via" list="agency-list" placeholder="Via agency" data-i18n-placeholder="form.via"
+          autocomplete="off"
           class="mt-2 hidden w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" />
         <p id="f-company-hint" class="notice mt-1 text-xs text-amber-400"></p>
         <datalist id="company-list"></datalist>
@@ -333,27 +356,31 @@
       </div>
 
       <div id="f-recruiter-wrap" class="hidden">
-        <label for="f-recruiter" class="mb-1 block text-xs text-gray-500">🧑‍💼 <span data-i18n="form.recruiters">Recruiters (one URL per line)</span></label>
+        <label for="f-recruiter" class="mb-1 block text-xs text-gray-500">🧑‍💼 <span
+            data-i18n="form.recruiters">Recruiters (one URL per line)</span></label>
         <textarea id="f-recruiter" rows="3"
           class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"></textarea>
       </div>
 
       <div>
-        <label for="f-notes" class="mb-1 block text-xs text-gray-500">🗒️ <span data-i18n="form.notes">Notes</span></label>
+        <label for="f-notes" class="mb-1 block text-xs text-gray-500">🗒️ <span
+            data-i18n="form.notes">Notes</span></label>
         <textarea id="f-notes" rows="8"
           class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"></textarea>
       </div>
 
       <div id="f-jd-wrap" class="hidden">
-        <label for="f-jd" class="mb-1 block text-xs text-gray-500">📎 <span data-i18n="form.appLink">Application link</span> <span id="f-jd-optional"
-            class="text-gray-600" data-i18n="common.optional">(optional)</span><span id="f-jd-req" class="req hidden">*</span></label>
+        <label for="f-jd" class="mb-1 block text-xs text-gray-500">📎 <span data-i18n="form.appLink">Application
+            link</span> <span id="f-jd-optional" class="text-gray-600"
+            data-i18n="common.optional">(optional)</span><span id="f-jd-req" class="req hidden">*</span></label>
         <div class="flex items-center gap-2">
           <input type="text" id="f-jd" autocomplete="off"
             class="min-w-0 flex-1 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" />
-          <a id="f-jd-open" href="#" target="_blank" rel="noopener noreferrer" title="Open link" data-i18n-title="form.openLink"
-            aria-label="Open link" data-i18n-aria-label="form.openLink"
+          <a id="f-jd-open" href="#" target="_blank" rel="noopener noreferrer" title="Open link"
+            data-i18n-title="form.openLink" aria-label="Open link" data-i18n-aria-label="form.openLink"
             class="hidden h-[38px] w-[38px] shrink-0 items-center justify-center rounded-lg border border-gray-700 bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-100">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-5 w-5">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.5" class="h-5 w-5">
               <path stroke-linecap="round" stroke-linejoin="round"
                 d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
             </svg>
@@ -365,9 +392,11 @@
 
       <div class="flex gap-2 pt-2">
         <button type="button" id="form-cancel"
-          class="flex-1 rounded-full border border-gray-700 py-2 text-sm text-gray-400 hover:bg-gray-800 hover:text-gray-50" data-i18n="common.cancel">Cancel</button>
+          class="flex-1 rounded-full border border-gray-700 py-2 text-sm text-gray-400 hover:bg-gray-800 hover:text-gray-50"
+          data-i18n="common.cancel">Cancel</button>
         <button type="submit" id="form-submit"
-          class="flex-1 rounded-full bg-gray-100 py-2 text-sm font-medium text-gray-900 hover:bg-white" data-i18n="common.save">Save</button>
+          class="flex-1 rounded-full bg-gray-100 py-2 text-sm font-medium text-gray-900 hover:bg-white"
+          data-i18n="common.save">Save</button>
       </div>
     </form>
   </div>
@@ -379,7 +408,8 @@
       <h2 class="text-base font-medium text-gray-100">📝 <span data-i18n="app.title">New application</span></h2>
 
       <div>
-        <label for="app-type" class="mb-1 block text-xs text-gray-500">📨 <span data-i18n="app.type">Type</span> <span class="req">*</span></label>
+        <label for="app-type" class="mb-1 block text-xs text-gray-500">📨 <span data-i18n="app.type">Type</span> <span
+            class="req">*</span></label>
         <select id="app-type"
           class="select-chevron w-full appearance-none rounded-lg border border-gray-700 bg-gray-800 py-2 pl-3 pr-9 text-sm text-gray-100"
           required>
@@ -391,11 +421,13 @@
       </div>
 
       <div>
-        <label for="app-company" class="mb-1 block text-xs text-gray-500">🏢 <span data-i18n="form.company">Company</span>
+        <label for="app-company" class="mb-1 block text-xs text-gray-500">🏢 <span
+            data-i18n="form.company">Company</span>
           <span class="req">*</span></label>
         <div class="flex gap-2">
           <input type="text" id="app-company" list="company-list" autocomplete="off"
-            class="min-w-0 flex-1 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" required />
+            class="min-w-0 flex-1 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"
+            required />
           <select id="app-company-type" aria-label="Agency or client" data-i18n-aria-label="form.companyType"
             class="select-chevron w-28 shrink-0 appearance-none rounded-lg border border-gray-700 bg-gray-800 py-2 pl-3 pr-9 text-sm text-gray-100">
             <option value="agency" data-i18n="form.agency">Agency</option>
@@ -406,36 +438,38 @@
       </div>
 
       <div>
-        <label for="app-home" class="mb-1 block text-xs text-gray-500">🔗 <span data-i18n="app.home">Company Home</span> <span
-            class="text-gray-600" data-i18n="common.optional">(optional)</span></label>
+        <label for="app-home" class="mb-1 block text-xs text-gray-500">🔗 <span data-i18n="app.home">Company Home</span>
+          <span class="text-gray-600" data-i18n="common.optional">(optional)</span></label>
         <input type="text" id="app-home" placeholder="https://www.linkedin.com/company/name/home" autocomplete="off"
           class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" />
       </div>
 
       <div>
-        <label for="app-recruiter" class="mb-1 block text-xs text-gray-500">🧑‍💼 <span data-i18n="form.recruiters">Recruiters (one URL per line)</span> <span
-            class="text-gray-600" data-i18n="common.optional">(optional)</span></label>
+        <label for="app-recruiter" class="mb-1 block text-xs text-gray-500">🧑‍💼 <span
+            data-i18n="form.recruiters">Recruiters (one URL per line)</span> <span class="text-gray-600"
+            data-i18n="common.optional">(optional)</span></label>
         <textarea id="app-recruiter" rows="3" placeholder="https://www.linkedin.com/in/recruiter"
           class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"></textarea>
       </div>
 
       <div>
-        <label for="app-website" class="mb-1 block text-xs text-gray-500">🌐 <span data-i18n="app.website">Company website</span> <span
-            class="text-gray-600" data-i18n="common.optional">(optional)</span></label>
+        <label for="app-website" class="mb-1 block text-xs text-gray-500">🌐 <span data-i18n="app.website">Company
+            website</span> <span class="text-gray-600" data-i18n="common.optional">(optional)</span></label>
         <input type="text" inputmode="url" id="app-website" autocomplete="off"
           class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" />
       </div>
 
       <div>
-        <label for="app-notes" class="mb-1 block text-xs text-gray-500">🗒️ <span data-i18n="form.notes">Notes</span> <span
-            class="text-gray-600" data-i18n="common.optional">(optional)</span></label>
+        <label for="app-notes" class="mb-1 block text-xs text-gray-500">🗒️ <span data-i18n="form.notes">Notes</span>
+          <span class="text-gray-600" data-i18n="common.optional">(optional)</span></label>
         <textarea id="app-notes" rows="5"
           class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"></textarea>
       </div>
 
       <div id="app-link-wrap">
-        <label for="app-link" class="mb-1 block text-xs text-gray-500">📎 <span data-i18n="form.appLink">Application link</span> <span id="app-link-optional"
-            class="text-gray-600" data-i18n="common.optional">(optional)</span><span id="app-link-req" class="req hidden">*</span></label>
+        <label for="app-link" class="mb-1 block text-xs text-gray-500">📎 <span data-i18n="form.appLink">Application
+            link</span> <span id="app-link-optional" class="text-gray-600"
+            data-i18n="common.optional">(optional)</span><span id="app-link-req" class="req hidden">*</span></label>
         <input type="text" id="app-link" autocomplete="off"
           class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" />
       </div>
@@ -444,9 +478,11 @@
 
       <div class="flex gap-2 pt-2">
         <button type="button" id="app-cancel"
-          class="flex-1 rounded-full border border-gray-700 py-2 text-sm text-gray-400 hover:bg-gray-800 hover:text-gray-50" data-i18n="common.cancel">Cancel</button>
+          class="flex-1 rounded-full border border-gray-700 py-2 text-sm text-gray-400 hover:bg-gray-800 hover:text-gray-50"
+          data-i18n="common.cancel">Cancel</button>
         <button type="submit" id="app-submit"
-          class="flex-1 rounded-full bg-gray-100 py-2 text-sm font-medium text-gray-900 hover:bg-white" data-i18n="common.save">Save</button>
+          class="flex-1 rounded-full bg-gray-100 py-2 text-sm font-medium text-gray-900 hover:bg-white"
+          data-i18n="common.save">Save</button>
       </div>
     </form>
   </div>
@@ -483,9 +519,11 @@
 
       <div class="flex gap-2 pt-2">
         <button type="button" id="edit-form-cancel"
-          class="flex-1 rounded-full border border-gray-700 py-2 text-sm text-gray-400 hover:bg-gray-800 hover:text-gray-50" data-i18n="common.cancel">Cancel</button>
+          class="flex-1 rounded-full border border-gray-700 py-2 text-sm text-gray-400 hover:bg-gray-800 hover:text-gray-50"
+          data-i18n="common.cancel">Cancel</button>
         <button type="submit" id="edit-form-submit"
-          class="flex-1 rounded-full bg-gray-100 py-2 text-sm font-medium text-gray-900 hover:bg-white" data-i18n="common.save">Save</button>
+          class="flex-1 rounded-full bg-gray-100 py-2 text-sm font-medium text-gray-900 hover:bg-white"
+          data-i18n="common.save">Save</button>
       </div>
     </form>
   </div>
