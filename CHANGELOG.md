@@ -28,6 +28,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   text at the bottom, from a new `GET /api/version` that reads the latest
   `## [x.y.z]` heading of this file.
 
+- **`/wake-up`, `/links-inbox` and `/write-daily-post`:** these skills are now
+  part of the repo. `/wake-up` is the morning routine in one command: it runs
+  `/links-inbox`, `/apply-pending` and `/digest-email`, and ends with their
+  tables.
+
 - **Intro video setting:** a new `INTRO_VIDEO_URL` setting (Settings, under
   Google Calendar ID) holds a link to the user's intro video. `/apply-pending`,
   `/apply-site`, `/apply-email` and `/digest-email` give this link whenever an
@@ -40,8 +45,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   `/api/google-tasks/sync` route and the three `GOOGLE_TASKS_*` settings. Links
   are queued from the Pending page.
 - **`/sync-aiapply`:** removed.
-- **`/check-email`, `/wake-up` and `/follow-up-email-application`:** they are
-  now `/digest-email`; `/apply-pending` runs on its own.
+- **`/check-email` and `/follow-up-email-application`:** they are now
+  `/digest-email`; `/apply-pending` runs on its own.
 
 ### Fixed
 

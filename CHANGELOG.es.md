@@ -28,6 +28,11 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
   en texto gris chico abajo de todo, a partir de un nuevo `GET /api/version`
   que lee el último encabezado `## [x.y.z]` de este archivo.
 
+- **`/wake-up`, `/links-inbox` y `/write-daily-post`:** estas skills ahora son
+  parte del repo. `/wake-up` es la rutina de la mañana en un solo comando:
+  ejecuta `/links-inbox`, `/apply-pending` y `/digest-email`, y termina con sus
+  tablas.
+
 - **Ajuste de video de presentación:** un nuevo ajuste `INTRO_VIDEO_URL`
   (Settings, debajo de Google Calendar ID) guarda un link al video de
   presentación del usuario. `/apply-pending`, `/apply-site`, `/apply-email` y
@@ -40,7 +45,7 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
   la ruta `/api/google-tasks/sync` y los tres ajustes `GOOGLE_TASKS_*`. Los
   links se encolan desde la página Pending.
 - **`/sync-aiapply`:** eliminado.
-- **`/check-email`, `/wake-up` y `/follow-up-email-application`:** ahora son
+- **`/check-email` y `/follow-up-email-application`:** ahora son
   `/digest-email`; `/apply-pending` se ejecuta solo.
 
 ### Corregido
