@@ -15,7 +15,6 @@ The personal data the skills read, with an invented person as the example. On th
 - **Phone, portal format (no spaces):** +15550100199
 - **Google account operated by Claude (the connected Chrome session):** juan.perez.jobs (email is sent from there)
 - **Chat language:** English
-- **Notes folder, for the daily post:** (optional) a folder of `.md` notes the daily post draws from, e.g. `../my-notes`
 - **LinkedIn:** [linkedin.com/in/juan-perez-example](https://www.linkedin.com/in/juan-perez-example)
 - **GitHub:** github.com/juan-perez-example
 - **Website:** [juan-perez.example](https://juan-perez.example)

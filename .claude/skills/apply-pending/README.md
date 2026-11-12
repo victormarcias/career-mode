@@ -1,10 +1,18 @@
 # apply-pending
 
-Applies to a job link end to end, or clears the whole queue of `pending` applications. The links come from the app's "Pending" page, which only queues them.
+Applies to a job link end to end, or clears the whole queue of `pending`
+applications that the app's Pending page collects, when `/apply-pending` runs
+with no link. For each link it reads the JD Post, checks that it is recent (not
+updated a month ago or more) and that the profile fits (Python or JavaScript is
+what counts, other tools can be learned, AI roles always apply), chooses email
+or web form from what the post says, fills the matching message and creates the
+company when it is new.
 
-- **For each link:** reads the JD Post from its public page without the user's session (or takes what the user pastes): recruiter, how to apply, language, date; stops if the link is already logged as an application, refuses JD Posts last updated a month ago or more (no date goes on), applies when the post asks for Python or JavaScript whatever other tools it names, applies to hybrid and on-site roles, skips the ones the profile can't back for a reason that is not a tool (country, language spoken, degree, years leading a team), and always applies to AI roles, and chooses email or form from what the JD Post says, picks the message template in the JD Post's language and fills it (and the email's subject), creates the company profile when it's new, hands off to [apply-email](../apply-email/README.md) or [apply-site](../apply-site/README.md) depending on `applyType`, and logs the application in the Calendar only once it went out.
-- **Queue run:** `/apply-pending` with no link checks the pending list in the API and, without asking first, processes every `pending` event oldest first, replaces each completed one with the real `application` event (with its `applyType`, which the Weekly Report counts), and leaves the ones it couldn't finish (captcha, failed send, dead link, old post) in place with a summary, except that one demanding a Loom-style video, or with an AI interview at any stage, is removed without asking, and a general careers page (a list of openings, a talent signup) is noted in the profile for [submit-profile](../submit-profile/README.md) and removed. Hybrid and on-site roles are applied to too. Nothing is logged for an application that did not go out.
-- **Output:** one numbered table of the run's links, applied and not applied (with the channel, or why not); below it, the numbers of the ones that probably don't make the cut, asking which to remove (their `pending` events are deleted only for the numbers the user gives), shown again after each answer until nothing is pending, and only a link stuck on something only the user can do, a question, or a failure.
-- **Touches:** the career-mode database (events and companies) through its local API, and, for web forms and for pages WebFetch can't read, the connected Chrome session (emails go out through the app's email setting). On a Job Board Platform only a JD Post is read, and only read: first its public page with WebFetch (no session) and, if that gives no text, that one post in Chrome; profiles, company pages and feeds are never opened, only written down as given, and nothing is ever done on the platform.
-
-Instructions: [SKILL.md](SKILL.md).
+The sending goes to [apply-email](../apply-email/README.md) or
+[apply-site](../apply-site/README.md), and the application is logged in the
+Calendar only once it went out; a link that cannot be finished stays pending,
+and the run shows a table of what was and was not applied to. It touches the
+career-mode database through its local API and, for forms and pages WebFetch
+cannot read, the connected Chrome. On a Job Board Platform only a JD Post is
+read, never profiles, company pages or feeds. Instructions:
+[SKILL.md](SKILL.md).

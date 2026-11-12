@@ -137,7 +137,7 @@ function timelineHtml(matches) {
 // Applications shows the very same one.
 export function companyTypeTagHtml(companyType) {
   const isAgency = companyType === 'agency'
-  return `<span class="rounded-full px-2 py-0.5 text-[10px] ${isAgency ? 'bg-blue-950 text-blue-300' : 'bg-violet-950 text-violet-300'}">${isAgency ? t('companies.agency') : t('companies.client')}</span>`
+  return `<span class="shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] ${isAgency ? 'bg-blue-950 text-blue-300' : 'bg-violet-950 text-violet-300'}">${isAgency ? t('companies.agency') : t('companies.client')}</span>`
 }
 
 // The events a company is in: its own, and those of the clients that came through it (when it is an agency).
@@ -188,11 +188,11 @@ function companyCardHtml(c, applications, companiesMap, isOpen) {
       <div class="capsule-header">
         <button type="button" class="capsule-summary" aria-expanded="${isOpen}">
           <div class="flex w-full items-center gap-2">
-            <span>🏢</span>
-            <span class="font-medium text-gray-100">${escapeHtml(c.name)}</span>
+            <span class="shrink-0">🏢</span>
+            <span class="shrink-0 whitespace-nowrap font-medium text-gray-100">${escapeHtml(c.name)}</span>
             ${companyTypeTagHtml(c.companyType)}
-            ${via ? `<span class="text-xs text-gray-500">${t('companies.viaLower')} ${escapeHtml(via.name)}</span>` : ''}
-            <span class="ml-auto inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium leading-none ${tag.classes}">${tag.emoji ? `<span>${tag.emoji}</span>` : ''}<span>${tag.text}</span></span>
+            ${via ? `<span class="shrink-0 whitespace-nowrap text-xs text-gray-500">${t('companies.viaLower')} ${escapeHtml(via.name)}</span>` : ''}
+            <span class="ml-auto inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium leading-none ${tag.classes}">${tag.emoji ? `<span>${tag.emoji}</span>` : ''}<span>${tag.text}</span></span>
           </div>
         </button>
         <button type="button" class="capsule-edit-btn company-edit-btn rounded-full bg-gray-100 px-4 py-1 text-sm font-medium text-gray-900 hover:bg-white" data-id="${c.id}">${t('common.edit')}</button>

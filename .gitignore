@@ -16,3 +16,6 @@ backup/
 profile/*
 !profile/README.md
 !profile/*.example.md
+
+# Private things (skills only for this clone)
+private/

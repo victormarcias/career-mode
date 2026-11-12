@@ -19,7 +19,7 @@ async function load(lang) {
 
 async function chosenLanguage() {
   try {
-    const vars = await fetch('/api/settings/env').then((response) => response.json())
+    const vars = await fetch('api/settings/env').then((response) => response.json())
     const value = vars.find((v) => v.name === 'APP_LANGUAGE')?.value
     return LANGUAGES.includes(value) ? value : 'en'
   } catch {

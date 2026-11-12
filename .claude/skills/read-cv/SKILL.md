@@ -37,7 +37,7 @@ Read the PDF with the Read tool (give `pages` for one over 10 pages, and keep go
 
 **On a re-run, years per skill are only compared:** the list is also the user's own decision (they may state fewer years than the CV shows, and list skills no "Tech:" line names). Never change or drop an entry. Calculate the years the same way, and tell the user which technologies differ from their list or are missing from it, and ask before changing any.
 
-**Never from the CV, and never changed on a re-run:** the rest of the profile, which is the user's own decisions: the order of roles and stack, what they are not interested in, work preferences, compensation and the salary range, the expertise levels, birthdate, the Google account Claude operates, chat language, notes folder, the portals where they already have a profile, and the rules for presenting them.
+**Never from the CV, and never changed on a re-run:** the rest of the profile, which is the user's own decisions: the order of roles and stack, what they are not interested in, work preferences, compensation and the salary range, the expertise levels, birthdate, the Google account Claude operates, chat language, the portals where they already have a profile, and the rules for presenting them.
 
 ## 4. Ask for what the CV doesn't have
 
@@ -45,7 +45,7 @@ Before building anything, work out which of the questions below are still unansw
 
 - **Contact:** the email to hand out (if the CV shows none, or several), phone and the same phone without spaces for portals that reject them, LinkedIn, GitHub, the website.
 - **Personal:** birthdate (some portals ask; optional), citizenship or work authorization if the CV doesn't say.
-- **Setup for Claude:** the Google account Claude operates (the one signed in to the connected Chrome), the chat language, and the notes folder for the daily post (optional).
+- **Setup for Claude:** the Google account Claude operates (the one signed in to the connected Chrome), and the chat language.
 - **Roles:** the roles to put first, in priority order. Propose them from the titles in the CV.
 - **Stack:** the technologies to choose first when a form limits them, in priority order (propose the most used in the CV), and what they don't want to work with.
 - **Work preferences:** working from, position type, work shift and time zone, the compensation a form asks for (current and expected), and the salary range for emails and recruiter replies, with its currency and kind of contract.

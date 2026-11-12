@@ -52,7 +52,7 @@ let stream = null
 async function refresh(collection) {
   const callbacks = subscribers.get(collection)
   if (!callbacks.size) return
-  const rows = await request('GET', `/api/${collection}`)
+  const rows = await request('GET', `api/${collection}`)
   callbacks.forEach((callback) => callback(rows))
 }
 
@@ -62,7 +62,7 @@ function openStream() {
   if (stream) return
   // The server says "changed" whenever the data does, whoever changed it (another
   // tab, a skill, the command line); EventSource also reconnects by itself.
-  stream = new EventSource('/api/stream')
+  stream = new EventSource('api/stream')
   stream.onopen = () => refreshAll().catch(() => {})
   stream.onmessage = () => refreshAll().catch(() => {})
 }
@@ -98,33 +98,33 @@ async function upload(path, file) {
 
 // The local settings (environment variables kept in .env).
 export const settings = {
-  env: () => request('GET', '/api/settings/env'),
-  saveEnv: (values) => request('PUT', '/api/settings/env', { values }),
+  env: () => request('GET', 'api/settings/env'),
+  saveEnv: (values) => request('PUT', 'api/settings/env', { values }),
   // The full value of one secret: only fetched when its eye icon is clicked.
-  reveal: (name) => request('GET', `/api/settings/env/${encodeURIComponent(name)}/value`),
+  reveal: (name) => request('GET', `api/settings/env/${encodeURIComponent(name)}/value`),
   // The profile photo kept in profile/: its info (null when there is none), and the changes to it.
-  photo: () => request('GET', '/api/settings/photo'),
-  uploadPhoto: (file) => upload('/api/settings/photo', file),
-  removePhoto: () => request('DELETE', '/api/settings/photo'),
+  photo: () => request('GET', 'api/settings/photo'),
+  uploadPhoto: (file) => upload('api/settings/photo', file),
+  removePhoto: () => request('DELETE', 'api/settings/photo'),
 }
 
 // Google Calendar (the calendar is the GOOGLE_CALENDAR_ID setting): `preview` lists what a sync of a date range would
 // add and changes nothing; `sync` logs only the events it is given, as {key, type}.
 export const calendar = {
-  preview: (start, end) => request('POST', '/api/calendar/preview', { start, end }),
-  sync: (start, end, events) => write('POST', '/api/calendar/sync', { start, end, events }),
+  preview: (start, end) => request('POST', 'api/calendar/preview', { start, end }),
+  sync: (start, end, events) => write('POST', 'api/calendar/sync', { start, end, events }),
 }
 
-// Google Tasks (the three GOOGLE_TASKS_* settings): queues the job links of the open tasks as pending applications.
-export const googleTasks = {
-  sync: () => write('POST', '/api/google-tasks/sync'),
+// This app's own version: the latest one in CHANGELOG.md, read from the running server.
+export const app = {
+  version: () => request('GET', 'api/version'),
 }
 
 export const api = {
-  list: (collection, filters) => request('GET', `/api/${collection}${query(filters)}`),
-  get: (collection, id) => request('GET', `/api/${collection}/${encodeURIComponent(id)}`),
-  create: (collection, data) => write('POST', `/api/${collection}`, data),
-  patch: (collection, id, data) => write('PATCH', `/api/${collection}/${encodeURIComponent(id)}`, data),
-  replace: (collection, id, data) => write('PUT', `/api/${collection}/${encodeURIComponent(id)}`, data),
-  remove: (collection, id) => write('DELETE', `/api/${collection}/${encodeURIComponent(id)}`),
+  list: (collection, filters) => request('GET', `api/${collection}${query(filters)}`),
+  get: (collection, id) => request('GET', `api/${collection}/${encodeURIComponent(id)}`),
+  create: (collection, data) => write('POST', `api/${collection}`, data),
+  patch: (collection, id, data) => write('PATCH', `api/${collection}/${encodeURIComponent(id)}`, data),
+  replace: (collection, id, data) => write('PUT', `api/${collection}/${encodeURIComponent(id)}`, data),
+  remove: (collection, id) => write('DELETE', `api/${collection}/${encodeURIComponent(id)}`),
 }

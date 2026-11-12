@@ -7,6 +7,7 @@ another website (Origin check). There is no login: whoever can open
 localhost:8333 is you. The API is documented at /docs.
 """
 import asyncio
+import re
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -16,15 +17,24 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy.exc import IntegrityError
 from starlette.datastructures import Headers, MutableHeaders
 
-from . import crud, google_calendar, google_tasks, mailer, profile_photo, snapshot
-from .database import DEFAULT_DB_PATH, ROOT, make_engine, migrate, session_factory
+from . import crud, google_calendar, mailer, profile_photo, snapshot
+from .database import DEFAULT_DB_PATH, ROOT, create_schema, make_engine, session_factory
 from .settings import ENV_PATH
-from .routes import calendar, companies, events, google_tasks as google_tasks_routes, mail, settings as settings_routes
+from .routes import calendar, companies, events, mail, settings as settings_routes
 from .schemas import Snapshot
 from .stream import Broadcaster, event_stream, watch_database
 
 LOCAL_HOSTS = ('localhost', '127.0.0.1', '::1')
 PROFILE_DIR = ROOT / 'profile'  # the user's own files in it are gitignored; the *.example.* ones ship with the repo
+
+
+def _latest_version() -> str | None:
+    """The latest released version: the first `## [x.y.z]` heading in CHANGELOG.md (skips `## [Unreleased]`)."""
+    changelog = ROOT / 'CHANGELOG.md'
+    if not changelog.is_file():
+        return None
+    match = re.search(r'^## \[(\d[^\]]*)\]', changelog.read_text(encoding='utf-8'), re.MULTILINE)
+    return match.group(1) if match else None
 
 
 def _hostname(host_header: str) -> str:
@@ -67,7 +77,7 @@ def create_app(db_path=None, allowed_hosts=LOCAL_HOSTS, env_path=None, profile_d
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        migrate(db_path)  # `alembic upgrade head`: nobody has to remember to run it
+        create_schema(db_path)  # the tables, at the latest version: nobody has to remember to run anything
         engine = make_engine(db_path)
         app.state.engine = engine
         app.state.session_factory = session_factory(engine)
@@ -75,8 +85,6 @@ def create_app(db_path=None, allowed_hosts=LOCAL_HOSTS, env_path=None, profile_d
         app.state.env_path = Path(env_path) if env_path else ENV_PATH
         app.state.profile_dir = Path(profile_dir) if profile_dir else PROFILE_DIR
         app.state.fetch_ics = google_calendar.fetch_ics  # replaced in tests, so none of them reaches Google
-        app.state.fetch_tasks = google_tasks.fetch_tasks
-        app.state.complete_tasks = google_tasks.complete_tasks
         app.state.send_mail = mailer.smtp_send  # replaced in tests, so none of them sends an email
         watcher = asyncio.create_task(watch_database(db_path, app.state.broadcaster))
         yield
@@ -102,9 +110,12 @@ def create_app(db_path=None, allowed_hosts=LOCAL_HOSTS, env_path=None, profile_d
     app.include_router(companies.router)
     app.include_router(events.router)
     app.include_router(calendar.router)
-    app.include_router(google_tasks_routes.router)
     app.include_router(mail.router)
     app.include_router(settings_routes.router)
+
+    @app.get('/api/version', tags=['app'], summary="The app's latest released version, from CHANGELOG.md")
+    def version():
+        return {'version': _latest_version()}
 
     @app.get('/api/export', response_model=Snapshot, tags=['backup'], summary='Everything, as JSON')
     def export(request: Request):

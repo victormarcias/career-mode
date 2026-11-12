@@ -1,23 +1,18 @@
 ---
 name: wake-up
-description: The user's start-of-day routine in one command: runs /check-email and then /apply-pending, one after the other. Use whenever the user invokes /wake-up or asks to start the day, run the morning routine or do the daily round.
+description: The morning routine in one command: bring the chat group's links into Pending (/links-inbox), apply to everything pending (/apply-pending) and digest the email (/digest-email). Use whenever the user invokes /wake-up or asks to start the day.
 ---
 
-# Start the day
+# Wake up
 
-One command for the start of the day. It does nothing by itself: it runs the skills below with the Skill tool, in this order, without asking before each one (the command is the order).
+One command, three steps, in this order, each through the Skill tool and with
+the days or `--verbose` the user gave passed on:
 
-## The steps
+1. `/links-inbox`, to queue the new links of the user's chat group. If it stops
+   (no credentials, not signed in, the bot is busy), say so in one line and go
+   on.
+2. `/apply-pending`, to work through the whole queue.
+3. `/digest-email`, for the mailbox.
 
-1. `/check-email`: sorts the recent Gmail and runs the skills that handle it. Pass on the days the user gave, if any.
-2. `/apply-pending`, with no link: works through the queue of pending applications.
-
-Pass `--verbose` to each step when the command has it. A new step is one more line in this list, in the place it should run.
-
-## When a step stops
-
-A step that stops (the app is not running, Gmail can't be read, something only the user can do) is reported and the next one still runs. When the app's API (`http://localhost:8333`) doesn't answer, start it with `./run-local.sh` once, before the first step, instead of letting each step find out.
-
-## Finish
-
-Each step shows what it always shows (what needs the user, the reply drafts, the table of `/apply-pending`, failures). Add nothing of your own unless the command has `--verbose`; with it, end with one line per step saying what it did. Nothing is committed.
+End with what those skills end with (the applications table and the email
+table), and nothing else. Nothing is committed.

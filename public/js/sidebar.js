@@ -1,3 +1,4 @@
+import { app } from './api.js'
 import { t } from './i18n.js'
 
 // The sidebar shows only its icons when the content to its right stops fitting (the Calendar's header needs about 1,200 px
@@ -62,4 +63,8 @@ export function initSidebar() {
 
   apply()
   requestAnimationFrame(() => nav.classList.add('has-transition'))  // not on load: it would slide in from the full width
+
+  app.version().then(({ version }) => {
+    if (version) document.getElementById('sidebar-version').textContent = t('sidebar.version', { version })
+  }).catch(() => {}) // no version line is fine, it's not load-bearing
 }

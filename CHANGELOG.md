@@ -12,6 +12,54 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- **`/digest-email`:** one command for the mailbox: it runs what `/check-email`
+  did, tags the threads that propose or confirm an interview with the
+  `Interviews` label, the rejections with `Rejected`, the ones that ask the user
+  to do something with `Needs Attention`, follows up the email applications
+  whose thread went quiet for 7 days (the latest message is the user's and is 7
+  days old or more, even if the company had answered before) and tags them
+  `Follow Up`, and ends with a table of Name, Subject and Action. Each follow-up
+  is recognized by its role and address, so one for a recruiter does not block
+  another application of the same company.
+
+- **Demo:** `demo/` has a demo with invented data (100 companies in English and Spanish, events of every type in the
+  last two weeks, an invented profile and messages), started with `./demo/run-demo.sh` on its own port, database and
+  profile and with no `.env`. `server/run.py` takes `--profile-dir` and `--env` for it.
+
+- **App version:** the sidebar now shows the app's version, in small gray
+  text at the bottom, from a new `GET /api/version` that reads the latest
+  `## [x.y.z]` heading of this file.
+
+- **`/wake-up`, `/links-inbox` and `/write-daily-post`:** these skills are now
+  part of the repo. `/wake-up` is the morning routine in one command: it runs
+  `/links-inbox`, `/apply-pending` and `/digest-email`, and ends with their
+  tables.
+
+- **Intro video setting:** a new `INTRO_VIDEO_URL` setting (Settings, under
+  Google Calendar ID) holds a link to the user's intro video. `/apply-pending`,
+  `/apply-site`, `/apply-email` and `/digest-email` give this link whenever an
+  application, a form or a recruiter asks for a video, instead of skipping that
+  step or canceling.
+
+### Removed
+
+- **Sync Google Tasks:** the Calendar's button, the Pending page's section, the
+  `/api/google-tasks/sync` route and the three `GOOGLE_TASKS_*` settings. Links
+  are queued from the Pending page.
+- **`/sync-aiapply`:** removed.
+- **`/check-email` and `/follow-up-email-application`:** they are now
+  `/digest-email`; `/apply-pending` runs on its own.
+
+### Fixed
+
+- **Calendar:** the week view now sorts each day's events strictly by time; it
+  used to group them by event type first (application, note, interview
+  stages...) and only sort by time within each group.
+
+## [0.2.0] - 2026-11-04
+
+### Added
+
 - **Archive (ghosted) in an event's form:** a button left of Delete, in the form that edits an event, archives that event's company by hand (👻 Ghosted), as the company card's Archive does. It shows while the company is active, and not on a queued link or an archive.
 - **`./backup-data.sh --open`:** opens the backup folder at the end also when the script is not run from a terminal (from a pipe or a tool); from a terminal it already did.
 - **`/follow-up-email-application`:** follows up, without asking, the applications sent by email that got no answer in 7 days or more, once each, as a reply on their own Gmail thread with the Application Follow-up Message in the language of the application, and logs each one in the Calendar as a "Follow up" note.
@@ -57,7 +105,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **CLI:** `profile-pdf` and `outreach-pdf` commands in `server/cli.py`.
 - **Skills:**
   - `/commit`: commits on the current branch with the default author and a one-line message, and never pushes.
-  - `/write-daily-post` saves each post in `profile/daily-posts/` with a topic line and a `log.csv` that picks the next topic.
 - **Tests and CI:** a pytest suite for the server, a Node suite for the front end, `run-tests.sh` and a GitHub Actions workflow that runs both on every push. A test fails when anything from the real profile is in a tracked file.
 - **Project:** `.github/FUNDING.yml`, and a Git section in `CLAUDE.md`.
 
@@ -72,7 +119,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - Reads LinkedIn JD Posts, with WebFetch first and then in Claude in Chrome, and opens Chrome for any other page it cannot read.
 - **`/apply-email` and `/apply-site`:** both report whether the application was sent or why it stopped. `/apply-site` stops at captchas and accounts to create, leaves the form open when stuck, and answers form questions on its own.
 - **`/reply-recruiter`:** one Calendar entry per conversation, only the technologies the recruiter asks about, and no need to read another skill.
-- **`/write-daily-post`:** the image prompt asks for correct spelling and minimal text, the post text is shown next to the image, and a bad image is discarded and its topic reused.
 - **`/setup`:** offers the backup's `outreach.md` and can send a test email to the user's own address.
 
 ### Removed

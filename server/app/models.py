@@ -2,9 +2,9 @@
 
 Companies (agencies and clients, in one table) and events reference each other with real foreign keys, so
 the database itself refuses a dangling reference, a duplicate company name or a
-passive message with no company. Alembic reads `Base.metadata` from here; after
-changing a model, run `alembic revision --autogenerate -m "what changed"` from
-the server/ folder (see CLAUDE.md).
+passive message with no company. There are no migrations: the server creates the
+tables from here, and a database made with an older version is rebuilt from the
+backup (see CLAUDE.md).
 """
 from enum import Enum
 from typing import Optional
@@ -12,8 +12,7 @@ from typing import Optional
 from sqlalchemy import CheckConstraint, ForeignKey, MetaData, String, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-# Names for every constraint, so migrations can refer to them (SQLite needs that
-# to alter a table) and an error message says which rule was broken.
+# Names for every constraint, so an error message says which rule was broken.
 NAMING_CONVENTION = {
     'ix': 'ix_%(column_0_label)s',
     'uq': 'uq_%(table_name)s_%(column_0_name)s',

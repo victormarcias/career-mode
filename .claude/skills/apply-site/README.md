@@ -1,12 +1,16 @@
 # apply-site
 
-Fills in and submits a job application on a company's own portal or web form (Workable, Viterbit, Loxo, a custom ATS). It's the delivery step for applications whose `applyType` is `web_form`.
+Fills in and submits a job application on a company's own portal or form
+(Workable, Viterbit, Loxo, a custom ATS). It is the delivery step for
+applications whose `applyType` is `web_form`, called by
+[apply-pending](../apply-pending/README.md), which also logs the application.
 
-- **Does:** uses the CV file (`CV_PDF_PATH` setting), fills the known public data from `profile/profile.md`, adapts the Cover Letter Message for any cover-letter field, accepts only the required terms, leaves marketing opt-ins unchecked, and submits without asking.
-- **Stops and flags:** captchas, accounts to create, Loom-style pitch videos demanded just to apply, processes with an AI interview at any stage, and a hard fact the profile doesn't have (a salary figure, a visa), which it asks and offers to save. Open questions (how the user works, uses AI, tests; a company's written assessment) are written from the profile's "How I work" section and the CV, without asking, and a portal's pre-filled answers are corrected against the profile. Other questions are answered straight from the profile; a portal that wants a whole profile built is [submit-profile](../submit-profile/README.md)'s.
-- **When stuck:** leaves the form open in Chrome, filled as far as it got, in front, and says exactly what is left for the user to click or type; it carries on when they say it is done.
-- **Reports back:** submitted (once the confirmation shows) or stopped and why, so the caller logs the application only when it went out.
-- **Touches:** the connected Chrome session (the Google account named in the profile). Nothing in the database.
-- **Called by:** [apply-pending](../apply-pending/README.md), which also logs the application and creates any new company.
-
-Instructions: [SKILL.md](SKILL.md).
+It uses the CV file of the `CV_PDF_PATH` setting and the public data and open
+answers from `profile/profile.md`, accepts only the required terms and submits
+without asking. Questions about skills and experience are answered yes, at the
+posting's own minimums, since the user can learn any skill; only facts that are
+not skills stay as the profile says. A video field is answered with the
+`INTRO_VIDEO_URL` setting's link. On a captcha, an account to create, or an AI
+interview it stops, leaves the form open in Chrome filled as far as it got,
+and says what is left for the user. It reports submitted, or stopped and why. It touches only the connected Chrome session, nothing in the
+database. Instructions: [SKILL.md](SKILL.md).

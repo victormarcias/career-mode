@@ -12,7 +12,6 @@ import { initFollowUp, renderFollowUp } from './follow-up.js'
 import { renderSettings } from './settings.js'
 import { renderProfile } from './profile-view.js'
 import { initCalendarSync } from './calendar-sync.js'
-import { initTasksSync } from './tasks-sync.js'
 import { initI18n, t } from './i18n.js'
 import { initSidebar } from './sidebar.js'
 
@@ -23,10 +22,6 @@ let companiesMap = new Map()
 let appInitialized = false
 let applicationsLoaded = false
 let companiesLoaded = false
-
-// Groups a day's pills by event type (in EVENT_TYPES' own order) instead of
-// interleaving them by time — an event type not in that list sorts last.
-const EVENT_TYPE_ORDER = new Map(EVENT_TYPES.map((t, i) => [t, i]))
 
 function spinnerHtml() {
   return '<div class="flex justify-center py-16"><div class="h-6 w-6 animate-spin rounded-full border-2 border-gray-700 border-t-gray-300"></div></div>'
@@ -77,8 +72,6 @@ function initApp() {
   initApplicationForm({ getCompanies: () => Array.from(companiesMap.values()) })
   initFollowUp(companiesDeps)
   initCalendarSync({ getWeekStart: () => weekStart, getCompanies: () => Array.from(companiesMap.values()) })
-  initTasksSync()
-  initTasksSync('pending-tasks-btn', 'pending-tasks-status')
 
   subscribe('events', (rows) => {
     applications = rows
@@ -320,12 +313,7 @@ function renderWeek() {
     const day = addDays(weekStart, i)
     const iso = toISODate(day)
     const isToday = iso === toISODate(new Date())
-    const events = (byDate.get(iso) ?? []).slice().sort((a, b) => {
-      const orderA = EVENT_TYPE_ORDER.get(a.event) ?? EVENT_TYPES.length
-      const orderB = EVENT_TYPE_ORDER.get(b.event) ?? EVENT_TYPES.length
-      if (orderA !== orderB) return orderA - orderB
-      return (a.time ?? '99:99').localeCompare(b.time ?? '99:99')
-    })
+    const events = (byDate.get(iso) ?? []).slice().sort((a, b) => (a.time ?? '99:99').localeCompare(b.time ?? '99:99'))
 
     const col = document.createElement('div')
     col.className = `day-column rounded-2xl border p-3 ${

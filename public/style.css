@@ -24,6 +24,20 @@ input[type='search']::-webkit-search-cancel-button {
   max-width: 33.6rem;
 }
 
+/* Companies: a row (name, tag, "via", status) always stays on one line — nothing in it
+   shrinks or wraps (see the capsule-header spans in companies.js). So the column widens
+   just enough to fit the widest row, instead of clipping it against the shared page width.
+   The (usually hidden) expanded body keeps the original reading width so its own text — far
+   longer than a row — doesn't drag the column along with it. */
+#view-companies .page-column {
+  max-width: none;
+  width: max-content;
+  min-width: 33.6rem;
+}
+#view-companies .capsule-body {
+  width: 33.6rem;
+}
+
 /* Explicit system-font stack for static pages (Outreach and future ones) — same
    font the rest of the app already gets from Tailwind's Preflight default, made
    explicit here so it doesn't depend on that staying unchanged. Matches Tailwind's
@@ -189,7 +203,8 @@ input[type='search']::-webkit-search-cancel-button {
   width: 4.25rem;
 }
 #sidebar.is-collapsed .sidebar-logo,
-#sidebar.is-collapsed .nav-label {
+#sidebar.is-collapsed .nav-label,
+#sidebar.is-collapsed #sidebar-version {
   display: none;
 }
 #sidebar.is-collapsed .side-item {

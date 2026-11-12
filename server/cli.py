@@ -2,8 +2,7 @@
 """Command line for the career-mode database.
 
     python server/cli.py export [DIR]            write DIR/calendar.csv and DIR/companies.csv (default: backup)
-    python server/cli.py import DIR [--replace]  load those files; also reads the old JSON backups (agencies.json,
-                                                 clients.json, events.json, and the Firestore applications.json).
+    python server/cli.py import DIR [--replace]  load those files
                                                  --replace empties the database first
     python server/cli.py stats                   how many rows each table has
     python server/cli.py backup-dir              print the backup folder, which is always backup
@@ -17,7 +16,6 @@ exchange format: a snapshot to keep, move to another computer or seed a new inst
 import argparse
 import csv
 import io
-import json
 import os
 import sys
 
@@ -25,36 +23,27 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from sqlalchemy import func, select  # noqa: E402
 
 from app import models, snapshot  # noqa: E402
-from app.database import DEFAULT_DB_PATH, ROOT, make_engine, migrate, session_factory  # noqa: E402
+from app.database import DEFAULT_DB_PATH, ROOT, create_schema, make_engine, session_factory  # noqa: E402
 from app.profile_pdf import render_pdf  # noqa: E402
 from app.settings import BACKUP_DIR  # noqa: E402
 
-FILES = ('companies', 'agencies', 'clients', 'events')
 PROFILE_DIR = ROOT / 'profile'
 
 
 def read_snapshot(directory):
-    """(snapshot, warnings) from DIR/calendar.csv + companies.csv, or from the older JSON files."""
+    """(snapshot, warnings) from DIR/calendar.csv + companies.csv."""
     texts = {}
     for key, filename in snapshot.CSV_FILES.items():
         path = os.path.join(directory, filename)
         if os.path.exists(path):
             with open(path, encoding='utf-8', newline='') as f:
                 texts[key] = f.read()
-    if texts:
-        try:
-            return snapshot.parse_csv(**texts)
-        except ValueError as err:
-            sys.exit(str(err))
-    data = {}
-    for name in FILES + ('applications',):  # "applications" is what the Firestore backups called events
-        path = os.path.join(directory, name + '.json')
-        if os.path.exists(path):
-            with open(path, encoding='utf-8') as f:
-                data[name] = json.load(f)
-    if not any(data.get(k) for k in FILES + ('applications',)):
-        sys.exit('No calendar.csv or companies.csv (nor the older JSON files) found in %s' % directory)
-    return data, []
+    if not texts:
+        sys.exit('No calendar.csv or companies.csv found in %s' % directory)
+    try:
+        return snapshot.parse_csv(**texts)
+    except ValueError as err:
+        sys.exit(str(err))
 
 
 def markdown_pdf(name, out):
@@ -85,7 +74,7 @@ def main(argv=None):
         name = args.command.split('-')[0]
         print(markdown_pdf(name, args.directory or os.path.join(BACKUP_DIR, 'profile', name + '.pdf')))
         return
-    migrate(args.db)
+    create_schema(args.db)
     engine = make_engine(args.db)
     with session_factory(engine)() as session:
         if args.command == 'stats':

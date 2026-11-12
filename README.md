@@ -4,10 +4,14 @@ A private, single-user job search tracker that runs on your own computer: one SQ
 
 [Español](README.es.md)
 
+## Live demo
+
+Try it with fantasy data, no setup needed: **[victormarcias.online/demo/career-mode](https://victormarcias.online/demo/career-mode)**.
+
 ## Stack
 
 - **FastAPI** serves the app and a JSON API (docs at `/docs`)
-- **SQLite** with SQLAlchemy, Pydantic and Alembic
+- **SQLite** with SQLAlchemy and Pydantic
 - Plain HTML/CSS/JS in `public/`, with Tailwind from its CDN: no bundler, no framework
 
 ## Quick start
@@ -26,7 +30,7 @@ Nothing personal leaves your computer: git ignores `profile/`, `data/`, `backup/
 ## Features
 
 ### Calendar
-Log every job application in a week-view calendar, from the first message to the offer or the rejection: applications, recruiter messages, interviews, notes. Add or edit events from the same page. The **Weekly Report** counts what you sent that week (by mail or by platform) and what moved forward. **Sync Google Calendar** brings your HR, technical and culture interviews in from your own calendar, and **Sync Google Tasks** queues the job links saved in your Google Tasks in Pending.
+Log every job application in a week-view calendar, from the first message to the offer or the rejection: applications, recruiter messages, interviews, notes. Add or edit events from the same page. The **Weekly Report** counts what you sent that week (by mail or by platform) and what moved forward. **Sync Google Calendar** brings your HR, technical and culture interviews in from your own calendar.
 
 <p align="center">
   <img src="docs/screenshots/en/calendar.png" alt="Calendar">
@@ -71,7 +75,7 @@ The messages you send most (application, cover letter, rejection reply, and so o
 </p>
 
 ### Settings
-Everything the app and the skills need, in one list: language (English or Spanish), email account, CV, Google Calendar, Google Tasks and picture. Keys and passwords are hidden until you click the eye.
+Everything the app and the skills need, in one list: language (English or Spanish), email account, CV, Google Calendar and picture. Keys and passwords are hidden until you click the eye.
 
 <p align="center">
   <img src="docs/screenshots/en/settings.png" alt="Settings" width="560">
@@ -91,13 +95,9 @@ In `.claude/skills/`, each with its own README:
 - `apply-email`: sends an application by email, CV attached
 - `apply-site`: fills a company's application form
 - `reply-recruiter`: answers a recruiter who wrote first
-- `sync-aiapply`: logs what AIApply.io got back from companies, and trashes its "Not this time" notices
 - `reply-rejected`: thanks the companies that rejected you, from your Gmail, archives the email and logs the rejection
-- `follow-up-email-application`: follows up the applications you emailed that got no answer, on their own thread, and logs it
-- `check-email`: sorts your recent Gmail and runs the skills that handle it
-- `wake-up`: starts the day: runs `check-email` and then `apply-pending`
+- `digest-email`: sorts your recent Gmail, runs the skills that handle it, tags the interviews, follows up the applications that went quiet and shows a table of what it did
 - `submit-profile`: fills candidate portals from your profile
-- `write-daily-post`: writes the daily post and its image
 - `commit`: commits your changes on the current branch, short and under your name
 
 ## Backups
@@ -117,7 +117,7 @@ They go to `backup/`, which git ignores. It also keeps one copy of your `.env` (
 ./run-tests.sh   # pytest for the server, node --test for the front end
 ```
 
-They use invented data only, and `tests/test_no_personal_data.py` checks that nothing from your `profile/` ends up in a file git tracks.
+They cover only the integrity of the data (the database rules, the backup round trip, the company and event rules); the rest of the app has no tests. They use invented data only, and `tests/test_no_personal_data.py` checks that nothing from your `profile/` ends up in a file git tracks.
 
 ## License
 

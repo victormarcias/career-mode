@@ -4,10 +4,14 @@ Un seguidor de búsqueda laboral privado y para una sola persona, que corre en t
 
 [English](README.md)
 
+## Demo en vivo
+
+Probala con datos inventados, sin instalar nada: **[victormarcias.online/demo/career-mode](https://victormarcias.online/demo/career-mode)**.
+
 ## Stack
 
 - **FastAPI** sirve la app y una API JSON (docs en `/docs`)
-- **SQLite** con SQLAlchemy, Pydantic y Alembic
+- **SQLite** con SQLAlchemy y Pydantic
 - HTML/CSS/JS plano en `public/`, con Tailwind desde su CDN: sin bundler, sin framework
 
 ## Empezar rápido
@@ -26,7 +30,7 @@ Nada personal sale de tu computadora: git ignora `profile/`, `data/`, `backup/` 
 ## Features
 
 ### Calendario
-Registra cada aplicación en una vista semanal, desde el primer mensaje hasta la oferta o el rechazo: aplicaciones, mensajes de recruiters, entrevistas, notas. Agrega o edita eventos desde la misma página. El **Weekly Report** cuenta lo que enviaste esa semana (por email o por plataforma) y lo que avanzó. **Sync Google Calendar** trae tus entrevistas de HR, técnicas y de cultura desde tu propio calendario, y **Sync Google Tasks** pone en cola en Pending los links de empleo guardados en tus Google Tasks.
+Registra cada aplicación en una vista semanal, desde el primer mensaje hasta la oferta o el rechazo: aplicaciones, mensajes de recruiters, entrevistas, notas. Agrega o edita eventos desde la misma página. El **Weekly Report** cuenta lo que enviaste esa semana (por email o por plataforma) y lo que avanzó. **Sync Google Calendar** trae tus entrevistas de HR, técnicas y de cultura desde tu propio calendario.
 
 <p align="center">
   <img src="docs/screenshots/es/calendar.png" alt="Calendar">
@@ -71,7 +75,7 @@ Los mensajes que más envías (aplicación, cover letter, respuesta de rechazo y
 </p>
 
 ### Ajustes
-Todo lo que necesitan la app y los skills, en una sola lista: idioma (English o español), cuenta de correo, CV, Google Calendar, Google Tasks y foto. Las claves y contraseñas quedan ocultas hasta que haces clic en el ojo.
+Todo lo que necesitan la app y los skills, en una sola lista: idioma (English o español), cuenta de correo, CV, Google Calendar y foto. Las claves y contraseñas quedan ocultas hasta que haces clic en el ojo.
 
 <p align="center">
   <img src="docs/screenshots/es/settings.png" alt="Settings" width="560">
@@ -91,13 +95,9 @@ En `.claude/skills/`, cada uno con su README:
 - `apply-email`: envía una aplicación por email, con el CV adjunto
 - `apply-site`: completa el formulario de postulación de una empresa
 - `reply-recruiter`: responde a un recruiter que escribió primero
-- `sync-aiapply`: registra lo que AIApply.io recibió de las empresas y manda a la papelera sus avisos "Not this time"
 - `reply-rejected`: agradece a las empresas que te rechazaron, desde tu Gmail, archiva el mail y registra el rechazo
-- `follow-up-email-application`: hace el seguimiento de las postulaciones que enviaste por email sin respuesta, en su mismo hilo, y lo registra
-- `check-email`: ordena tu Gmail reciente y ejecuta los skills que se ocupan de cada cosa
-- `wake-up`: arranca el día: ejecuta `check-email` y después `apply-pending`
+- `digest-email`: ordena tu Gmail reciente, ejecuta los skills que se ocupan de cada cosa, etiqueta las entrevistas, hace el seguimiento de las postulaciones sin respuesta y muestra una tabla de lo que hizo
 - `submit-profile`: completa portales de candidatos con tu perfil
-- `write-daily-post`: escribe el post diario y su imagen
 - `commit`: commitea tus cambios en la rama actual, corto y a tu nombre
 
 ## Backups
@@ -117,7 +117,7 @@ Van a `backup/`, que git ignora. También guarda una copia de tu `.env` (`backup
 ./run-tests.sh   # pytest para el servidor, node --test para el front end
 ```
 
-Usan solo datos inventados, y `tests/test_no_personal_data.py` verifica que nada de tu `profile/` termine en un archivo que git rastrea.
+Cubren solo la integridad de los datos (las reglas de la base, la ida y vuelta del backup, las reglas de empresas y eventos); el resto de la app no tiene tests. Usan solo datos inventados, y `tests/test_no_personal_data.py` verifica que nada de tu `profile/` termine en un archivo que git rastrea.
 
 ## Licencia
 

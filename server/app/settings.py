@@ -88,27 +88,10 @@ ENV_VARS = [  # in alphabetical order, which is how Settings lists them
         secret=True,
     ),
     EnvVar(
-        'GOOGLE_TASKS_CLIENT_ID',
-        'Google Tasks client ID',
-        'What the Google Tasks button reads: it queues the links of your open tasks and marks those tasks as done. In the Google Cloud Console enable the Google Tasks API, '
-        'set up the OAuth consent screen (add yourself as a test user) and create an OAuth client ID of type Web application, with '
-        '`https://developers.google.com/oauthplayground` as an authorized redirect URI. This is its client ID.',
-        secret=True,
-    ),
-    EnvVar(
-        'GOOGLE_TASKS_CLIENT_SECRET',
-        'Google Tasks client secret',
-        'The secret of that OAuth client.',
-        secret=True,
-    ),
-    EnvVar(
-        'GOOGLE_TASKS_REFRESH_TOKEN',
-        'Google Tasks refresh token',
-        'In the OAuth Playground (`https://developers.google.com/oauthplayground`), open its settings, tick "Use your own OAuth '
-        'credentials" and paste the client ID and secret above. Write the scope `https://www.googleapis.com/auth/tasks`, '
-        'authorize, press "Exchange authorization code for tokens" and paste the refresh token here. While the consent screen is '
-        'in Testing, Google expires it after 7 days: publish the app to keep it.',
-        secret=True,
+        'INTRO_VIDEO_URL',
+        'Intro video',
+        'A link to your intro video. The skills give this whenever an application, a form or a recruiter asks for a video, '
+        'instead of skipping that step.',
     ),
 ]
 # What a variable used to be called: an install that still has the old name keeps working, and saving the new name removes it.
@@ -174,6 +157,8 @@ def validate(name: str, value: str) -> str:
         raise ValueError('The port is 465 or 587')
     if name == 'GOOGLE_CALENDAR_ID':
         google_calendar.ics_url(value)  # raises the ValueError to show
+    if name == 'INTRO_VIDEO_URL' and not re.match(r'https?://', value):
+        raise ValueError('That is not a link (it should start with http:// or https://)')
     if name == 'CV_PDF_PATH':
         path = Path(os.path.expanduser(value))
         path = path if path.is_absolute() else ROOT / path

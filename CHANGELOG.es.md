@@ -12,6 +12,55 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
 
 ### Añadido
 
+- **`/digest-email`:** un solo comando para el correo: hace lo que hacía
+  `/check-email`, etiqueta con `Interviews` los hilos que proponen o confirman
+  una entrevista, con `Rejected` los rechazos, con `Needs Attention` los que le
+  piden algo al usuario, hace el seguimiento de las postulaciones por email cuyo
+  hilo quedó en silencio 7 días (el último mensaje es del usuario y tiene 7 días
+  o más, aunque la empresa haya contestado antes) y las etiqueta `Follow Up`, y
+  termina con una tabla de Name, Subject y Action. Cada follow-up se reconoce
+  por su rol y su dirección, así que el de un recruiter no bloquea otra
+  postulación de la misma empresa.
+
+- **Demo:** `demo/` tiene una demo con datos inventados (100 empresas en inglés y español, eventos de todos los
+  tipos en las últimas dos semanas, un perfil y mensajes inventados), que se inicia con `./demo/run-demo.sh` en su
+  propio puerto, base de datos y perfil y sin `.env`. `server/run.py` acepta `--profile-dir` y `--env` para eso.
+
+- **Versión de la app:** el menú lateral ahora muestra la versión de la app,
+  en texto gris chico abajo de todo, a partir de un nuevo `GET /api/version`
+  que lee el último encabezado `## [x.y.z]` de este archivo.
+
+- **`/wake-up`, `/links-inbox` y `/write-daily-post`:** estas skills ahora son
+  parte del repo. `/wake-up` es la rutina de la mañana en un solo comando:
+  ejecuta `/links-inbox`, `/apply-pending` y `/digest-email`, y termina con sus
+  tablas.
+
+- **Ajuste de video de presentación:** un nuevo ajuste `INTRO_VIDEO_URL`
+  (Settings, debajo de Google Calendar ID) guarda un link al video de
+  presentación del usuario. `/apply-pending`, `/apply-site`, `/apply-email` y
+  `/digest-email` dan ese link cada vez que una postulación, un formulario o
+  un recruiter pide un video, en vez de saltear ese paso o cancelar.
+
+### Eliminado
+
+- **Sync Google Tasks:** el botón del Calendar, la sección de la página Pending,
+  la ruta `/api/google-tasks/sync` y los tres ajustes `GOOGLE_TASKS_*`. Los
+  links se encolan desde la página Pending.
+- **`/sync-aiapply`:** eliminado.
+- **`/check-email` y `/follow-up-email-application`:** ahora son
+  `/digest-email`; `/apply-pending` se ejecuta solo.
+
+### Corregido
+
+- **Calendar:** la vista semanal ahora ordena los eventos de cada día
+  estrictamente por hora; antes los agrupaba primero por tipo de evento
+  (aplicación, nota, etapas de entrevista...) y recién dentro de cada grupo
+  ordenaba por hora.
+
+## [0.2.0] - 2026-11-04
+
+### Añadido
+
 - **Archivar (desaparecida) en el formulario de un evento:** un botón a la izquierda de Eliminar, en el formulario que edita un evento, archiva a mano la empresa de ese evento (👻 Desaparecida), como el Archivar de la tarjeta de la empresa. Se muestra mientras la empresa está activa, y no en un link en cola ni en un archivo.
 - **`./backup-data.sh --open`:** abre la carpeta del backup al terminar también cuando el script no se corre desde una terminal (desde un pipe o una herramienta); desde una terminal ya lo hacía.
 - **`/follow-up-email-application`:** hace el seguimiento, sin preguntar, de las postulaciones enviadas por email que no tuvieron respuesta en 7 días o más, una sola vez cada una, como respuesta en su mismo hilo de Gmail con el mensaje Application Follow-up en el idioma de la postulación, y registra cada una en el Calendar como una nota "Follow up".
@@ -57,7 +106,6 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
 - **CLI:** comandos `profile-pdf` y `outreach-pdf` en `server/cli.py`.
 - **Skills:**
   - `/commit`: hace commit en la rama actual con el autor por defecto y un mensaje de una línea, y nunca hace push.
-  - `/write-daily-post` guarda cada post en `profile/daily-posts/` con una línea de tema y un `log.csv` que elige el siguiente tema.
 - **Tests y CI:** una suite de pytest para el servidor, una de Node para el front end, `run-tests.sh` y un workflow de GitHub Actions que ejecuta ambas en cada push. Un test falla cuando algo del perfil real aparece en un archivo versionado.
 - **Proyecto:** `.github/FUNDING.yml` y una sección de Git en `CLAUDE.md`.
 
@@ -72,7 +120,6 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
   - Lee JD Posts de LinkedIn, primero con WebFetch y después en Claude in Chrome, y abre Chrome para cualquier otra página que no pueda leer.
 - **`/apply-email` y `/apply-site`:** ambos informan si la aplicación se envió o por qué se detuvo. `/apply-site` se detiene ante captchas y cuentas por crear, deja el formulario abierto cuando se atasca y responde por sí mismo las preguntas del formulario.
 - **`/reply-recruiter`:** una entrada de Calendar por conversación, solo las tecnologías por las que pregunta el recruiter, y sin necesidad de leer otro skill.
-- **`/write-daily-post`:** el prompt de la imagen pide ortografía correcta y texto mínimo, el texto del post se muestra junto a la imagen, y una imagen mala se descarta y su tema se reutiliza.
 - **`/setup`:** ofrece el `outreach.md` del backup y puede enviar un email de prueba a la dirección del propio usuario.
 
 ### Eliminado
