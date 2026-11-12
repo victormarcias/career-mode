@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-## [0.2.0] - 2026-11-04
+## [0.3.0] - 2026-11-12
 
 ### Added
 
@@ -139,7 +139,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 Initial release.
 
-[Unreleased]: https://github.com/victormarcias/career-mode/compare/0.2.0...HEAD
+[Unreleased]: https://github.com/victormarcias/career-mode/compare/0.3.0...HEAD
+[0.3.0]: https://github.com/victormarcias/career-mode/compare/0.2.0...0.3.0
 [0.2.0]: https://github.com/victormarcias/career-mode/compare/0.1.1...0.2.0
 [0.1.1]: https://github.com/victormarcias/career-mode/compare/0.1...0.1.1
 [0.1]: https://github.com/victormarcias/career-mode/releases/tag/0.1
