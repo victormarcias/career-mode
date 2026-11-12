@@ -7,6 +7,7 @@ another website (Origin check). There is no login: whoever can open
 localhost:8333 is you. The API is documented at /docs.
 """
 import asyncio
+import re
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -25,6 +26,15 @@ from .stream import Broadcaster, event_stream, watch_database
 
 LOCAL_HOSTS = ('localhost', '127.0.0.1', '::1')
 PROFILE_DIR = ROOT / 'profile'  # the user's own files in it are gitignored; the *.example.* ones ship with the repo
+
+
+def _latest_version() -> str | None:
+    """The latest released version: the first `## [x.y.z]` heading in CHANGELOG.md (skips `## [Unreleased]`)."""
+    changelog = ROOT / 'CHANGELOG.md'
+    if not changelog.is_file():
+        return None
+    match = re.search(r'^## \[(\d[^\]]*)\]', changelog.read_text(encoding='utf-8'), re.MULTILINE)
+    return match.group(1) if match else None
 
 
 def _hostname(host_header: str) -> str:
@@ -102,6 +112,10 @@ def create_app(db_path=None, allowed_hosts=LOCAL_HOSTS, env_path=None, profile_d
     app.include_router(calendar.router)
     app.include_router(mail.router)
     app.include_router(settings_routes.router)
+
+    @app.get('/api/version', tags=['app'], summary="The app's latest released version, from CHANGELOG.md")
+    def version():
+        return {'version': _latest_version()}
 
     @app.get('/api/export', response_model=Snapshot, tags=['backup'], summary='Everything, as JSON')
     def export(request: Request):

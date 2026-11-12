@@ -203,7 +203,8 @@ input[type='search']::-webkit-search-cancel-button {
   width: 4.25rem;
 }
 #sidebar.is-collapsed .sidebar-logo,
-#sidebar.is-collapsed .nav-label {
+#sidebar.is-collapsed .nav-label,
+#sidebar.is-collapsed #sidebar-version {
   display: none;
 }
 #sidebar.is-collapsed .side-item {

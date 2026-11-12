@@ -15,6 +15,7 @@
   "nav.apiDocs": "API Docs",
   "sidebar.collapse": "Colapsar menú",
   "sidebar.expand": "Expandir menú",
+  "sidebar.version": "v{version}",
   "settings.title": "Ajustes",
   "settings.subtitle": "Cómo está configurada esta copia de career-mode en esta computadora.",
   "settings.config.title": "Configuración",

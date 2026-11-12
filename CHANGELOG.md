@@ -24,6 +24,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   last two weeks, an invented profile and messages), started with `./demo/run-demo.sh` on its own port, database and
   profile and with no `.env`. `server/run.py` takes `--profile-dir` and `--env` for it.
 
+- **App version:** the sidebar now shows the app's version, in small gray
+  text at the bottom, from a new `GET /api/version` that reads the latest
+  `## [x.y.z]` heading of this file.
+
 ### Removed
 
 - **Sync Google Tasks:** the Calendar's button, the Pending page's section, the

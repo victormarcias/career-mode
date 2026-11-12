@@ -15,6 +15,7 @@
   "nav.apiDocs": "API docs",
   "sidebar.collapse": "Collapse menu",
   "sidebar.expand": "Expand menu",
+  "sidebar.version": "v{version}",
   "settings.title": "Settings",
   "settings.subtitle": "How this copy of career-mode is set up on this computer.",
   "settings.config.title": "Configuration",

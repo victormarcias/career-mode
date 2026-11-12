@@ -115,6 +115,11 @@ export const calendar = {
   sync: (start, end, events) => write('POST', 'api/calendar/sync', { start, end, events }),
 }
 
+// This app's own version: the latest one in CHANGELOG.md, read from the running server.
+export const app = {
+  version: () => request('GET', 'api/version'),
+}
+
 export const api = {
   list: (collection, filters) => request('GET', `api/${collection}${query(filters)}`),
   get: (collection, id) => request('GET', `api/${collection}/${encodeURIComponent(id)}`),
