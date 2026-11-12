@@ -28,6 +28,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   text at the bottom, from a new `GET /api/version` that reads the latest
   `## [x.y.z]` heading of this file.
 
+- **Intro video setting:** a new `INTRO_VIDEO_URL` setting (Settings, under
+  Google Calendar ID) holds a link to the user's intro video. `/apply-pending`,
+  `/apply-site`, `/apply-email` and `/digest-email` give this link whenever an
+  application, a form or a recruiter asks for a video, instead of skipping that
+  step or canceling.
+
 ### Removed
 
 - **Sync Google Tasks:** the Calendar's button, the Pending page's section, the

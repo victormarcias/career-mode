@@ -28,6 +28,12 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
   en texto gris chico abajo de todo, a partir de un nuevo `GET /api/version`
   que lee el último encabezado `## [x.y.z]` de este archivo.
 
+- **Ajuste de video de presentación:** un nuevo ajuste `INTRO_VIDEO_URL`
+  (Settings, debajo de Google Calendar ID) guarda un link al video de
+  presentación del usuario. `/apply-pending`, `/apply-site`, `/apply-email` y
+  `/digest-email` dan ese link cada vez que una postulación, un formulario o
+  un recruiter pide un video, en vez de saltear ese paso o cancelar.
+
 ### Eliminado
 
 - **Sync Google Tasks:** el botón del Calendar, la sección de la página Pending,

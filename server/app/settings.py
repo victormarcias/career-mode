@@ -87,6 +87,12 @@ ENV_VARS = [  # in alphabetical order, which is how Settings lists them
         'which also works for a private one.',
         secret=True,
     ),
+    EnvVar(
+        'INTRO_VIDEO_URL',
+        'Intro video',
+        'A link to your intro video. The skills give this whenever an application, a form or a recruiter asks for a video, '
+        'instead of skipping that step.',
+    ),
 ]
 # What a variable used to be called: an install that still has the old name keeps working, and saving the new name removes it.
 LEGACY_NAMES = {'GOOGLE_CALENDAR_ID': 'CALENDAR_ID'}
@@ -151,6 +157,8 @@ def validate(name: str, value: str) -> str:
         raise ValueError('The port is 465 or 587')
     if name == 'GOOGLE_CALENDAR_ID':
         google_calendar.ics_url(value)  # raises the ValueError to show
+    if name == 'INTRO_VIDEO_URL' and not re.match(r'https?://', value):
+        raise ValueError('That is not a link (it should start with http:// or https://)')
     if name == 'CV_PDF_PATH':
         path = Path(os.path.expanduser(value))
         path = path if path.is_absolute() else ROOT / path

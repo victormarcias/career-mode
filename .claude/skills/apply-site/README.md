@@ -9,8 +9,8 @@ It uses the CV file of the `CV_PDF_PATH` setting and the public data and open
 answers from `profile/profile.md`, accepts only the required terms and submits
 without asking. Questions about skills and experience are answered yes, at the
 posting's own minimums, since the user can learn any skill; only facts that are
-not skills stay as the profile says. On a captcha, an account to create, a
-pitch video or an AI interview it stops, leaves the form open in Chrome filled
-as far as it got, and says what is left for the user. It reports submitted, or
-stopped and why. It touches only the connected Chrome session, nothing in the
+not skills stay as the profile says. A video field is answered with the
+`INTRO_VIDEO_URL` setting's link. On a captcha, an account to create, or an AI
+interview it stops, leaves the form open in Chrome filled as far as it got,
+and says what is left for the user. It reports submitted, or stopped and why. It touches only the connected Chrome session, nothing in the
 database. Instructions: [SKILL.md](SKILL.md).
