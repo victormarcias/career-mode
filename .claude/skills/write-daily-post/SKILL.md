@@ -1,6 +1,7 @@
 ---
 name: write-daily-post
 description: Generate the user's daily LinkedIn-style reflection post on the topic they give in the command (`/write-daily-post <topic>`), plus an optional accompanying image. Use this whenever the user asks for their "daily post" or "today's post", even in short, casual asks. Also use it for a later, separate ask to generate the accompanying image for a post already shown in chat.
+model: sonnet
 ---
 
 # Daily Post (reflection)

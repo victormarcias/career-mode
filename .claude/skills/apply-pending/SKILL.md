@@ -1,6 +1,7 @@
 ---
 name: apply-pending
 description: Apply to a job the user sends — a JD Post link from a Job Board Platform (LinkedIn, Indeed...), a recruiter message, or any other portal link — or process the whole queue when the user invokes /apply-pending with no link. Use this whenever the user pastes a JD Post link and asks to apply, forwards something from a recruiter, or asks to work through queued/pending applications. Covers reading the JD Post, creating or updating the company profile and choosing the channel, then hands off the actual sending to /apply-email or /apply-site, and logs the application in the Calendar once it went out.
+model: sonnet
 ---
 
 # Apply to a pending job link

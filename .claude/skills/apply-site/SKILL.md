@@ -1,6 +1,7 @@
 ---
 name: apply-site
 description: Fill out and submit a company's own application form on a third-party portal (Workable, Viterbit, Loxo, Ashby, Greenhouse, the company's own ATS, etc.) instead of sending an email. Use this whenever the user asks to apply through a company's portal/form or shares a link to one, including as the delivery step for /apply-pending when a JD Post's `applyType` is `web_form`.
+model: sonnet
 ---
 
 # Apply on a company's portal/form

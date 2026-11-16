@@ -15,6 +15,11 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
   experimento con flujos de AI, una nota de arquitectura o un caso del propio
   trabajo del usuario; un tema fuera de eso se escribe desde ese ángulo, y
   quedan afuera las quejas y los memes sin contenido.
+- **Los skills de rutina corren en Sonnet:** `/wake-up`, `/links-inbox`,
+  `/apply-pending`, `/apply-email`, `/apply-site`, `/digest-email`,
+  `/reply-rejected`, `/reply-recruiter` y `/write-daily-post` fijan
+  `model: sonnet`, así corren más rápido y más barato con cualquier modelo de
+  la sesión.
 
 ## [0.3.0] - 2026-11-12
 

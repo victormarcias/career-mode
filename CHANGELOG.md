@@ -15,6 +15,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   workflow experiment, an architecture note or a case study from the user's
   own work; an off-topic subject is written from that angle, and rants and
   bare memes are out.
+- **Routine skills run on Sonnet:** `/wake-up`, `/links-inbox`,
+  `/apply-pending`, `/apply-email`, `/apply-site`, `/digest-email`,
+  `/reply-rejected`, `/reply-recruiter` and `/write-daily-post` set
+  `model: sonnet`, so they run faster and cheaper whatever the session's model.
 
 ## [0.3.0] - 2026-11-12
 

@@ -1,6 +1,7 @@
 ---
 name: digest-email
 description: Digest the user's recent Gmail: run the other skills on what it finds (rejections to /reply-rejected, recruiters who wrote first to /reply-recruiter), tag the interview, rejection and needs-attention threads, follow up the email applications whose thread went quiet for 7 days, archive what is handled, and show a table of what was done. Use whenever the user invokes /digest-email or asks to check, sweep, digest or go through their email.
+model: sonnet
 ---
 
 # Digest the email

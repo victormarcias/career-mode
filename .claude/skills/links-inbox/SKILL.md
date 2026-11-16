@@ -1,6 +1,7 @@
 ---
 name: links-inbox
 description: Read the user's job group in Telegram Web, pick the offers that fit the user (Argentina, Python, AI Engineer and the like) and queue their links as pending applications for /apply-pending. Use whenever the user invokes /links-inbox, asks to go through the group's offers, or as a step of /wake-up.
+model: sonnet
 ---
 
 # Links inbox

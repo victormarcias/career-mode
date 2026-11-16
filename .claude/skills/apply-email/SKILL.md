@@ -1,6 +1,7 @@
 ---
 name: apply-email
 description: Send a job application by email from the user's own email address through the app's own API (no browser), with the CV attached. Use this whenever the user asks to email a recruiter or send an application by mail, including as the delivery step for /apply-pending when a JD Post's `applyType` is `email_apply` (the JD Post gives an email address to apply to).
+model: sonnet
 ---
 
 # Apply by email

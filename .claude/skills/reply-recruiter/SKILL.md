@@ -1,6 +1,7 @@
 ---
 name: reply-recruiter
 description: Handle a recruiter who contacted the user first, on a Job Board Platform or by email (a "passive contact"). The user pastes the recruiter's message and usually their profile link; this analyzes it, drafts the reply in the message's language (interested, expected salary range, contact email), and logs the company plus the recruiter in career-mode's database as a passive message. Use whenever the user pastes a message from a recruiter, from a platform or an email, and says something like "a recruiter wrote to me", "a recruiter sent me a proposal", "passive contact" or "reply that I'm interested", or invokes /reply-recruiter.
+model: sonnet
 ---
 
 # Reply to a recruiter's message

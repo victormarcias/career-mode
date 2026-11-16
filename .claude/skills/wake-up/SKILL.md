@@ -1,6 +1,7 @@
 ---
 name: wake-up
 description: The morning routine in one command: bring the chat group's links into Pending (/links-inbox), apply to everything pending (/apply-pending) and digest the email (/digest-email). Use whenever the user invokes /wake-up or asks to start the day.
+model: sonnet
 ---
 
 # Wake up
