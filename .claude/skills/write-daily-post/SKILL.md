@@ -13,9 +13,31 @@ The topic is what the user wrote after the command (`/write-daily-post <topic>`,
 
 Look at the posts already saved (`grep -m1 '^Topic:' profile/daily-posts/*.txt`, if there are any): when the user's topic is already there, say so in one line and take a different angle on it, instead of repeating the post.
 
+The posts are there for recruiters as much as for the feed: they show the user's
+technical judgment. So whatever the topic, the take lands as one of these four
+kinds of post: **a short engineering lesson**, **an AI workflow experiment**,
+**a backend or architecture note**, or **a case study from the user's own work**
+(only what the CV and `profile/profile.md` back, with no client named that the
+CV doesn't name). A topic far from engineering (news, a meme, something to
+complain about) is still written, but from the angle that ties it to one of
+those four, and the reply says so in one line.
+
 ## 2. Write the reflection
 
-One single short paragraph, **at most about 90 words** (four or five sentences), written as a senior developer thinking out loud — not a summary of the topic, a *take* on it. Ground it in specifics (the real trade-offs, terms, and examples of the topic), not generic filler or textbook-sounding prose. Tone: optimistic, with a light touch of wit — wit is a seasoning here, not the main flavor, so don't force a joke into every sentence. One idea, no padding: cut any sentence that only repeats the previous one. No engagement bait ("comment YES if…") and no links in the paragraph, which LinkedIn pushes down. No emojis in the text unless the user asks for one, and then one at most, never repeated. Plain, direct language, no buzzword soup ("leverage", "synergy", "paradigm shift", etc.). Always write it in English, for broad social reach regardless of what language the user asked in.
+One single short paragraph, **at most about 90 words** (four or five sentences),
+written as a senior developer thinking out loud — not a summary of the topic, a
+*take* on it. Ground it in specifics (the real trade-offs, terms, and examples
+of the topic), not generic filler or textbook-sounding prose. Tone: optimistic,
+with a light touch of wit — wit is a seasoning here, not the main flavor, so
+don't force a joke into every sentence. Never a rant, never negative about a
+company, a tool's users or a group of people, and never a meme with no lesson in
+it: those read as low signal to a recruiter. One idea, no padding: cut any
+sentence that only repeats the previous one. No engagement bait ("comment YES
+if…") and no links in the paragraph, which LinkedIn pushes down. No emojis in
+the text unless the user asks for one, and then one at most, never repeated.
+Plain, direct language, no buzzword soup ("leverage", "synergy", "paradigm
+shift", etc.). Always write it in English, for broad social reach regardless of
+what language the user asked in.
 
 ## 3. Add hashtags
 

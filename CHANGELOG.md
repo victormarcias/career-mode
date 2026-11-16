@@ -11,6 +11,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Changed
 
 - **Project:** agent instructions live in `AGENTS.md`, readable by any agent; `CLAUDE.md` only imports it.
+- **`/write-daily-post`:** every post lands as an engineering lesson, an AI
+  workflow experiment, an architecture note or a case study from the user's
+  own work; an off-topic subject is written from that angle, and rants and
+  bare memes are out.
 
 ## [0.3.0] - 2026-11-12
 

@@ -11,6 +11,10 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
 ### Cambiado
 
 - **Proyecto:** las instrucciones para agentes viven en `AGENTS.md`, que lee cualquier agente; `CLAUDE.md` solo lo importa.
+- **`/write-daily-post`:** cada post sale como una lección de ingeniería, un
+  experimento con flujos de AI, una nota de arquitectura o un caso del propio
+  trabajo del usuario; un tema fuera de eso se escribe desde ese ángulo, y
+  quedan afuera las quejas y los memes sin contenido.
 
 ## [0.3.0] - 2026-11-12
 

@@ -2,7 +2,9 @@
 
 Writes the user's daily social-media reflection post on the topic given as the
 command's input (`/write-daily-post <topic>`; with none, it asks): one short
-paragraph (about 90 words) in English with 3 to 5 hashtags, shown in chat and
+paragraph (about 90 words) in English with 3 to 5 hashtags, written as an
+engineering lesson, an AI workflow experiment, an architecture note or a case
+study from the user's own work, never a rant or a bare meme, shown in chat and
 saved as `profile/daily-posts/daily-post-YYYYMMDD.txt`. Its first line is the
 topic, and `log.csv` records whether each post went well.
 
