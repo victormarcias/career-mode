@@ -94,6 +94,7 @@ En `.claude/skills/`, cada uno con su README:
 - `apply-pending`: aplica a los links en cola, eligiendo email o formulario
 - `apply-email`: envía una aplicación por email, con el CV adjunto
 - `apply-site`: completa el formulario de postulación de una empresa
+- `go-hunting`: recorre las bolsas de trabajo de tus plataformas y se postula a los trabajos que encajan
 - `reply-recruiter`: responde a un recruiter que escribió primero
 - `reply-rejected`: agradece a las empresas que te rechazaron, desde tu Gmail, archiva el mail y registra el rechazo
 - `digest-email`: ordena tu Gmail reciente, ejecuta los skills que se ocupan de cada cosa, etiqueta las entrevistas, hace el seguimiento de las postulaciones sin respuesta y muestra una tabla de lo que hizo

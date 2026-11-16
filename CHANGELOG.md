@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- **`/go-hunting`:** goes through the job boards of the platforms where the
+  user has a profile, checks each one allows applying with AI, reads the recent
+  jobs and applies to the ones that fit, answering the questions; it asks
+  for each board's page once and keeps a record of each platform in
+  `profile/job_boards.md`.
+
 ### Changed
 
 - **Project:** agent instructions live in `AGENTS.md`, readable by any agent; `CLAUDE.md` only imports it.

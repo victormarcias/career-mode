@@ -94,6 +94,7 @@ In `.claude/skills/`, each with its own README:
 - `apply-pending`: applies to the queued links, choosing email or form
 - `apply-email`: sends an application by email, CV attached
 - `apply-site`: fills a company's application form
+- `go-hunting`: browses the job boards of your platforms and applies to the jobs that fit
 - `reply-recruiter`: answers a recruiter who wrote first
 - `reply-rejected`: thanks the companies that rejected you, from your Gmail, archives the email and logs the rejection
 - `digest-email`: sorts your recent Gmail, runs the skills that handle it, tags the interviews, follows up the applications that went quiet and shows a table of what it did

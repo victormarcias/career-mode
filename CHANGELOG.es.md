@@ -8,6 +8,14 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
 
 ## [Unreleased]
 
+### Agregado
+
+- **`/go-hunting`:** recorre las bolsas de trabajo de las plataformas donde el
+  usuario tiene perfil, verifica que cada una permita postularse con AI, lee los
+  trabajos recientes y se postula a los que encajan, respondiendo las preguntas;
+  pide una sola vez la página de cada bolsa y guarda un registro de cada
+  plataforma en `profile/job_boards.md`.
+
 ### Cambiado
 
 - **Proyecto:** las instrucciones para agentes viven en `AGENTS.md`, que lee cualquier agente; `CLAUDE.md` solo lo importa.
