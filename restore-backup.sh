@@ -25,7 +25,7 @@ else
 fi
 if [ -t 2 ] && [ -z "${NO_COLOR:-}" ]; then RED=$'\033[31m'; else RED=''; fi
 
-[ -x .venv/bin/python ] || { echo "${RED}❌ No .venv yet: run ./run-local.sh once first.${RESET}" >&2; exit 1; }
+[ -x .venv/bin/python ] || { echo "${RED}❌ No .venv yet: run ./start.sh once first.${RESET}" >&2; exit 1; }
 BACKUP="$(.venv/bin/python server/cli.py backup-dir)"
 DIR="$BACKUP"
 PROFILE_FILES="profile.md outreach.md cv.pdf photo.png photo.jpg"
@@ -68,7 +68,7 @@ restore_env() {
   else
     cp "$DIR/env/env" .env
     chmod 600 .env
-    echo "${GREEN}🔑 Restored .env: restart the app (./stop.sh, ./run-local.sh) so it reads it${RESET}"
+    echo "${GREEN}🔑 Restored .env: restart the app (./stop.sh, ./start.sh) so it reads it${RESET}"
   fi
 }
 

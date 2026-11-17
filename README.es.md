@@ -23,8 +23,8 @@ Probala con datos inventados, sin instalar nada: **[victormarcias.online/demo/ca
 Nada personal sale de tu computadora: git ignora `profile/`, `data/`, `backup/` y `.env`. Sin Claude Code la app igual funciona como seguidor.
 
 ```bash
-./run-local.sh   # la inicia en segundo plano (Python 3.10+)
-./stop.sh        # la detiene
+./start.sh   # la inicia en segundo plano (Python 3.10+)
+./stop.sh    # la detiene
 ```
 
 ## Features

@@ -10,7 +10,7 @@ Everything here operates on career-mode's own database (events and companies) th
 
 ## Reading and writing the data
 
-Use the local API at `http://localhost:8333` (the interactive docs are at `/docs`; if a request can't connect, `./run-local.sh` starts the server). Send JSON with `curl -s -H 'Content-Type: application/json'`. The routes you need: `GET /api/companies`, `GET /api/events` (filter with `?event=pending`, `?jdUrl=...`, `?companyId=...`), `POST` to `/api/companies` or `/api/events` to create, `PATCH /api/<collection>/<id>` to change some fields, `DELETE /api/<collection>/<id>`. Never open the SQLite file directly: the API applies the rules below. Errors come back as `{"detail": "..."}`; a 409 means it already exists (name taken) or still has events.
+Use the local API at `http://localhost:8333` (the interactive docs are at `/docs`; if a request can't connect, `./start.sh` starts the server). Send JSON with `curl -s -H 'Content-Type: application/json'`. The routes you need: `GET /api/companies`, `GET /api/events` (filter with `?event=pending`, `?jdUrl=...`, `?companyId=...`), `POST` to `/api/companies` or `/api/events` to create, `PATCH /api/<collection>/<id>` to change some fields, `DELETE /api/<collection>/<id>`. Never open the SQLite file directly: the API applies the rules below. Errors come back as `{"detail": "..."}`; a 409 means it already exists (name taken) or still has events.
 
 ## Rule: on a Job Board Platform only a JD Post is read, and only read
 

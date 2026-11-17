@@ -1,6 +1,6 @@
 # Profile
 
-The personal data the skills read, with an invented person as the example. On the first run `./run-local.sh` copies this file to `profile.md` (gitignored: it is never committed and never leaves this computer). Make that copy yours: have an AI fill it from your CV, as the README in this folder explains, or edit it by hand. Keep it in step with your CV, which is the source of truth.
+The personal data the skills read, with an invented person as the example. On the first run `./start.sh` copies this file to `profile.md` (gitignored: it is never committed and never leaves this computer). Make that copy yours: have an AI fill it from your CV, as the README in this folder explains, or edit it by hand. Keep it in step with your CV, which is the source of truth.
 
 ## 👤 Basics
 

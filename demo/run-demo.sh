@@ -28,8 +28,8 @@ if lsof -i ":$PORT" -sTCP:LISTEN -t >/dev/null 2>&1; then
   exit 0
 fi
 
-# the same environment as the app (run ./run-local.sh once, or: python3 -m venv .venv && .venv/bin/pip install -r requirements.txt)
-[ -x "$VENV/bin/python" ] || { echo "❌ No .venv yet: run ./run-local.sh once first." >&2; exit 1; }
+# the same environment as the app (run ./start.sh once, or: python3 -m venv .venv && .venv/bin/pip install -r requirements.txt)
+[ -x "$VENV/bin/python" ] || { echo "❌ No .venv yet: run ./start.sh once first." >&2; exit 1; }
 
 # a fresh database every time, filled with the invented companies and events, dated around today
 rm -f demo/data/demo.db demo/data/demo.db-shm demo/data/demo.db-wal

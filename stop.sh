@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Stops the dev server started by run-local.sh.
+# Stops the dev server started by start.sh.
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -11,7 +11,7 @@ else
 fi
 if [ -t 2 ] && [ -z "${NO_COLOR:-}" ]; then RED=$'\033[31m'; else RED=''; fi
 
-# Same lookup as run-local.sh: a PORT exported in the shell wins, then the one in .env.
+# Same lookup as start.sh: a PORT exported in the shell wins, then the one in .env.
 if [ -z "${PORT:-}" ] && [ -f .env ]; then
   PORT="$(grep -E '^PORT=[0-9]+$' .env | tail -n 1 | cut -d= -f2 || true)"
 fi
@@ -22,7 +22,7 @@ if [ -f "$PIDFILE" ]; then
   PID="$(cat "$PIDFILE")"
   if kill -0 "$PID" 2>/dev/null; then
     kill "$PID"
-    # Wait until it is really gone, so ./stop.sh && ./run-local.sh can't race.
+    # Wait until it is really gone, so ./stop.sh && ./start.sh can't race.
     for _ in $(seq 1 50); do kill -0 "$PID" 2>/dev/null || break; sleep 0.1; done
     echo "${GREEN}🛑 Stopped (PID $PID).${RESET}"
   else
@@ -32,7 +32,7 @@ if [ -f "$PIDFILE" ]; then
   exit 0
 fi
 
-# No pidfile (e.g. the server was started manually, not via run-local.sh) —
+# No pidfile (e.g. the server was started manually, not via start.sh) —
 # fall back to whatever is actually listening on the port.
 PORT_PID="$(lsof -i ":$PORT" -sTCP:LISTEN -t 2>/dev/null || true)"
 if [ -n "$PORT_PID" ]; then

@@ -30,7 +30,7 @@
   "settings.nothingToChange": "Nothing to change.",
   "settings.saving": "Saving…",
   "settings.saved": "Saved.",
-  "settings.savedRestart": "Saved. Restart the server (`./stop.sh`, then `./run-local.sh`) for the port or database change to apply.",
+  "settings.savedRestart": "Saved. Restart the server (`./stop.sh`, then `./start.sh`) for the port or database change to apply.",
   "settings.choice.APP_LANGUAGE.en": "English",
   "settings.choice.APP_LANGUAGE.es": "Español",
   "settings.picture.hint": "A PNG or JPEG of up to {mb} MB, kept in `profile/` (git ignores it). It is uploaded right away, no Save needed. Used by the `/submit-profile` skill when a profile picture is needed.",
@@ -235,5 +235,5 @@
   "profile.noSections": "No sections found in profile.md.",
   "profile.errServer": "The server answered {status}.",
   "profile.errLoad": "Could not load the profile: {message}",
-  "api.unreachable": "Cannot reach the server. Is it running? (./run-local.sh)"
+  "api.unreachable": "Cannot reach the server. Is it running? (./start.sh)"
 }

@@ -23,8 +23,8 @@ Try it with fantasy data, no setup needed: **[victormarcias.online/demo/career-m
 Nothing personal leaves your computer: git ignores `profile/`, `data/`, `backup/` and `.env`. Without Claude Code the app still runs as a tracker.
 
 ```bash
-./run-local.sh   # starts it in the background (Python 3.10+)
-./stop.sh        # stops it
+./start.sh   # starts it in the background (Python 3.10+)
+./stop.sh    # stops it
 ```
 
 ## Features

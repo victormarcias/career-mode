@@ -45,7 +45,7 @@ Once the reply went out, **archive the thread**: `unlabel_thread` with the threa
 
 ## 4. Log the rejection
 
-Through the local API at `http://localhost:8333` (docs at `/docs`; if a request can't connect, `./run-local.sh` starts the server), with `curl -s -H 'Content-Type: application/json'`.
+Through the local API at `http://localhost:8333` (docs at `/docs`; if a request can't connect, `./start.sh` starts the server), with `curl -s -H 'Content-Type: application/json'`.
 
 **The rule: nothing is logged that has no process in the Calendar already**, whether the process is new or archived. A rejection closes an application that exists; it never starts one, and it never creates a company. This holds for the rejections from a company and for AIApply's.
 

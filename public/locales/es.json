@@ -30,7 +30,7 @@
   "settings.nothingToChange": "No hay nada para cambiar.",
   "settings.saving": "Guardando…",
   "settings.saved": "Guardado.",
-  "settings.savedRestart": "Guardado. Reinicia el servidor (`./stop.sh` y después `./run-local.sh`) para que se aplique el cambio de puerto o de base de datos.",
+  "settings.savedRestart": "Guardado. Reinicia el servidor (`./stop.sh` y después `./start.sh`) para que se aplique el cambio de puerto o de base de datos.",
   "settings.choice.APP_LANGUAGE.en": "English",
   "settings.choice.APP_LANGUAGE.es": "Español",
   "settings.picture.hint": "Un PNG o JPEG de hasta {mb} MB, guardado en `profile/` (git lo ignora). Se sube al instante, sin hacer clic en Guardar. Lo usa el skill `/submit-profile` cuando hace falta una foto de perfil.",
@@ -235,5 +235,5 @@
   "profile.noSections": "No se encontraron secciones en profile.md.",
   "profile.errServer": "El servidor respondió {status}.",
   "profile.errLoad": "No se pudo cargar el perfil: {message}",
-  "api.unreachable": "No se puede llegar al servidor. ¿Está corriendo? (./run-local.sh)"
+  "api.unreachable": "No se puede llegar al servidor. ¿Está corriendo? (./start.sh)"
 }

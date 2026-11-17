@@ -172,7 +172,7 @@ def main():
             time.sleep(30)
             run_once(token, chat)
     except urllib.error.URLError:
-        sys.exit("The app is not running at %s: ./run-local.sh starts it." % APP)
+        sys.exit("The app is not running at %s: ./start.sh starts it." % APP)
     except KeyboardInterrupt:
         pass
 

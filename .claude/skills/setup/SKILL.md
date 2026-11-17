@@ -23,7 +23,7 @@ Run these and show a short checklist of what is fine and what is missing:
 
 ## 2. Start the app
 
-`./run-local.sh`. The first run creates `.venv`, installs the packages and creates `.env`, `profile/profile.md`, `profile/outreach.md` and the database, so it can take a minute. If it fails, show the last lines it printed and stop. Otherwise confirm with `curl -s http://localhost:8333/api/settings/env`.
+`./start.sh`. The first run creates `.venv`, installs the packages and creates `.env`, `profile/profile.md`, `profile/outreach.md` and the database, so it can take a minute. If it fails, show the last lines it printed and stop. Otherwise confirm with `curl -s http://localhost:8333/api/settings/env`.
 
 From here on, everything is read and written through the local API (`http://localhost:8333`, docs at `/docs`), never by opening the SQLite file or editing `.env` by hand.
 
@@ -69,4 +69,4 @@ For a file: check that it exists, that it is a PDF (its first bytes are `%PDF-`)
 
 - Open the app: `open http://localhost:8333` on macOS, `xdg-open` on Linux.
 - Say, in a short list, what was set and what was skipped, and where each skipped thing is done later: Settings (CV file, email address and password, Google Calendar ID, Gemini key, picture, database and backup folders), `profile/profile.md` or `/read-cv` (the profile), `profile/outreach.md` (the messages), or running `/setup` again.
-- Remind them the app is started with `./run-local.sh` and stopped with `./stop.sh`, and that the Calendar's **+ Application** and the sidebar's **Pending** page are where applications start.
+- Remind them the app is started with `./start.sh` and stopped with `./stop.sh`, and that the Calendar's **+ Application** and the sidebar's **Pending** page are where applications start.

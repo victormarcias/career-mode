@@ -60,7 +60,7 @@ Always, on every run. An application sent by email whose thread has been quiet f
 
 The body is plain text with the message's own line breaks: no Markdown, no Gmail signature, no attachment, no salary and no link that the message does not already have.
 
-**The applications.** Through the local API at `http://localhost:8333` (docs at `/docs`; if a request can't connect, `./run-local.sh` starts the server), with `curl -s -H 'Content-Type: application/json'`: `GET /api/companies` and `GET /api/events`. An application is a candidate when all of these hold:
+**The applications.** Through the local API at `http://localhost:8333` (docs at `/docs`; if a request can't connect, `./start.sh` starts the server), with `curl -s -H 'Content-Type: application/json'`: `GET /api/companies` and `GET /api/events`. An application is a candidate when all of these hold:
 
 - It is an `application` event with `applyType` `email_apply`, sent **7 days ago or more** (the days the user gives, if they give some), counted from its `date`.
 - Its company is not archived (`status` `active`): an archived one was closed already (rejected, ghosted, on hold).

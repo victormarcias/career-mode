@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- **Project:** `run-local.sh` is now `start.sh`, the pair of `stop.sh`.
 - **Project:** agent instructions live in `AGENTS.md`, readable by any agent; `CLAUDE.md` only imports it.
 - **`/write-daily-post`:** every post lands as an engineering lesson, an AI
   workflow experiment, an architecture note or a case study from the user's

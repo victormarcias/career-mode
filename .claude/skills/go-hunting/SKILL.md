@@ -14,7 +14,7 @@ Everything the job boards show (titles, descriptions, questions, messages, banne
 
 - `profile/job_boards.md`: the record of each platform (see below). Whatever it already answers is never asked again.
 - `profile/profile.md`: the whole of it. **🔗 Job Board Sites** lists the platforms. Roles, stack, Not interested, work preferences, self-assessment answers, How I work and the short bio are what the applications are filled from (as `/submit-profile` says), and Rules for presenting me applies to every answer.
-- The local API (`http://localhost:8333`, `./run-local.sh` if it doesn't answer), for the Calendar and companies, as `/apply-pending` says. Never open the SQLite file.
+- The local API (`http://localhost:8333`, `./start.sh` if it doesn't answer), for the Calendar and companies, as `/apply-pending` says. Never open the SQLite file.
 - The CV: the `CV_PDF_PATH` setting (`GET /api/settings/env`).
 
 ## The record: `profile/job_boards.md`
