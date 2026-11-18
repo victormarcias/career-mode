@@ -1,5 +1,5 @@
 import { api, subscribe } from './api.js'
-import { EVENT_TYPES, EVENT_LABELS, EVENT_COLORS, EVENT_COLOR_HIGHLIGHT, INTERVIEW_ALERT_CLASS, interviewAlertOn } from './events.js'
+import { EVENT_TYPES, EVENT_LABELS, EVENT_COLORS, eventTimeClass, EVENT_COLOR_HIGHLIGHT, INTERVIEW_ALERT_CLASS, interviewAlertOn } from './events.js'
 import { startOfWeek, addDays, formTime, toISODate, formatDayLabel, formatWeekNumber, formatWeekRange, currentOrNextBusinessWeekStart } from './dates.js'
 import { companyCardLink, companyHint, escapeHtml, findCompany, openableLink, pendingLabel, setNotice, slideTransition, typeConflict, typeConflictText, typeFor } from './dom-utils.js'
 import { renderOutreach, detectApplyType } from './outreach.js'
@@ -334,7 +334,7 @@ function renderWeek() {
       const pill = document.createElement('button')
       pill.className = `event-pill block w-full rounded-2xl px-3 py-2 text-left text-sm ${color}`
       pill.innerHTML = `
-        ${app.time ? `<div class="text-[10px] font-semibold opacity-70">${app.time}</div>` : ''}
+        ${app.time ? `<div class="text-[10px] font-semibold ${eventTimeClass(app.event)}">${app.time}</div>` : ''}
         <div class="flex items-center gap-1.5">
           <span>${meta.emoji}</span>
           <span class="truncate font-medium">${escapeHtml(pillLabel(app))}</span>

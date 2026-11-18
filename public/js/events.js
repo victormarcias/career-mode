@@ -39,7 +39,8 @@ const EVENT_EMOJIS = {
   on_hold: '⏸️',
   offer: '🎉',
   rejection: '❌',
-  red_flag: '🚩',
+  // A black flag, since the red 🚩 vanishes on the red of the red flag entry.
+  red_flag: '🏴',
   archive: '📦',
 }
 
@@ -72,11 +73,20 @@ export const EVENT_COLORS = {
   tech_interview: 'bg-black text-green-400',
   culture_interview: 'bg-violet-100 text-violet-950',
   on_hold: 'bg-amber-100 text-amber-950',
-  offer: 'bg-emerald-100 text-emerald-950',
-  rejection: 'bg-red-100 text-red-950',
-  red_flag: 'bg-orange-100 text-orange-950',
+  // The offer is a strong violet with white text, so it stands out and isn't mistaken for the light violet
+  // of the culture interview.
+  offer: 'bg-violet-600 text-white',
+  // The rejection is the dark gray capsule with red text the company list shows for it (`CLOSED_BY_LOOKS`).
+  rejection: 'bg-gray-800 text-red-400',
+  // The red flag is a strong red with white text, so it stands out from the rejection's red text.
+  red_flag: 'bg-red-600 text-white',
   archive: 'bg-slate-200 text-slate-900',
 }
+
+// The pills with a dark background show their time in one light gray, instead of the faded text color,
+// which is hard to read on them.
+const DARK_PILL_EVENTS = ['tech_filter', 'hr_intro', 'tech_interview', 'offer', 'rejection', 'red_flag']
+export const eventTimeClass = (event) => (DARK_PILL_EVENTS.includes(event) ? 'text-gray-300' : 'opacity-70')
 
 // The interviews: their pill gets a red alert border from 10 minutes before the time it has until 30 minutes
 // after it, while the page is open.

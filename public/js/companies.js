@@ -40,7 +40,7 @@ export function companyCounts(companies) {
 const CLOSED_BY_LOOKS = {
   ghosted: { emoji: '👻', color: 'text-gray-300' },
   rejection: { emoji: EVENT_LABELS.rejection.emoji, color: 'text-red-400' },
-  red_flag: { emoji: EVENT_LABELS.red_flag.emoji, color: 'text-orange-400' },
+  red_flag: { emoji: EVENT_LABELS.red_flag.emoji, color: 'text-red-500' },
   on_hold: { emoji: EVENT_LABELS.on_hold.emoji, color: 'text-amber-400' },
   offer: { emoji: EVENT_LABELS.offer.emoji, color: 'text-emerald-400' },
 }

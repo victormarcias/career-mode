@@ -99,6 +99,7 @@ En `.claude/skills/`, cada uno con su README:
 - `reply-rejected`: agradece a las empresas que te rechazaron, desde tu Gmail, archiva el mail y registra el rechazo
 - `digest-email`: ordena tu Gmail reciente, ejecuta los skills que se ocupan de cada cosa, etiqueta las entrevistas, hace el seguimiento de las postulaciones sin respuesta y muestra una tabla de lo que hizo
 - `submit-profile`: completa portales de candidatos con tu perfil
+- `ui`: hace un cambio chico al aspecto de la app (un color, un emoji, un texto), con Haiku
 - `commit`: commitea tus cambios en la rama actual, corto y a tu nombre
 
 ## Backups

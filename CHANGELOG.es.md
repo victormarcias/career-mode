@@ -15,6 +15,9 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
   trabajos recientes y se postula a los que encajan, respondiendo las preguntas;
   pide una sola vez la página de cada bolsa y guarda un registro de cada
   plataforma en `profile/job_boards.md`.
+- **`/ui`:** hace un cambio chico al aspecto de la app (un color, un emoji, un
+  texto) con Haiku, manteniendo los textos en ambos idiomas y los colores
+  distinguibles.
 
 ### Cambiado
 

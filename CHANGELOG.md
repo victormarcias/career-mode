@@ -15,6 +15,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   jobs and applies to the ones that fit, answering the questions; it asks
   for each board's page once and keeps a record of each platform in
   `profile/job_boards.md`.
+- **`/ui`:** makes a small change to the look of the app (a color, an emoji, a
+  text) on Haiku, keeping the texts in both languages and the colors distinct.
 
 ### Changed
 
