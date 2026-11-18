@@ -44,6 +44,8 @@
   "settings.picture.removed": "Photo removed.",
   "settings.var.APP_LANGUAGE.label": "Language",
   "settings.var.APP_LANGUAGE.description": "The language of the app: `en` (English) or `es` (Spanish). It applies when the page reloads.",
+  "settings.var.CV_DOC_ID.label": "CV Google Doc",
+  "settings.var.CV_DOC_ID.description": "The ID of the Google Doc your CV is written in (the part of its link after `/d/`). The skills open it to edit the CV itself; `CV_PDF_PATH` is still the file they attach.",
   "settings.var.CV_PDF_PATH.label": "CV file",
   "settings.var.CV_PDF_PATH.description": "The path to your CV as a PDF of up to 1 MB on this computer. `/setup` copies it to `profile/cv.pdf` and fills this in; run it again when your CV changes. A relative path starts at the project folder. The skills attach and upload this file, and `/read-cv` reads it.",
   "settings.var.EMAIL_ADDRESS.label": "Email address",

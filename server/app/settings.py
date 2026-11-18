@@ -42,6 +42,13 @@ ENV_VARS = [  # in alphabetical order, which is how Settings lists them
         choices=('en', 'es'),
     ),
     EnvVar(
+        'CV_DOC_ID',
+        'CV Google Doc',
+        'The ID of the Google Doc your CV is written in (the part of its link after `/d/`). The skills open it to edit '
+        'the CV itself; `CV_PDF_PATH` is still the file they attach.',
+        secret=True,
+    ),
+    EnvVar(
         'CV_PDF_PATH',
         'CV file',
         'The path to your CV as a PDF of up to 1 MB on this computer. `/setup` copies it to `profile/cv.pdf` and fills this in; '

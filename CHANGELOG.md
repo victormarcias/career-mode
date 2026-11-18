@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- **CV Google Doc setting (`CV_DOC_ID`):** the ID of the Google Doc the CV is
+  written in, so the skills can open it to edit the CV itself.
 - **`/go-hunting`:** goes through the job boards of the platforms where the
   user has a profile, checks each one allows applying with AI, reads the recent
   jobs and applies to the ones that fit, answering the questions; it asks

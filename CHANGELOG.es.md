@@ -10,6 +10,8 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
 
 ### Agregado
 
+- **Ajuste del Google Doc del CV (`CV_DOC_ID`):** el ID del Google Doc en el que
+  está escrito el CV, para que los skills lo abran y editen el CV en sí.
 - **`/go-hunting`:** recorre las bolsas de trabajo de las plataformas donde el
   usuario tiene perfil, verifica que cada una permita postularse con AI, lee los
   trabajos recientes y se postula a los que encajan, respondiendo las preguntas;
