@@ -1,6 +1,6 @@
 import { api } from './api.js'
 import { currentTime, toISODate } from './dates.js'
-import { companyHint, findCompany, setNotice, typeConflict, typeConflictText, typeFor } from './dom-utils.js'
+import { companyHint, findCompany, refreshLinkOpeners, setNotice, typeConflict, typeConflictText, typeFor } from './dom-utils.js'
 import { t } from './i18n.js'
 
 // The form for an application sent by hand to a company that is new to the app: it asks for
@@ -35,22 +35,29 @@ function linkedinPath(value) {
 export const isCompanyHome = (value) => /^\/(company|school|showcase)\/[^/]+/.test(linkedinPath(value) ?? '')
 export const isRecruiterProfile = (value) => /^\/in\/[^/]+/.test(linkedinPath(value) ?? '')
 
+// A recruiter is written down as their LinkedIn profile, their email or just their name (letters, spaces,
+// dots, apostrophes and hyphens), one per line. Anything longer, like a name followed by notes, is not one.
+export const isRecruiterEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+export const isRecruiterName = (value) => /^\p{L}[\p{L}\p{M} .'’-]{0,59}$/u.test(value.trim())
+export const isRecruiter = (value) =>
+  isRecruiterProfile(linkedinUrl(value)) || isRecruiterEmail(value) || isRecruiterName(value)
+
 // The first problem with the form, as a sentence to show, or null when it can be saved. Company Home
 // and the recruiters are never required (not everyone has a LinkedIn profile), but a link that is
-// given has to be the right kind of address.
+// given has to be the right kind of address, and a recruiter a profile, an email or a name.
 export function validateApplication(fields) {
   if (!TYPES.includes(fields.type)) return t('app.errType')
   if (fields.type === 'web_form' && !fields.link.trim()) return t('form.errLinkRequired')
   if (!fields.company.trim()) return t('app.errCompany')
   const home = linkedinUrl(fields.companyHome)
   if (home && !isCompanyHome(home)) return t('app.errHomeKind')
-  if (parseRecruiters(fields.recruiters).some((r) => !isRecruiterProfile(r))) {
+  if (parseRecruiters(fields.recruiters).some((r) => !isRecruiter(r))) {
     return t('app.errRecruiters')
   }
   return null
 }
 
-// The Recruiters field takes one LinkedIn profile per line, like an agency's Recruiters field.
+// The Recruiters field takes one recruiter per line: a LinkedIn profile (completed to a full URL), an email or a name.
 export function parseRecruiters(text) {
   return [...new Set((text ?? '').split(/\r?\n/).map(linkedinUrl).filter(Boolean))]
 }
@@ -62,11 +69,15 @@ export function buildNotes(recruiters, notes) {
 }
 
 // The other way round, for editing: the recruiters on the leading `Recruiter:` lines, and the rest.
+// Only a line that holds a recruiter (a profile, an email or a name) counts; a `Recruiter:` line with
+// more than that, like a name and notes, stays in the notes, so saving never drops it.
 export function splitRecruiters(notes) {
   const lines = (notes ?? '').split('\n')
   const recruiters = []
   while (lines.length && /^Recruiter:/.test(lines[0])) {
-    const value = lines.shift().replace(/^Recruiter:[ \t]*/, '').trim()
+    const value = lines[0].replace(/^Recruiter:[ \t]*/, '').trim()
+    if (value && !isRecruiter(value)) break
+    lines.shift()
     if (value) recruiters.push(value)
   }
   return { recruiters, rest: lines.join('\n') }
@@ -83,15 +94,17 @@ export async function saveApplication(fields, { companies, now = new Date() }, c
   if (conflict) throw new Error(typeConflictText(fields.company, conflict))
 
   const recruiters = parseRecruiters(fields.recruiters)
+  // An agency's own list keeps LinkedIn profiles only; an email or a name stays on the event.
+  const profiles = recruiters.filter(isRecruiterProfile)
   const website = fields.website.trim() || null
   const profile = { name: fields.company.trim(), companyType, website, linkedin: linkedinUrl(fields.companyHome) || null }
   let companyId
   const found = findCompany(companies, fields.company)
   if (!found) {
-    companyId = (await client.create('companies', fields.agency ? { ...profile, recruiters } : profile)).id
+    companyId = (await client.create('companies', fields.agency ? { ...profile, recruiters: profiles } : profile)).id
   } else {
     companyId = found.id
-    const missing = fields.agency ? recruiters.filter((r) => !(found.recruiters ?? []).includes(r)) : []
+    const missing = fields.agency ? profiles.filter((r) => !(found.recruiters ?? []).includes(r)) : []
     if (missing.length) await client.patch('companies', companyId, { recruiters: [...(found.recruiters ?? []), ...missing] })
   }
 
@@ -127,6 +140,7 @@ export function initApplicationForm({ getCompanies }) {
   function open() {
     openButton.classList.add('active') // pressed while its form is open
     form.reset()
+    refreshLinkOpeners(form)
     syncType()
     setNotice(errorEl, '')
     overlay.classList.remove('hidden')

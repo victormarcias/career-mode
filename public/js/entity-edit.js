@@ -1,5 +1,5 @@
 import { api } from './api.js'
-import { escapeHtml, findCompany, setNotice, typeConflictText } from './dom-utils.js'
+import { escapeHtml, findCompany, setNotice, typeConflictText, wireLinkOpeners } from './dom-utils.js'
 import { toISODate } from './dates.js'
 import { t } from './i18n.js'
 
@@ -8,7 +8,7 @@ const FIELD_SPECS = [
   { key: 'notes', label: 'form.notes', type: 'textarea' },
   { key: 'website', label: 'companies.website', type: 'url' },
   { key: 'linkedin', label: 'edit.linkedin', type: 'url' },
-  { key: 'applicationLink', label: 'edit.applicationLink', type: 'text' },
+  { key: 'applicationLink', label: 'edit.applicationLink', type: 'url' },
   { key: 'recruiters', label: 'form.recruiters', type: 'lines' },
 ]
 
@@ -55,13 +55,13 @@ export function fieldHtml(spec, value) {
     return `
       <div>
         <label class="mb-1 block text-xs text-gray-500">${t(spec.label)}</label>
-        <textarea id="${id}" rows="${rows}" class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100">${escapeHtml(text)}</textarea>
+        <textarea id="${id}" rows="${rows}"${spec.type === 'lines' ? ' data-link' : ''} class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100">${escapeHtml(text)}</textarea>
       </div>
     `
   }
   // A link is typed with no "https://" ("acme.example"), which an <input type="url"> refuses: it is a text field
-  // with the keyboard of a URL, and the card adds the https:// when it opens it (safeHref, dom-utils.js).
-  const typeAttrs = spec.type === 'url' ? 'type="text" inputmode="url"' : `type="${spec.type}"`
+  // with the keyboard of a URL and an open button (data-link), and it opens with https:// added (linkHref, dom-utils.js).
+  const typeAttrs = spec.type === 'url' ? 'type="text" inputmode="url" data-link' : `type="${spec.type}"`
   return `
     <div>
       <label class="mb-1 block text-xs text-gray-500">${t(spec.label)}${spec.required ? ' <span class="req">*</span>' : ''}</label>
@@ -123,6 +123,7 @@ function openForm(company, viaName, archived = false) {
   // The type and, for a client, its agency go right after the name.
   parts.splice(1, 0, typeFieldHtml(company.companyType), viaFieldHtml(viaName, company.companyType))
   document.getElementById('edit-form-fields').innerHTML = parts.join('')
+  wireLinkOpeners(document.getElementById('edit-form-fields'))
   document.getElementById('edit-f-companyType').addEventListener('change', (e) => {
     document.getElementById('edit-f-via-wrap').classList.toggle('hidden', e.target.value !== 'client')
   })

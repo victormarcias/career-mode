@@ -1,11 +1,11 @@
 import { api, subscribe } from './api.js'
 import { EVENT_TYPES, EVENT_LABELS, EVENT_COLORS, eventTimeClass, EVENT_COLOR_HIGHLIGHT, INTERVIEW_ALERT_CLASS, interviewAlertOn } from './events.js'
 import { startOfWeek, addDays, formTime, toISODate, formatDayLabel, formatWeekNumber, formatWeekRange, currentOrNextBusinessWeekStart } from './dates.js'
-import { companyCardLink, companyHint, escapeHtml, findCompany, openableLink, pendingLabel, setNotice, slideTransition, typeConflict, typeConflictText, typeFor } from './dom-utils.js'
+import { companyCardLink, companyHint, escapeHtml, findCompany, pendingLabel, refreshLinkOpeners, setNotice, slideTransition, typeConflict, typeConflictText, typeFor, wireLinkOpeners } from './dom-utils.js'
 import { renderOutreach, detectApplyType } from './outreach.js'
 import { initPending, renderPending } from './pending.js'
 import { archivableCompany, archiveCompany, initEntityEditForm } from './entity-edit.js'
-import { buildNotes, initApplicationForm, parseRecruiters, splitRecruiters } from './application-form.js'
+import { buildNotes, initApplicationForm, isRecruiter, parseRecruiters, splitRecruiters } from './application-form.js'
 import { activeCompanies, renderCompanies, setSearch, setStatusFilter } from './companies.js'
 import { generateWeeklyReport, hideWeeklyReport, isWeeklyReportOpen, refreshWeeklyReport } from './weekly-report.js'
 import { initFollowUp, renderFollowUp } from './follow-up.js'
@@ -41,7 +41,7 @@ function initApp() {
   document.getElementById('company-search').addEventListener('input', (e) => setSearch(e.target.value))
   document.getElementById('f-event').addEventListener('change', updateTypeFields)
   document.getElementById('f-apply-type').addEventListener('change', updateTypeFields)
-  document.getElementById('f-jd').addEventListener('input', updateLinkOpener)
+  wireLinkOpeners(document) // the open button of every field marked data-link, in every form of the page
   document.getElementById('f-company').addEventListener('input', pickCompany)
   document.getElementById('f-company').addEventListener('change', pickCompany)
   document.getElementById('f-company').addEventListener('input', updateCompanyOpener)
@@ -416,8 +416,13 @@ function showOpener(id, href) {
   opener.classList.toggle('flex', Boolean(href))
 }
 
-function updateLinkOpener() {
-  showOpener('f-jd-open', openableLink(document.getElementById('f-jd').value))
+// Notes open as tall as their text (3 lines at least, half the screen at most, then it scrolls);
+// the user can still drag it taller. It runs once the form is shown, when the text has a height to measure.
+function fitNotes() {
+  const notes = document.getElementById('f-notes')
+  notes.style.height = 'auto'
+  const border = notes.offsetHeight - notes.clientHeight
+  notes.style.height = `${Math.min(notes.scrollHeight + border, window.innerHeight * 0.5)}px`
 }
 
 function updateCompanyOpener() {
@@ -429,7 +434,8 @@ function updateCompanyOpener() {
 // event, and a passive message has none. An application of type Web must have it.
 function updateTypeFields() {
   document.getElementById('event-form-title').textContent = eventFormTitle()
-  const hasLink = pendingEdit || (typeDrivenEdit && currentEvent() !== 'passive_message')
+  // A passive message shows its JD link too, when the recruiter gave one.
+  const hasLink = pendingEdit || typeDrivenEdit
   document.getElementById('f-jd-wrap').classList.toggle('hidden', !hasLink)
   const web = typeDrivenEdit && document.getElementById('f-apply-type').value === 'web_form'
   document.getElementById('f-jd').required = web
@@ -516,7 +522,7 @@ function openForm(app = null) {
   document.getElementById('f-notes').value = rest
   // A link is given when an application is logged (+ Application); this form only edits it.
   document.getElementById('f-jd').value = app?.jdUrl ?? ''
-  updateLinkOpener()
+  refreshLinkOpeners(document.getElementById('event-form'))
   updateTypeFields()
   updateCompanyType()
   setNotice(document.getElementById('form-error'), '')
@@ -527,6 +533,7 @@ function openForm(app = null) {
   document.getElementById('new-event-btn').classList.toggle('active', !app)
   overlay.classList.remove('hidden')
   overlay.classList.add('flex')
+  fitNotes()
   requestAnimationFrame(() => card.classList.add('is-open'))
 }
 
@@ -580,7 +587,11 @@ async function handleFormSubmit(e) {
     const viaConflict = viaName ? typeConflict(companies, viaName, 'agency') : null
     if (viaConflict) throw new Error(typeConflictText(viaName, viaConflict))
     let notes = document.getElementById('f-notes').value.trim()
-    if (typeDrivenEdit) notes = buildNotes(parseRecruiters(document.getElementById('f-recruiter').value), notes)
+    if (typeDrivenEdit) {
+      const recruiters = parseRecruiters(document.getElementById('f-recruiter').value)
+      if (recruiters.some((r) => !isRecruiter(r))) throw new Error(t('app.errRecruiters'))
+      notes = buildNotes(recruiters, notes)
+    }
 
     // An existing company is found by name (ignoring case) and reused; only a new one is created. Whether an
     // event archives or reactivates its company is derived from its events, so there is no status to write here.
@@ -601,9 +612,9 @@ async function handleFormSubmit(e) {
 
     const payload = { date, time, event, companyId, viaCompanyId, notes }
     if (typeDrivenEdit) {
-      // An application's link can be edited; a passive message has none. The Type of an application is
+      // An application's or a passive message's link can be edited. The Type of an application is
       // its apply type. Any other event leaves both as they are.
-      payload.jdUrl = event === 'passive_message' ? null : document.getElementById('f-jd').value.trim() || null
+      payload.jdUrl = document.getElementById('f-jd').value.trim() || null
       payload.applyType = event === 'passive_message' ? null : type || null
     }
     if (editingAppId) await api.patch('events', editingAppId, payload)

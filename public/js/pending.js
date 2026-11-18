@@ -1,7 +1,7 @@
 import { api } from './api.js'
 import { EVENT_LABELS } from './events.js'
 import { nextBusinessDate } from './dates.js'
-import { escapeHtml, setNotice } from './dom-utils.js'
+import { escapeHtml, linkHref, setNotice } from './dom-utils.js'
 import { t } from './i18n.js'
 
 // The Pending page: the queued links, which follow the data live, and under them a form that saves a link as a
@@ -43,7 +43,7 @@ export function listHtml(items) {
     .map(
       (app) => `
         <div class="flex items-center gap-1 rounded-lg hover:bg-gray-800">
-          <a href="${escapeHtml(app.jdUrl ?? '')}" target="_blank" rel="noreferrer" title="${escapeHtml(app.jdUrl ?? '')}"
+          <a href="${escapeHtml(linkHref(app.jdUrl) ?? '')}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(app.jdUrl ?? '')}"
             class="flex min-w-0 flex-1 items-center gap-3 px-3 py-2 text-sm text-gray-300 hover:text-gray-50">
             <span>${EVENT_LABELS.pending.emoji}</span>
             <span class="min-w-0 flex-1 truncate">${escapeHtml(app.jdUrl ?? '')}</span>

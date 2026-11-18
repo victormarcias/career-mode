@@ -68,14 +68,67 @@ export function companyHint(companies, name, companyType, via = '') {
   return ''
 }
 
-// Where an application link points when it is opened, or null when it is not something to open: a web address
-// as it is, one typed with no "https://" ("jobs.example/x") with it, and a bare email address as a mailto: link.
-// Anything else (a script, a file, plain text) is not opened.
-export function openableLink(value) {
-  const link = (value ?? '').trim()
-  if (/^(https?:\/\/|mailto:)\S+$/i.test(link)) return link
-  if (/^[^\s@/:]+@[^\s@/:]+\.[^\s@/:]+$/.test(link)) return `mailto:${link}`
-  return /^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}(:\d+)?([/?#]\S*)?$/i.test(link) ? `https://${link}` : null
+// ---------- Links: the one rule for everything the page opens ----------
+// A value is a link when it is a web address: "https://..." (or http) as it is, or one typed with no scheme
+// ("linkedin.com/in/ana", "acme.example/jobs"), which gets https://. Anything else (a name, an email, a
+// "javascript:" or other scheme, plain text) is not a link and is shown as text. Wherever a link shows, as a
+// value on a card, inside notes or in a form field, it opens through these.
+export const LINK_CLASS = 'text-blue-400 underline hover:text-blue-300'
+
+export function linkHref(value) {
+  const link = String(value ?? '').trim()
+  if (/^https?:\/\/[^\s"<>]+$/i.test(link)) return link
+  return /^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}(:\d+)?([/?#][^\s"<>]*)?$/i.test(link) ? `https://${link}` : null
+}
+
+// The value as a clickable link (in a new tab) when it is one, else as plain text. `label` is what shows.
+export function linkHtml(value, { label = value, className = LINK_CLASS } = {}) {
+  const href = linkHref(value)
+  const text = escapeHtml(String(label ?? ''))
+  return href ? `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer" class="${className}">${text}</a>` : text
+}
+
+const OPEN_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>'
+
+// Every form field marked `data-link` gets an open button beside it, shown while the field holds exactly one
+// line and that line is a link (a recruiters field with a name, or two recruiters, has nothing to open).
+// Safe to call again on the same root: a field is wired once.
+export function wireLinkOpeners(root = document) {
+  root.querySelectorAll('[data-link]').forEach((field) => {
+    if (field.dataset.linkWired) return
+    field.dataset.linkWired = 'true'
+    const row = document.createElement('div')
+    row.className = 'flex items-start gap-2'
+    field.replaceWith(row)
+    field.classList.remove('w-full')
+    field.classList.add('min-w-0', 'flex-1')
+    const opener = document.createElement('a')
+    opener.target = '_blank'
+    opener.rel = 'noopener noreferrer'
+    opener.title = t('form.openLink')
+    opener.setAttribute('aria-label', t('form.openLink'))
+    opener.className = 'hidden h-[38px] w-[38px] shrink-0 items-center justify-center rounded-lg border border-gray-700 bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-100'
+    opener.innerHTML = OPEN_ICON
+    row.append(field, opener)
+    field.addEventListener('input', () => updateLinkOpener(field))
+    updateLinkOpener(field)
+  })
+}
+
+// After a form sets its fields' values in code (which fires no input event), so each button matches its field.
+export function refreshLinkOpeners(root = document) {
+  root.querySelectorAll('[data-link]').forEach(updateLinkOpener)
+}
+
+function updateLinkOpener(field) {
+  const opener = field.nextElementSibling
+  if (!opener) return
+  const lines = field.value.split('\n').map((line) => line.trim()).filter(Boolean)
+  const href = lines.length === 1 ? linkHref(lines[0]) : null
+  if (href) opener.setAttribute('href', href)
+  else opener.removeAttribute('href')
+  opener.classList.toggle('hidden', !href)
+  opener.classList.toggle('flex', Boolean(href))
 }
 
 // Where the arrow next to a company goes: its card in Companies, or nowhere when the name typed is not a company yet.
@@ -147,19 +200,6 @@ export function escapeHtml(text) {
     .replace(/'/g, '&#39;')
 }
 
-// A link typed into a company (website, LinkedIn, recruiter, application) as an escaped href. It is typed with no
-// "https://" ("acme.example"), so one with no scheme gets it, and a bare email address becomes a mailto: link.
-// Only http(s) and mailto may open: a "javascript:" link (or any other scheme) becomes "#". Browsers ignore
-// control characters and spaces inside a scheme, so those are dropped before it is checked; "host:8080" is a port.
-export function safeHref(url) {
-  const link = String(url ?? '').trim()
-  if (!link) return '#'
-  const scheme = link.replace(/[\u0000-\u0020]/g, '').match(/^([a-z][a-z0-9+.-]*):(?!\d)/i)
-  if (scheme) return ['http', 'https', 'mailto'].includes(scheme[1].toLowerCase()) ? escapeHtml(link) : '#'
-  if (/^[^\s@/:]+@[^\s@/:]+\.[^\s@/:]+$/.test(link)) return escapeHtml(`mailto:${link}`)
-  return escapeHtml(`https://${link.replace(/^\/+/, '')}`)
-}
-
 // A title that starts with an emoji ("🤝 Platform Reachout Message") is shown with the emoji apart, as a company
 // card shows its building.
 function splitTitle(title) {
@@ -197,26 +237,29 @@ export function bannerHtml({ title, text, prompt }) {
   </div>`
 }
 
-// Markdown-style `[text](url)`, or a bare `https://...` pasted straight from a
-// recruiter email/ATS notification — both become clickable. One pass so a
-// markdown link's own URL is never re-matched as a second, bare link.
-const LINK_PATTERN = /\[([^\]]+)\]\(([^)]+)\)|(https?:\/\/[^\s<]+)/g
+// Notes as html: a markdown-style `[text](url)` or a bare `https://...` pasted straight from a recruiter
+// email/ATS notification becomes clickable, through linkHtml (so a `[x](javascript:...)` stays text). One pass,
+// so a markdown link's own URL is never matched again as a bare one. A literal <br> is kept as a line break.
+const LINK_PATTERN = /\[([^\]]+)\]\(([^)\s]+)\)|(https?:\/\/[^\s<]+)/g
 
 export function renderNotes(text) {
-  const escaped = (text ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/&lt;br&gt;/g, '<br>')
-
-  return escaped.replace(LINK_PATTERN, (match, mdText, mdUrl, bareUrl) => {
-    // Don't swallow sentence punctuation right after a bare URL (a closing
-    // period, comma, or parenthesis) into the link itself.
-    const trailing = bareUrl ? bareUrl.match(/[.,;:!?)]+$/)?.[0] ?? '' : ''
-    const url = trailing ? bareUrl.slice(0, -trailing.length) : (mdUrl ?? bareUrl)
-    const label = mdText ?? url
-    return `<a href="${url}" target="_blank" rel="noreferrer" class="text-blue-400 underline hover:text-blue-300">${label}</a>${trailing}`
-  })
+  const source = text ?? ''
+  const plain = (part) => escapeHtml(part).replace(/&lt;br&gt;/g, '<br>')
+  let html = ''
+  let last = 0
+  for (const match of source.matchAll(LINK_PATTERN)) {
+    const [whole, mdText, mdUrl, bareUrl] = match
+    html += plain(source.slice(last, match.index))
+    last = match.index + whole.length
+    if (mdUrl) {
+      html += linkHref(mdUrl) ? linkHtml(mdUrl, { label: mdText }) : plain(whole)
+      continue
+    }
+    // Sentence punctuation right after a bare URL (a closing period, comma or parenthesis) is not part of it.
+    const trailing = bareUrl.match(/[.,;:!?)]+$/)?.[0] ?? ''
+    html += linkHtml(trailing ? bareUrl.slice(0, -trailing.length) : bareUrl) + plain(trailing)
+  }
+  return html + plain(source.slice(last))
 }
 
 export function addCopyButtons(container) {

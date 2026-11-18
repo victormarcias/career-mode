@@ -1,4 +1,4 @@
-import { escapeHtml, safeHref, renderNotes, fadeTransition, wireAccordion } from './dom-utils.js'
+import { escapeHtml, LINK_CLASS, linkHref, linkHtml, renderNotes, fadeTransition, wireAccordion } from './dom-utils.js'
 import { EVENT_LABELS, EVENT_COLORS, isClosingEvent } from './events.js'
 import { openEntityEdit } from './entity-edit.js'
 import { t } from './i18n.js'
@@ -145,27 +145,28 @@ export function eventsOf(applications, company) {
   return applications.filter((app) => app.companyId === company.id || app.viaCompanyId === company.id)
 }
 
-const linkHtml = (url) => `<a href="${safeHref(url)}" target="_blank" rel="noreferrer" class="break-all text-blue-400 underline hover:text-blue-300">${escapeHtml(url)}</a>`
+const valueLinkHtml = (url) => linkHtml(url, { className: `break-all ${LINK_CLASS}` })
 
 // Exported for follow-up.js, which reuses this exact card body inside its own expandable results list: "the same
 // card as Companies", not a rebuild. `via` is the agency a client came through, when it has one.
 export function companyBodyHtml(c, matches, via) {
   const recruiters = c.recruiters?.length
-    ? c.recruiters.map((url) => `<a href="${safeHref(url)}" target="_blank" rel="noreferrer" class="block text-blue-400 underline hover:text-blue-300">${escapeHtml(url)}</a>`).join('')
+    ? c.recruiters.map((value) => `<div>${valueLinkHtml(value)}</div>`).join('')
     : `<p class="text-gray-500">${t('companies.noRecruiters')}</p>`
   const application = t('companies.application')
+  const applicationHref = linkHref(c.applicationLink)
   return `
-    ${c.companyType === 'client' ? `<p class="mb-3 text-sm text-gray-500">${via ? `${t('companies.via')} <a href="#companies/${via.id}" class="text-blue-400 underline hover:text-blue-300">${escapeHtml(via.name)}</a>` : t('companies.viaDirect')}</p>` : ''}
+    ${c.companyType === 'client' ? `<p class="mb-3 text-sm text-gray-500">${via ? `${t('companies.via')} <a href="#companies/${via.id}" class="${LINK_CLASS}">${escapeHtml(via.name)}</a>` : t('companies.viaDirect')}</p>` : ''}
     ${c.notes ? `<p class="mb-4 whitespace-pre-wrap text-sm leading-relaxed text-gray-300">${renderNotes(c.notes)}</p>` : ''}
     <div class="mb-6 space-y-1 text-sm">
-      <div><span class="text-gray-500">${t('companies.website')}:</span> ${c.website ? linkHtml(c.website) : '—'}</div>
-      <div><span class="text-gray-500">LinkedIn:</span> ${c.linkedin ? linkHtml(c.linkedin) : '—'}</div>
+      <div><span class="text-gray-500">${t('companies.website')}:</span> ${c.website ? valueLinkHtml(c.website) : '—'}</div>
+      <div><span class="text-gray-500">LinkedIn:</span> ${c.linkedin ? valueLinkHtml(c.linkedin) : '—'}</div>
     </div>
     <h2 class="mb-2 text-sm font-medium text-gray-400">${t('companies.recruiters')}</h2>
     <div class="mb-6 space-y-1 text-sm">${recruiters}</div>
     ${
-      c.applicationLink
-        ? `<a href="${safeHref(c.applicationLink)}" target="_blank" rel="noreferrer" class="mb-6 inline-block rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white">${application} →</a>`
+      applicationHref
+        ? `<a href="${escapeHtml(applicationHref)}" target="_blank" rel="noopener noreferrer" class="mb-6 inline-block rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white">${application} →</a>`
         : `<span class="mb-6 inline-block cursor-not-allowed rounded-full bg-gray-800 px-4 py-2 text-sm font-medium text-gray-500">${application} →</span>`
     }
     <h2 class="mb-2 mt-4 text-sm font-medium text-gray-400">${t('companies.timeline', { count: matches.length })}</h2>

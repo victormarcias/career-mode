@@ -1,9 +1,8 @@
-import { escapeHtml } from './dom-utils.js'
+import { escapeHtml, LINK_CLASS } from './dom-utils.js'
 
 // A small markdown to html for the user's own files (the profile). It knows what those files use and nothing
 // else: ### headings, paragraphs, nested bullet and numbered lists (a paragraph under an item belongs to it),
 // code blocks, and in a line `code`, **bold**, *italic* and [text](https://link). Everything is escaped first.
-const LINK_CLASS = 'text-blue-400 underline hover:text-blue-300'
 
 function inlineHtml(text) {
   const spans = []
