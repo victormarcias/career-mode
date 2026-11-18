@@ -87,10 +87,10 @@ The skills look a message up by its title, so keep these six.
 | Message | For | Used by |
 |---|---|---|
 | 📝 Platform Reachout Message | reach out first, or add a connection, on a platform | by hand |
-| 📝 Proposal Reply Message | answer a recruiter who contacted you first | `/reply-recruiter` |
+| 📝 Proposal Reply Message | answer a recruiter who contacted you first | `/reply` |
 | 📝 Application by Email Message | apply by email to a JD Post you found on a Job Board Platform: the app sends it with your CV attached, and ends it with your name and your website | `/apply-pending` |
 | 📝 Application Follow-up Message | ask for news on an application | by hand |
-| 📝 Application Rejected Message | thank them and ask for feedback after a rejection | by hand |
+| 📝 Application Rejected Message | thank them and ask for feedback after a rejection | `/digest-email` |
 | 📝 Cover Letter Message | introduce yourself when there is no specific JD Post | `/apply-site` |
 
 Placeholders, filled in by you or by a skill when it uses the message:

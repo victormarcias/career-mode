@@ -1,9 +1,9 @@
 # digest-email
 
 One command for the mailbox. It reads the last 2 days of the user's Gmail, sorts
-each thread and runs the skill that handles it: rejections go to
-[reply-rejected](../reply-rejected/README.md) and recruiters who wrote first to
-[reply-recruiter](../reply-recruiter/README.md). The threads that propose or
+each thread and handles it: rejections get the Application Rejected Message of
+`profile/outreach.md` and are logged in the Calendar, and recruiters who wrote
+first go to [reply](../reply/README.md). The threads that propose or
 confirm an interview get the `Interviews` tag, the rejections get `Rejected`,
 the ones that ask the user to do something get `Needs Attention`, and the email
 applications whose thread went quiet for 7 days get one follow-up on that same

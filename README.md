@@ -95,9 +95,8 @@ In `.claude/skills/`, each with its own README:
 - `apply-email`: sends an application by email, CV attached
 - `apply-site`: fills a company's application form
 - `go-hunting`: browses the job boards of your platforms and applies to the jobs that fit
-- `reply-recruiter`: answers a recruiter who wrote first
-- `reply-rejected`: thanks the companies that rejected you, from your Gmail, archives the email and logs the rejection
-- `digest-email`: sorts your recent Gmail, runs the skills that handle it, tags the interviews, follows up the applications that went quiet and shows a table of what it did
+- `reply`: drafts the reply to a recruiter who wrote first (`--short` for the plain message) and logs it in the Calendar
+- `digest-email`: sorts your recent Gmail, answers and logs the rejections, hands the recruiters to `reply`, tags the interviews, follows up the applications that went quiet and shows a table of what it did
 - `submit-profile`: fills candidate portals from your profile
 - `ui`: makes a small change to the look of the app (a color, an emoji, a text), on Haiku
 - `commit`: commits your changes on the current branch, short and under your name

@@ -22,6 +22,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- **`/digest-email`:** answers the rejections itself with the Application Rejected Message and logs them; `/reply-rejected` is gone.
+- **`/reply`:** `/reply-recruiter` is now `/reply`, shorter: it always starts from the Proposal Reply Message, as it is with `--short` or adapted to what the recruiter asked, and logs the contact in the Calendar.
 - **Project:** `run-local.sh` is now `start.sh`, the pair of `stop.sh`.
 - **Project:** agent instructions live in `AGENTS.md`, readable by any agent; `CLAUDE.md` only imports it.
 - **`/write-daily-post`:** every post lands as an engineering lesson, an AI
