@@ -52,7 +52,7 @@ class CompanyFields(CamelModel):
     website: OptionalText = None
     linkedin: OptionalText = None
     application_link: OptionalText = None
-    recruiters: list[str] = Field(default_factory=list, description='LinkedIn profile links, in the order entered')
+    recruiters: list[str] = Field(default_factory=list, description='The recruiters, in the order entered: each a LinkedIn profile, an email or a name')
     via_company_id: OptionalText = Field(
         default=None, description='For a client: the agency it came through; empty = applied directly. Only a client has one')
 

@@ -105,7 +105,7 @@ class CompanyRecruiter(Base):
 
     company_id: Mapped[str] = mapped_column(ForeignKey('companies.id', ondelete='CASCADE', onupdate='CASCADE'), primary_key=True)
     position: Mapped[int] = mapped_column(primary_key=True)  # keeps the order they were entered in
-    url: Mapped[str]  # the recruiter's LinkedIn profile
+    url: Mapped[str]  # the recruiter: their LinkedIn profile, their email or their name
 
 
 class Event(Base):

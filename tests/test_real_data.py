@@ -2,7 +2,7 @@
 
 The Recruiters field of the event form shows the leading `Recruiter:` lines of an event's notes: each holds one
 recruiter, as a LinkedIn profile, an email or just a name (the rule of isRecruiter in public/js/application-form.js).
-A company's `recruiters` list holds LinkedIn profiles only. A note written there shows in the wrong field. This
+A company's `recruiters` list holds the same, one recruiter each. A note written there shows in the wrong field. This
 reads a copy of the real database (data/career-mode.db) through the API, so the real file is never touched, and
 lists every event or company that breaks it. Without a real database
 (a fresh clone, CI) there is nothing to check and it is skipped. It holds no personal data: what it reports comes
@@ -59,9 +59,9 @@ def test_event_recruiter_lines_hold_one_recruiter(real):
     assert not bad, f'{len(bad)} Recruiter: lines are not a profile, an email or a name:\n' + '\n'.join(bad)
 
 
-def test_company_recruiters_are_profile_links(real):
+def test_company_recruiters_hold_one_recruiter_each(real):
     bad = [f"{c['id']}: {value[:80]}"
            for c in real.get('/api/companies').json()
            for value in c.get('recruiters') or []
-           if not PROFILE.match(value)]
-    assert not bad, f'{len(bad)} company recruiters are not a LinkedIn profile:\n' + '\n'.join(bad)
+           if not is_recruiter(value)]
+    assert not bad, f'{len(bad)} company recruiters are not a profile, an email or a name:\n' + '\n'.join(bad)

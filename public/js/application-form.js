@@ -94,17 +94,15 @@ export async function saveApplication(fields, { companies, now = new Date() }, c
   if (conflict) throw new Error(typeConflictText(fields.company, conflict))
 
   const recruiters = parseRecruiters(fields.recruiters)
-  // An agency's own list keeps LinkedIn profiles only; an email or a name stays on the event.
-  const profiles = recruiters.filter(isRecruiterProfile)
   const website = fields.website.trim() || null
   const profile = { name: fields.company.trim(), companyType, website, linkedin: linkedinUrl(fields.companyHome) || null }
   let companyId
   const found = findCompany(companies, fields.company)
   if (!found) {
-    companyId = (await client.create('companies', fields.agency ? { ...profile, recruiters: profiles } : profile)).id
+    companyId = (await client.create('companies', fields.agency ? { ...profile, recruiters } : profile)).id
   } else {
     companyId = found.id
-    const missing = fields.agency ? profiles.filter((r) => !(found.recruiters ?? []).includes(r)) : []
+    const missing = fields.agency ? recruiters.filter((r) => !(found.recruiters ?? []).includes(r)) : []
     if (missing.length) await client.patch('companies', companyId, { recruiters: [...(found.recruiters ?? []), ...missing] })
   }
 

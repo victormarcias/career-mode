@@ -35,7 +35,7 @@ COMPANIES_COLUMNS = [
     'application_link', 'notes',
 ]
 CSV_FILES = {'calendar': 'calendar.csv', 'companies': 'companies.csv'}
-RECRUITER_SEPARATOR = ' | '  # LinkedIn links have no spaces, so this can't appear inside one
+RECRUITER_SEPARATOR = ' | '  # a recruiter (a LinkedIn link, an email or a name) never holds a '|'
 _FORMULA = re.compile(r"^'*[=+\-@\t\r]")
 
 
