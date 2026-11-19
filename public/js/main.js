@@ -1,5 +1,5 @@
 import { api, subscribe } from './api.js'
-import { EVENT_TYPES, EVENT_LABELS, EVENT_COLORS, eventTimeClass, EVENT_COLOR_HIGHLIGHT, INTERVIEW_ALERT_CLASS, interviewAlertOn } from './events.js'
+import { EVENT_TYPES, EVENT_LABELS, EVENT_COLORS, eventTimeClass, EVENT_COLOR_HIGHLIGHT, INTERVIEW_ALERT_CLASS, INTERVIEW_EVENTS, interviewAlertOn } from './events.js'
 import { startOfWeek, addDays, formTime, toISODate, formatDayLabel, formatWeekNumber, formatWeekRange, currentOrNextBusinessWeekStart } from './dates.js'
 import { companyCardLink, companyHint, escapeHtml, findCompany, pendingLabel, refreshLinkOpeners, setNotice, slideTransition, typeConflict, typeConflictText, typeFor, wireLinkOpeners } from './dom-utils.js'
 import { renderOutreach, detectApplyType } from './outreach.js'
@@ -441,6 +441,8 @@ function updateTypeFields() {
   document.getElementById('f-jd').required = web
   document.getElementById('f-jd-optional').classList.toggle('hidden', web)
   document.getElementById('f-jd-req').classList.toggle('hidden', !web)
+  // An interview has its meeting link instead.
+  document.getElementById('f-meeting-wrap').classList.toggle('hidden', pendingEdit || !INTERVIEW_EVENTS.includes(currentEvent()))
 }
 
 // Says under the company which of the typed names are new, so a typo doesn't quietly create a company, and when
@@ -522,6 +524,7 @@ function openForm(app = null) {
   document.getElementById('f-notes').value = rest
   // A link is given when an application is logged (+ Application); this form only edits it.
   document.getElementById('f-jd').value = app?.jdUrl ?? ''
+  document.getElementById('f-meeting').value = app?.meetingUrl ?? ''
   refreshLinkOpeners(document.getElementById('event-form'))
   updateTypeFields()
   updateCompanyType()
@@ -611,6 +614,8 @@ async function handleFormSubmit(e) {
     }
 
     const payload = { date, time, event, companyId, viaCompanyId, notes }
+    // Only an interview has a meeting link; changing an interview to another type leaves its link as it was.
+    if (INTERVIEW_EVENTS.includes(event)) payload.meetingUrl = document.getElementById('f-meeting').value.trim() || null
     if (typeDrivenEdit) {
       // An application's or a passive message's link can be edited. The Type of an application is
       // its apply type. Any other event leaves both as they are.

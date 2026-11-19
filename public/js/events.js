@@ -89,8 +89,8 @@ const DARK_PILL_EVENTS = ['tech_filter', 'hr_intro', 'tech_interview', 'offer', 
 export const eventTimeClass = (event) => (DARK_PILL_EVENTS.includes(event) ? 'text-gray-300' : 'opacity-70')
 
 // The interviews: their pill gets a red alert border from 10 minutes before the time it has until 30 minutes
-// after it, while the page is open.
-const INTERVIEW_EVENTS = ['hr_intro', 'tech_interview', 'culture_interview']
+// after it, while the page is open. They are also the events that have a meeting link (meetingUrl).
+export const INTERVIEW_EVENTS = ['hr_intro', 'tech_interview', 'culture_interview']
 export const INTERVIEW_ALERT_BEFORE_MINUTES = 10
 export const INTERVIEW_ALERT_AFTER_MINUTES = 30
 // The border and its slow fade are in style.css.

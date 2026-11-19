@@ -135,6 +135,7 @@ class EventIn(CamelModel):
     via_company_id: OptionalText = Field(default=None, description='The agency a client\'s application came through, when there is one')
     notes: Annotated[str, BeforeValidator(lambda v: (v or '').strip() if isinstance(v, str) or v is None else v)] = ''
     jd_url: OptionalText = Field(default=None, description='Application link: a JD Post link or an email address')
+    meeting_url: OptionalText = Field(default=None, description="An interview's meeting link (Meet, Teams, Zoom...)")
     apply_type: Annotated[Optional[ApplyType], BeforeValidator(_blank_to_none)] = None
     calendar_event_id: OptionalText = None
 
@@ -156,6 +157,7 @@ class EventPatch(CamelModel):
     via_company_id: OptionalText = None
     notes: Optional[str] = None
     jd_url: OptionalText = None
+    meeting_url: OptionalText = None
     apply_type: Annotated[Optional[ApplyType], BeforeValidator(_blank_to_none)] = None
     calendar_event_id: OptionalText = None
 
@@ -180,6 +182,7 @@ class EventOut(CamelModel):
     company_label: str = Field(description="'Agency → Client' when the event came through an agency, else the company's name, else '—'. Derived, never stored.")
     notes: str
     jd_url: Optional[str]
+    meeting_url: Optional[str]
     apply_type: Optional[ApplyType]
     calendar_event_id: Optional[str]
 

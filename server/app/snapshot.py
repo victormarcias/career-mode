@@ -28,7 +28,7 @@ def export_snapshot(session: Session) -> dict:
 # Columns run roughly from shortest to longest, free text last, so the short ones stay in view in a spreadsheet.
 CALENDAR_COLUMNS = [
     'id', 'date', 'time', 'event', 'company', 'apply_type', 'calendar_event_id',
-    'company_id', 'via_company_id', 'jd_url', 'notes',
+    'company_id', 'via_company_id', 'jd_url', 'meeting_url', 'notes',
 ]
 COMPANIES_COLUMNS = [
     'company_type', 'id', 'name', 'status', 'via_company_id', 'website', 'linkedin', 'recruiters',
@@ -68,7 +68,7 @@ def export_csv(session: Session) -> dict:
     calendar = [
         {
             'id': e['id'], 'date': e['date'], 'time': e['time'], 'event': e['event'], 'company': e['companyLabel'],
-            'notes': e['notes'], 'jd_url': e['jdUrl'], 'apply_type': e['applyType'], 'calendar_event_id': e['calendarEventId'],
+            'notes': e['notes'], 'jd_url': e['jdUrl'], 'meeting_url': e['meetingUrl'], 'apply_type': e['applyType'], 'calendar_event_id': e['calendarEventId'],
             'company_id': e['companyId'], 'via_company_id': e['viaCompanyId'],
         }
         for e in data['events']
@@ -112,7 +112,7 @@ def parse_csv(calendar: str = None, companies: str = None):
     for number, row in _read_csv(calendar, ('id', 'date', 'event'), 'calendar.csv') if calendar else ():
         data['events'].append({
             'id': row['id'], 'date': row['date'], 'time': row.get('time'), 'event': row['event'], 'notes': row.get('notes'),
-            'jdUrl': row.get('jd_url'), 'applyType': row.get('apply_type'), 'calendarEventId': row.get('calendar_event_id'),
+            'jdUrl': row.get('jd_url'), 'meetingUrl': row.get('meeting_url'), 'applyType': row.get('apply_type'), 'calendarEventId': row.get('calendar_event_id'),
             'companyId': row.get('company_id'), 'viaCompanyId': row.get('via_company_id'),
         })  # `company` is only there to read: the server derives it
     return data, warnings

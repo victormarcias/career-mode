@@ -379,6 +379,14 @@
           class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" />
       </div>
 
+      <!-- An interview's meeting link (Meet, Teams, Zoom...), opened with the button beside it (data-link). -->
+      <div id="f-meeting-wrap" class="hidden">
+        <label for="f-meeting" class="mb-1 block text-xs text-gray-500">🎥 <span data-i18n="form.meetingLink">Meeting
+            link</span> <span class="text-gray-600" data-i18n="common.optional">(optional)</span></label>
+        <input type="text" id="f-meeting" data-link autocomplete="off"
+          class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" />
+      </div>
+
       <p id="form-error" class="notice text-xs text-red-400"></p>
 
       <div class="flex gap-2 pt-2">

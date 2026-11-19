@@ -35,7 +35,8 @@ class SyncIn(Range):
 class PreviewEvent(CamelModel):
     key: str
     summary: str
-    notes: str = Field(description='What the event\'s notes would hold: the Google event\'s title and description')
+    notes: str = Field(description='What the event\'s notes would hold: only the invitation\'s password, when it states one')
+    meeting_url: Optional[str] = Field(default=None, description='The invitation\'s meeting link (Meet, Teams, Zoom...), which goes in the event\'s meetingUrl')
     date: str
     time: str
     company: Optional[str] = Field(description='The company to offer (from the description\'s "Company:" line), or the one a moved event has')
@@ -77,7 +78,7 @@ def preview(data: Range, session: SessionDep, request: Request):
 @router.post('/sync', response_model=SyncOut, summary='Log the chosen Google Calendar events of a date range',
              description=(
                  'Each event is logged once (its calendar id is kept on the event) with the type and the company chosen '
-                 'for it (one that does not exist is created), and its notes are the Google event\'s title and description. One '
+                 'for it (one that does not exist is created), and its notes keep only the invitation\'s password, when it states one. One '
                  'that moved only gets its new date and time. Anything not listed in `events` is left alone.'
              ))
 def sync(data: SyncIn, session: SessionDep, request: Request):

@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- **Meeting link:** an interview has its own Meeting link field, opened like the other links; the Google Calendar sync fills it from the invitation and keeps nothing else of it in the notes but its password, when it has one.
 - **CV Google Doc setting (`CV_DOC_ID`):** the ID of the Google Doc the CV is
   written in, so the skills can open it to edit the CV itself.
 - **`/go-hunting`:** goes through the job boards of the platforms where the

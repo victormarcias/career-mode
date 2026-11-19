@@ -162,9 +162,28 @@ def clean_description(text: str) -> str:
     return re.sub(r'\n{3,}', '\n\n', re.sub(r'[ \t]+\n', '\n', text)).strip()
 
 
-def event_notes(summary: str, description: str) -> str:
-    """What the event's notes hold: the Google event's title, then its description."""
-    return '\n\n'.join(part for part in (summary, description) if part)
+# An invitation's meeting link: Google Meet, Microsoft Teams, Zoom or Webex. It goes in the event's meeting_url, which
+# the form opens, and not in its notes.
+MEETING_LINK = re.compile(
+    r'https?://(?:meet\.google\.com/[\w-]+|teams\.microsoft\.com/(?:meet|l/meetup-join)/[^\s<>()"]+'
+    r'|[\w.-]*zoom\.us/j/[^\s<>()"]+|[\w.-]*webex\.com/[^\s<>()"]+)',
+    re.IGNORECASE,
+)
+# The one thing of an invitation worth keeping besides its link: a password (Zoom, Teams), when it states one.
+_PASSWORD = re.compile(r'\b(?:passcode|password|contraseña|código de acceso)\s*:\s*([^\s,;)]+)', re.IGNORECASE)
+
+
+def meeting_link(text: str) -> Optional[str]:
+    """The first meeting link in an invitation, or None."""
+    match = MEETING_LINK.search(text or '')
+    return match.group(0).rstrip('.,;') if match else None
+
+
+def event_notes(description: str) -> str:
+    """What a synced event's notes hold: only the invitation's password, when it states one. Its meeting link goes in
+    meeting_url, and its title, date, time and company are already the event's own."""
+    match = _PASSWORD.search(description or '')
+    return '🔑 Password: %s' % match.group(1) if match else ''
 
 
 def _company_line(description: str) -> Optional[str]:
@@ -226,7 +245,8 @@ def plan_range(session: Session, ics_text: str, first: dt.date, last: dt.date, t
         plan['events'].append({
             'key': event.key,
             'summary': summary,
-            'notes': event_notes(summary, description),
+            'notes': event_notes(description),
+            'meetingUrl': meeting_link(description) or meeting_link(event.description),
             'date': date,
             'time': time,
             **offer,
@@ -279,9 +299,9 @@ def _resolve_company(session: Session, choice: Choice) -> tuple[Optional[str], O
 def apply_range(session: Session, ics_text: str, first: dt.date, last: dt.date, chosen: dict, tz=None) -> dict:
     """Does what `plan_range` says, for the events whose key is in `chosen` ({key: Choice}) only.
 
-    A new event is logged with the type and the company chosen for it, and its notes are the Google event's
-    title and description. A company that does not exist yet is created first (an event can be the first one
-    of its company). A moved event only gets its new date and time: its type, company and notes stay as they are.
+    A new event is logged with the type and the company chosen for it, the invitation's meeting link as its
+    meeting_url, and in its notes only the invitation's password, when it states one. A company that does not exist
+    yet is created first (an event can be the first one of its company). A moved event only gets its new date and time: its type, company and notes stay as they are.
     Every choice is checked before anything is written.
     """
     items = [item for item in plan_range(session, ics_text, first, last, tz)['events'] if item['key'] in chosen]
@@ -300,7 +320,7 @@ def apply_range(session: Session, ics_text: str, first: dt.date, last: dt.date, 
             continue
         company_id, via_company_id = _resolve_company(session, choice)
         crud.create_event(session, EventIn(
-            date=item['date'], time=item['time'], event=choice.type, notes=item['notes'],
+            date=item['date'], time=item['time'], event=choice.type, notes=item['notes'], meeting_url=item['meetingUrl'],
             calendar_event_id=item['key'], company_id=company_id, via_company_id=via_company_id,
         ))
         result['created'] += 1

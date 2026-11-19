@@ -121,6 +121,7 @@ class Event(Base):
     via_company_id: Mapped[Optional[str]] = mapped_column(ForeignKey('companies.id', ondelete='RESTRICT', onupdate='CASCADE'), index=True)
     notes: Mapped[str] = mapped_column(String, server_default='')
     jd_url: Mapped[Optional[str]]  # the application link: a JD Post link or an email address
+    meeting_url: Mapped[Optional[str]]  # an interview's meeting link (Meet, Teams, Zoom...), which the form opens
     apply_type: Mapped[Optional[str]]
     calendar_event_id: Mapped[Optional[str]] = mapped_column(String, unique=True)  # reserved for the Google Calendar sync
     created_at: Mapped[str] = mapped_column(String, server_default=text("(strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))"))

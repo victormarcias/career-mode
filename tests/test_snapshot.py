@@ -21,9 +21,10 @@ def test_export_then_import_into_an_empty_database_gives_the_same_data(client, m
     # Each event on its own day: on the same day the order falls back to `created_at`, which a backup doesn't keep
     make_event(companyId='big', viaCompanyId='acme', event='rejection', notes='n', date='2026-10-01')
     make_event(event='pending', jdUrl='https://p', date='2026-10-02')
+    make_event(companyId='big', event='hr_intro', meetingUrl='https://meet.example/abc', date='2026-10-03')
     exported = client.get('/api/export').json()
     report = snapshot.import_snapshot(session, exported, replace=True)
-    assert (report['companies'], report['events'], report['skipped']) == (2, 2, [])
+    assert (report['companies'], report['events'], report['skipped']) == (2, 3, [])
     assert snapshot.export_snapshot(session) == exported
 
 
@@ -63,6 +64,7 @@ def test_csv_export_is_two_files_and_loads_back_the_same_data(client, make_agenc
     make_event(companyId='big', viaCompanyId='acme', event='rejection', notes='=HYPERLINK("http://evil")', date='2026-10-01')
     make_event(companyId='solo', event='note', notes="'+1 already quoted", date='2026-10-02')
     make_event(event='pending', jdUrl='https://p', date='2026-10-03')
+    make_event(companyId='solo', event='tech_interview', meetingUrl='https://meet.example/xyz', date='2026-10-04')
     exported = client.get('/api/export').json()
     snapshot.import_snapshot(session, exported)  # `session` is a second, empty database
     files = snapshot.export_csv(session)

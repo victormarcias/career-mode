@@ -100,6 +100,7 @@
   "form.recruiters": "Recruiters (LinkedIn, email or name, one per line)",
   "form.notes": "Notes",
   "form.appLink": "Application link",
+  "form.meetingLink": "Meeting link",
   "form.openLink": "Open link",
   "form.openCompany": "Open in Companies",
   "app.title": "New application",

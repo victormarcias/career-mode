@@ -10,6 +10,7 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
 
 ### Agregado
 
+- **Link de la reunión:** una entrevista tiene su propio campo de link de la reunión, que se abre como los demás links; la sincronización con Google Calendar lo completa desde la invitación y de ella solo guarda en las notas la contraseña, si tiene.
 - **Ajuste del Google Doc del CV (`CV_DOC_ID`):** el ID del Google Doc en el que
   está escrito el CV, para que los skills lo abran y editen el CV en sí.
 - **`/go-hunting`:** recorre las bolsas de trabajo de las plataformas donde el
