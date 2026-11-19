@@ -6,9 +6,11 @@ paragraph (about 90 words) in English with 3 to 5 hashtags, written as an
 engineering lesson, an AI workflow experiment, an architecture note or a case
 study from the user's own work, never a rant or a bare meme, shown in chat and
 saved as `profile/daily-posts/daily-post-YYYYMMDD.txt`. Its first line is the
-topic, and `log.csv` records whether each post went well.
+topic, and `log.csv` records whether each post went well. Below every post it
+reminds that a link goes in the first comment, never in the post, and when there
+is one it gives that comment ready to paste.
 
-When asked, it also generates an image with the repo's
+Then it asks whether to generate the image; if so, it makes it with the repo's
 `generate_daily_image.py` (Gemini API, key in `.env`), saves it next to
 the post, shows the text again and copies it to `~/Downloads`. When Gemini gives
 no image, it draws one itself as an SVG rendered to PNG; an image the user calls

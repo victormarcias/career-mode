@@ -48,13 +48,15 @@ List 3–5 hashtags below the paragraph (hashtags weigh little on LinkedIn, and 
 
 Show the post and hashtags directly in chat: that's the deliverable. The user copies it and posts it themselves — never post it anywhere automatically (no LinkedIn automation, no drafting through any social API).
 
+Right below them, every time, this reminder, in the user's chat language: **🔗 A link goes in the first comment, never in the post** (LinkedIn shows posts with links less). When the post points to something the user gave a link for (a repo, an article), the post's last sentence says it is in the first comment, and the comment is shown ready to paste: one short line saying what it is, then the link.
+
 Also save it in `profile/daily-posts/` (create the folder; git ignores `profile/`, so it stays on this computer) as `<name>.txt`, which holds, in this order: a first line `Topic: <area>/<specific point>`, a blank line, the paragraph, a blank line and the hashtags. The topic is a short area name, a slash and the specific point the post is about, in the user's own terms, such as `Topic: ai-content/dead internet and ai slop`. `<name>` is `daily-post-YYYYMMDD`, today's date, with no topic in it; add `-2`, `-3`... if that name is taken, and never overwrite a file. The image of step 5 takes the same name.
 
 Then add one line to `profile/daily-posts/log.csv`, which only says whether each post went well: `date,status`, with the date exactly as the file name has it after `daily-post-` (`YYYYMMDD`, or `YYYYMMDD-2`...) and the status `ok`. Create the file with the header line `date,status` if it is not there, and only append lines (the one exception is marking a line `error`, as step 5 says). One line per post, even if two share a day. Save nothing anywhere else: that folder is the only place the posts and their log go.
 
-## 5. If asked for the accompanying image
+## 5. The accompanying image
 
-Only do this if the user separately asks for it (in the same turn or a later one) — don't generate it by default.
+Once the post is shown and saved, ask with **AskUserQuestion** whether to generate its image: one question, with the options "Generate it" and "No, I'll use my own". On "Generate it", go on with the steps below; otherwise stop, and the post stays saved without an image. A later, separate ask for the image of a post already shown goes straight to the steps below.
 
 1. Check the key is set: `GEMINI_API_KEY` in `curl -s http://localhost:8333/api/settings/env` (`isSet`). If it is not, say so and stop: the user sets it in Settings, or by running `/setup` again.
 2. The image is named like the post it belongs to: `profile/daily-posts/<name>.png`, with the `<name>` of the `.txt` saved in step 4 for the post shown in chat. If that post was never saved (it is from before this folder), save its `.txt` first, as in step 4.
