@@ -62,7 +62,8 @@ export const EVENT_COLORS = {
   pending: 'bg-cyan-100 text-cyan-950',
   // An application is plain white: any light gray looked pinkish on the user's screen.
   application: 'bg-white text-gray-950',
-  passive_message: 'bg-teal-100 text-teal-950',
+  // LinkedIn's brand blue (#0A66C2) with white text: the recruiters who write first come from LinkedIn.
+  passive_message: 'bg-[#0A66C2] text-white',
   note: 'bg-yellow-100 text-yellow-950',
   // Technical/coding-evaluation events get a Matrix-console look (black bg, green text) instead of a
   // pastel — makes them pop out at a glance among the calendar's lighter pills. The black has to be
