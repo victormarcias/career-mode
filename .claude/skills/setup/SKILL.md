@@ -1,6 +1,7 @@
 ---
 name: setup
 description: "Set up career-mode for the person who just forked or cloned it: check the requirements, start the app, offer to keep their copy as a fork or as a private repo, then walk through the personal setup (CV and profile, messages, picture, Google Calendar, Gemini key) one question at a time, each with options and a way to skip. Use whenever the user says \"set this up\", \"setup\", \"first time\" or \"get me started\", or invokes /setup. Safe to run again: it skips what is already done."
+model: opus
 ---
 
 # Set up career-mode

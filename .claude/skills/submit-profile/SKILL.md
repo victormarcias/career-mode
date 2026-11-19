@@ -1,6 +1,7 @@
 ---
 name: submit-profile
 description: The user's candidate profile as a quick reference, read from `profile/profile.md` — for filling candidate-portal wizards and profile builders ("LinkedIn clones") and any application form that asks for roles, stack, compensation, English level, experience or a bio. Use this whenever filling out such a form, and check the profile's known-portals list before building a profile from scratch on a new portal.
+model: opus
 ---
 
 # Clone the profile
