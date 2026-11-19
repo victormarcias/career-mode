@@ -1,6 +1,6 @@
 ---
 name: read-cv
-description: Read the user's CV (a PDF file or a link to one) and use it to fill the CV-derived parts of `profile/profile.md`: education, work history with each role's dates, bullets and technologies, years per technology and a draft bio. Use whenever the user gives a CV and asks to fill, create or update their profile from it, or invokes /read-cv.
+description: "Read the user's CV (a PDF file or a link to one) and use it to fill the CV-derived parts of `profile/profile.md`: education, work history with each role's dates, bullets and technologies, years per technology and a draft bio. Use whenever the user gives a CV and asks to fill, create or update their profile from it, or invokes /read-cv."
 ---
 
 # Read the CV into the profile
