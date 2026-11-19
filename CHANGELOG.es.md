@@ -24,6 +24,7 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/
 
 ### Cambiado
 
+- **Notas de los eventos:** los skills las escriben como una lista, el recruiter en su línea `Recruiter:` y después una línea con emoji por dato (rol, stack, condiciones, sueldo, proceso...), nunca una sola línea de texto; el timeline de Companies muestra sus líneas.
 - **`/digest-email`:** responde los rechazos con el Application Rejected Message y los registra; `/reply-rejected` ya no existe.
 - **`/reply`:** `/reply-recruiter` ahora es `/reply`, más simple: siempre parte del Proposal Reply Message, tal cual con `--short` o adaptado a lo que preguntó el recruiter, y registra el contacto en el Calendar.
 - **Proyecto:** `run-local.sh` ahora es `start.sh`, el par de `stop.sh`.

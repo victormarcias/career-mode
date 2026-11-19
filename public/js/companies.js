@@ -126,7 +126,7 @@ function timelineHtml(matches) {
             <span class="rounded-full px-2 py-0.5 text-[11px] font-medium ${color}">${meta.emoji} ${meta.label}</span>
             <span>${app.date}${app.time ? ' · ' + app.time : ''}</span>
           </div>
-          <p class="text-sm text-gray-300">${notesPreviewHtml(app.notes)}</p>
+          <p class="whitespace-pre-wrap text-sm text-gray-300">${notesPreviewHtml(app.notes)}</p>
         </div>
       `
     })

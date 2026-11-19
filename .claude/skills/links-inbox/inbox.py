@@ -115,7 +115,8 @@ def already_queued(url):
 def queue(url, title):
     return request("POST", APP + "/api/events", {
         "event": "pending", "date": datetime.date.today().isoformat(), "jdUrl": url,
-        "applyType": "web_form", "notes": "From Telegram: %s" % title,
+        # the event-notes format of AGENTS.md (Data): one emoji line per fact
+        "applyType": "web_form", "notes": "🔗 Source: Telegram, %s" % title,
     })
 
 

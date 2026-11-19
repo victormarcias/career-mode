@@ -23,6 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- **Event notes:** the skills write them as a list, the recruiter on its `Recruiter:` line and then one emoji line per fact (role, stack, terms, salary, process...), never one line of text; the Companies timeline shows their lines.
 - **`/digest-email`:** answers the rejections itself with the Application Rejected Message and logs them; `/reply-rejected` is gone.
 - **`/reply`:** `/reply-recruiter` is now `/reply`, shorter: it always starts from the Proposal Reply Message, as it is with `--short` or adapted to what the recruiter asked, and logs the contact in the Calendar.
 - **Project:** `run-local.sh` is now `start.sh`, the pair of `stop.sh`.
