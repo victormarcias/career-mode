@@ -329,7 +329,7 @@
         <p class="mb-1 block text-xs text-gray-500">🏢 <span data-i18n="form.company">Company</span> <span
             class="req">*</span></p>
         <div class="flex gap-2">
-          <input type="text" id="f-company" list="company-list" placeholder="Company"
+          <input type="text" id="f-company" data-suggest="company" placeholder="Company"
             data-i18n-placeholder="form.company" autocomplete="off"
             class="min-w-0 flex-1 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" />
           <a id="f-company-open" href="#" title="Open in Companies" data-i18n-title="form.openCompany"
@@ -347,12 +347,10 @@
             <option value="client" data-i18n="form.client">Client</option>
           </select>
         </div>
-        <input type="text" id="f-via" list="agency-list" placeholder="Via agency" data-i18n-placeholder="form.via"
+        <input type="text" id="f-via" data-suggest="agency" placeholder="Via agency" data-i18n-placeholder="form.via"
           autocomplete="off"
           class="mt-2 hidden w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" />
         <p id="f-company-hint" class="notice mt-1 text-xs text-amber-400"></p>
-        <datalist id="company-list"></datalist>
-        <datalist id="agency-list"></datalist>
       </div>
 
       <div id="f-recruiter-wrap" class="hidden">
@@ -424,7 +422,7 @@
             data-i18n="form.company">Company</span>
           <span class="req">*</span></label>
         <div class="flex gap-2">
-          <input type="text" id="app-company" list="company-list" autocomplete="off"
+          <input type="text" id="app-company" data-suggest="company" autocomplete="off"
             class="min-w-0 flex-1 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"
             required />
           <select id="app-company-type" aria-label="Agency or client" data-i18n-aria-label="form.companyType"

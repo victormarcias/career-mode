@@ -82,12 +82,12 @@ function typeFieldHtml(companyType) {
 }
 
 // Only for a client: the agency it came through, shown by its name and left empty for a direct client.
-// `agency-list` is the same shared <datalist> the "+ Update" form uses.
+// It suggests the agencies like the "+ Update" form does (data-suggest, suggest.js).
 function viaFieldHtml(viaName, companyType) {
   return `
     <div id="edit-f-via-wrap"${companyType === 'client' ? '' : ' class="hidden"'}>
       <label for="edit-f-via" class="mb-1 block text-xs text-gray-500">🤝 ${t('form.via')} <span class="text-gray-600">${t('edit.viaHint')}</span></label>
-      <input type="text" id="edit-f-via" list="agency-list" autocomplete="off" value="${attr(viaName || '')}" class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" />
+      <input type="text" id="edit-f-via" data-suggest="agency" autocomplete="off" value="${attr(viaName || '')}" class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100" />
     </div>
   `
 }

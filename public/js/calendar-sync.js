@@ -42,12 +42,12 @@ function companyFieldsHtml(i, item) {
   const company = { name: item.company ?? '', companyType: item.companyType ?? 'agency', via: item.via ?? '' }
   const option = (value, label) => `<option value="${value}"${company.companyType === value ? ' selected' : ''}>${t(label)}</option>`
   return `<div class="flex gap-2 pl-7">
-            <input type="text" data-company="${i}" list="company-list" autocomplete="off" placeholder="${t('form.company')}" aria-label="${escapeHtml(t('sync.companyOf', { summary: item.summary }))}"
+            <input type="text" data-company="${i}" data-suggest="company" autocomplete="off" placeholder="${t('form.company')}" aria-label="${escapeHtml(t('sync.companyOf', { summary: item.summary }))}"
               value="${escapeHtml(company.name)}" class="${INPUT_CLASS}" />
             <select data-company-type="${i}" aria-label="${escapeHtml(t('sync.companyTypeOf', { summary: item.summary }))}" class="${TYPE_CLASS}">${option('agency', 'form.agency')}${option('client', 'form.client')}</select>
           </div>
           <div data-via-wrap="${i}" class="pl-7${company.companyType === 'client' ? '' : ' hidden'}">
-            <input type="text" data-via="${i}" list="agency-list" autocomplete="off" placeholder="${t('form.via')}" aria-label="${escapeHtml(t('sync.viaOf', { summary: item.summary }))}"
+            <input type="text" data-via="${i}" data-suggest="agency" autocomplete="off" placeholder="${t('form.via')}" aria-label="${escapeHtml(t('sync.viaOf', { summary: item.summary }))}"
               value="${escapeHtml(company.via)}" class="w-full ${INPUT_CLASS.replace('flex-1 ', '')}" />
           </div>
           <p data-hint="${i}" class="notice pl-7 text-xs text-amber-400"></p>`

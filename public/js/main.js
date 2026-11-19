@@ -14,6 +14,7 @@ import { renderProfile } from './profile-view.js'
 import { initCalendarSync } from './calendar-sync.js'
 import { initI18n, t } from './i18n.js'
 import { initSidebar } from './sidebar.js'
+import { initSuggest } from './suggest.js'
 
 // ---------- App state ----------
 let weekStart = currentOrNextBusinessWeekStart(new Date())
@@ -42,6 +43,7 @@ function initApp() {
   document.getElementById('f-event').addEventListener('change', updateTypeFields)
   document.getElementById('f-apply-type').addEventListener('change', updateTypeFields)
   wireLinkOpeners(document) // the open button of every field marked data-link, in every form of the page
+  initSuggest(companySuggestions) // the company list of every field marked data-suggest
   document.getElementById('f-company').addEventListener('input', pickCompany)
   document.getElementById('f-company').addEventListener('change', pickCompany)
   document.getElementById('f-company').addEventListener('input', updateCompanyOpener)
@@ -77,7 +79,6 @@ function initApp() {
     applications = rows
     applicationsLoaded = true
     refreshWeeklyReport(applications, weekStart)
-    renderDatalists()
     if (currentSection() === 'calendar') renderWeek()
     renderPending(applications) // the queued links are under the Calendar
     if (currentSection() === 'companies') handleRoute()
@@ -87,7 +88,6 @@ function initApp() {
     companiesMap = new Map(rows.map((c) => [c.id, c]))
     updateCompanyOpener()
     companiesLoaded = true
-    renderDatalists()
     if (currentSection() === 'companies') handleRoute()
     if (currentSection() === 'calendar') renderWeek()  // a company's name or type can change what an event says
   })
@@ -110,15 +110,13 @@ function fillEventSelect(lockedType) {
     .join('')
 }
 
-// The company suggestions come from the lists the page already has, and are only the active companies (a
-// client is active or not by its events, so this runs again when they change). Company has both, each
-// with its tag; Via agency has the agencies.
-function renderDatalists() {
-  const active = activeCompanies(Array.from(companiesMap.values()))
-  const options = (list, label) =>
-    list.map((c) => `<option value="${escapeHtml(c.name)}"${label ? ` label="${t(c.companyType === 'agency' ? 'form.agency' : 'form.client')}"` : ''}>`).join('')
-  document.getElementById('agency-list').innerHTML = options(active.filter((c) => c.companyType === 'agency'))
-  document.getElementById('company-list').innerHTML = options(active, true)
+// The company suggestions (suggest.js) come from the lists the page already has, and are only the active
+// companies (a client is active or not by its events). A Company field offers both, each with its tag; a Via
+// agency field, the agencies.
+function companySuggestions(kind) {
+  return activeCompanies(Array.from(companiesMap.values()))
+    .filter((c) => kind === 'company' || c.companyType === 'agency')
+    .map((c) => ({ name: c.name, tag: kind === 'company' ? t(c.companyType === 'agency' ? 'form.agency' : 'form.client') : '' }))
 }
 
 // ---------- Router ----------
