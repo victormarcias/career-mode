@@ -34,10 +34,16 @@ skip that tag: never create it.
 
 `search_threads` with `-from:me newer_than:2d` (the days the user gives, if they
 give some), `pageSize` 50, the default view: the sender, the subject and a
-snippet of each is enough to sort them. When there is a next page, say so and
-stop at the 50, never page through the whole mailbox.
+snippet of each, enough to pick out what is not worth opening (step 2 reads the
+rest). When there is a next page, say so and stop at the 50, never page through
+the whole mailbox.
 
 ## 2. Sort
+
+Read the **body** of every thread that is not obviously an alert, a newsletter
+or an automatic platform notification (`get_thread` with `PLAIN_TEXT`, the
+latest messages first): the subject and the snippet are not enough to tell a
+rejection from anything else, since many are polite and never say "no".
 
 Put each thread in one place, from its sender, subject and snippet:
 
@@ -46,7 +52,12 @@ Put each thread in one place, from its sender, subject and snippet:
   reply would go to AIApply. Its other notifications are left alone.
 -  **Rejection:** a company says it is not going ahead with the user
   (unfortunately, "not moving forward", "other candidates", and the same in
-  Spanish), It is answered and logged in step 3. A rejection that is not for a
+  Spanish), or closes the process softly: the terms don't match (employee
+  instead of contractor, local currency, on-site), "we have saved your CV",
+  "we registered you in our database", "we will contact you if your profile
+  matches", "we'll keep in touch for future opportunities" with no next step.
+  Judge by what the whole message means, not by its keywords. It is answered
+  and logged in step 3. A rejection that is not for a
   job (an event, a course) is left alone.
 -  **Interview:** a person or a company proposes, confirms or schedules a time
   to talk ("interview", "entrevista", "agendado", "agendada", "scheduled", a
@@ -75,7 +86,8 @@ A thread that is not clear goes in "Needs the user", never into a skill.
 
 **Rejections.** For each one, without asking:
 
-1.  **Reply**, unless the thread already has a message from the user, the sender
+1.  **Reply**, unless the user already wrote after the rejection (the latest
+   message is the user's), the sender
    is a no-reply address (`noreply`, `no-reply`, `donotreply`, `mailer-daemon`,
    an ATS `notifications@`) or it is AIApply's. The text is the **📝 Application
    Rejected Message** of `profile/outreach.md`, read at run time, in the
