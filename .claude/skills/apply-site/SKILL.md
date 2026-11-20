@@ -6,24 +6,87 @@ model: sonnet
 
 # Apply on a company's portal/form
 
-Open the form's link in a new tab of the connected Chrome and leave the user's other tabs alone. If the form **has no captcha** and needs no account, fill it out and submit it directly, without asking for confirmation field by field:
+Open the form's link in a new tab of the connected Chrome and leave the user's
+other tabs alone. If the form **has no captcha** and needs no account, fill it
+out and submit it directly, without asking for confirmation field by field:
 
-1. CV: use the file of the `CV_PDF_PATH` setting (`curl -s http://localhost:8333/api/settings/env`, the entry with that name), straight from where it is. If it is not set, say so and stop: the user sets it in Settings, or by running `/setup` again. Never look for a CV anywhere else. If the form shows no file input until you press its upload button, press it, then find the `type=file` input that appeared and give it the file with the browser's file upload tool; never click through the system file picker, which can't be driven.
-2. Fill in without asking, since this is public/known data, all of it from the profile's Basics: name, birthdate, email, phone (the portal-friendly format if the form rejects spaces), LinkedIn, GitHub, website and location.
-   Every other question is answered **without asking the user**: from the profile when it has the answer, and otherwise creatively and in the user's favour, because the user can learn any skill a posting asks for.
-   - **A skill, tool or kind of experience the form asks about is a yes.** Where it asks a level and years, pick Intermediate (Advanced for what the profile lists as strong) and the years the posting asks for as its minimum, or the profile's years-per-skill number when it has the skill and is higher, so the form never filters the application out. A yes/no about experience, equipment (a laptop of a given make), hours, contract length or availability is yes; a start date is 2 weeks.
-   - **A free-text question** ("which cloud?", "which project?") gets a short, concrete answer built from the closest real experience in the profile (for Azure, the AWS and GCP work; for Spark, the Python data work) and that the user ramps up fast on the rest, never an empty or evasive one.
-   - **Not a skill, so it stays true to the profile:** name, contacts, the English level, total years of experience, education, country and work authorization, the expected salary (one number, the profile's current-salary figure when the form wants one) and what the profile lists as not interested. A degree, a licence or a certification the user does not have is never claimed. Roles and stack, when the form limits how many you can pick, in the order the profile lists them. Work preferences as the profile says ("Anytime" if the form allows only one shift). The short bio for a free-text "about you".
-   - **The only thing worth asking** is a required personal fact that is not a skill and that the profile does not have (`(not set)`). A portal that wants a whole profile built (photo, work history, repos) is `/submit-profile`'s job.
-3. Cover letter / free-text field, if asked: adapt the **Cover Letter Message** (Outreach → Messages tab, which shows `profile/outreach.md`) to that specific posting's context — don't paste the generic one unmodified. If a required skill from the JD is weak or missing, say so honestly in that text rather than overstating it. If the text is still the example's placeholder (the Messages tab shows a banner while that is so), don't use it: ask the user to write it first (`profile/README.md` explains how).
-4. Checkboxes: check "I accept the Terms"/Privacy Policy (required to submit). Never check a newsletter/"receive more offers"/"follow the company"/marketing opt-in — uncheck it if it comes pre-checked.
-5. Captcha, or an account to create or a sign-in the user has not got open already: stop and flag it, leave the rest for the user to finish. Never create an account for them and never type a password.
-6. A field that asks for a video (an upload, a link, "record a short pitch") is answered with the `INTRO_VIDEO_URL` setting's link (`GET /api/settings/env`, or Settings), never a cancel. An AI interview at any stage of the process (the posting or the form says so) is still a cancel: don't submit, and report it back so `/apply-pending` removes the link without asking — that's a live/interactive screening round, not a video field this link answers.
-7. Submit directly, no confirmation needed. Reasons worth actually stopping for are real red flags (not remote, salary far off from the profile's range, missing a hard requirement) — not a routine "should I send this?" check.
-8. Check that it went through: a confirmation message or page, not a form that came back with errors. Fix a validation error you can fix (a phone format, a required field the profile answers); anything else is flagged.
+1.  CV: use the file of the `CV_PDF_PATH` setting (`curl -s
+   http://localhost:8333/api/settings/env`, the entry with that name), straight
+   from where it is. If it is not set, say so and stop: the user sets it in
+   Settings, or by running `/setup` again. Never look for a CV anywhere else. If
+   the form shows no file input until you press its upload button, press it,
+   then find the `type=file` input that appeared and give it the file with the
+   browser's file upload tool; never click through the system file picker, which
+   can't be driven.
+2.  Fill in without asking, since this is public/known data, all of it from the
+   profile's Basics: name, birthdate, email, phone (the portal-friendly format
+   if the form rejects spaces), LinkedIn, GitHub, website and location.
+   Every other question is answered **without asking the user**: from the
+   profile when it has the answer, and otherwise creatively and in the user's
+   favour, because the user can learn any skill a posting asks for.
+   -  **A skill, tool or kind of experience the form asks about is a yes.**
+     Where it asks a level and years, pick Intermediate (Advanced for what the
+     profile lists as strong) and the years the posting asks for as its minimum,
+     or the profile's years-per-skill number when it has the skill and is
+     higher, so the form never filters the application out. A yes/no about
+     experience, equipment (a laptop of a given make), hours, contract length or
+     availability is yes; a start date is 2 weeks.
+   -  **A free-text question** ("which cloud?", "which project?") gets a short,
+     concrete answer built from the closest real experience in the profile (for
+     Azure, the AWS and GCP work; for Spark, the Python data work) and that the
+     user ramps up fast on the rest, never an empty or evasive one.
+   -  **Not a skill, so it stays true to the profile:** name, contacts, the
+     English level, total years of experience, education, country and work
+     authorization, the expected salary (one number, the profile's
+     current-salary figure when the form wants one) and what the profile lists
+     as not interested. A degree, a licence or a certification the user does not
+     have is never claimed. Roles and stack, when the form limits how many you
+     can pick, in the order the profile lists them. Work preferences as the
+     profile says ("Anytime" if the form allows only one shift). The short bio
+     for a free-text "about you".
+   -  **The only thing worth asking** is a required personal fact that is not a
+     skill and that the profile does not have (`(not set)`). A portal that wants
+     a whole profile built (photo, work history, repos) is `/submit-profile`'s
+     job.
+3.  Cover letter / free-text field, if asked: adapt the **Cover Letter Message**
+   (Outreach → Messages tab, which shows `profile/outreach.md`) to that specific
+   posting's context — don't paste the generic one unmodified. If a required
+   skill from the JD is weak or missing, say so honestly in that text rather
+   than overstating it. If the text is still the example's placeholder (the
+   Messages tab shows a banner while that is so), don't use it: ask the user to
+   write it first (`profile/README.md` explains how).
+4.  Checkboxes: check "I accept the Terms"/Privacy Policy (required to submit).
+   Never check a newsletter/"receive more offers"/"follow the company"/marketing
+   opt-in — uncheck it if it comes pre-checked.
+5.  Captcha, or an account to create or a sign-in the user has not got open
+   already: stop and flag it, leave the rest for the user to finish. Never
+   create an account for them and never type a password.
+6.  A field that asks for a video (an upload, a link, "record a short pitch") is
+   answered with the `INTRO_VIDEO_URL` setting's link (`GET /api/settings/env`,
+   or Settings), never a cancel. An AI interview at any stage of the process
+   (the posting or the form says so) is still a cancel: don't submit, and report
+   it back so `/apply-pending` removes the link without asking — that's a
+   live/interactive screening round, not a video field this link answers.
+7.  Submit directly, no confirmation needed. Reasons worth actually stopping for
+   are real red flags (not remote, salary far off from the profile's range,
+   missing a hard requirement) — not a routine "should I send this?" check.
+8.  Check that it went through: a confirmation message or page, not a form that
+   came back with errors. Fix a validation error you can fix (a phone format, a
+   required field the profile answers); anything else is flagged.
 
-**When stuck** (a captcha, a sign-in, a click or a field you can't do, a step you don't understand), don't close anything or give up on the page: leave the form open in Claude in Chrome with everything you could fill in, bring that tab to the front, and tell the user exactly what is left to click or type. They do it themselves; when they say it is done, check the confirmation (step 8) and report it as submitted.
+**When stuck** (a captcha, a sign-in, a click or a field you can't do, a step
+you don't understand), don't close anything or give up on the page: leave the
+form open in Claude in Chrome with everything you could fill in, bring that tab
+to the front, and tell the user exactly what is left to click or type. They do
+it themselves; when they say it is done, check the confirmation (step 8) and
+report it as submitted.
 
-**Report back** to the caller: submitted (with what the confirmation said), or stopped and why (captcha, account, AI interview, red flag, a question the profile doesn't answer). `/apply-pending` logs the application in the Calendar only when it went out, so a form left half-filled is reported as stopped, never as done.
+**Report back** to the caller: submitted (with what the confirmation said), or
+stopped and why (captcha, account, AI interview, red flag, a question the
+profile doesn't answer). `/apply-pending` logs the application in the Calendar
+only when it went out, so a form left half-filled is reported as stopped, never
+as done.
 
-This is the delivery step only — if a new company needs a profile or the application needs to be logged in the Calendar, that's `/apply-pending`'s job, not this one's.
+This is the delivery step only — if a new company needs a profile or the
+application needs to be logged in the Calendar, that's `/apply-pending`'s job,
+not this one's.

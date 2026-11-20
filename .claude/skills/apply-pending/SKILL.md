@@ -6,55 +6,231 @@ model: sonnet
 
 # Apply to a pending job link
 
-Everything here operates on career-mode's own database (events and companies) through its local API. This covers both cases: the user hands you one link directly, or you're clearing the queue of `pending` applications the sidebar's "Pending" page created. **`/apply-pending` with no link is the second case:** the first thing to do is check the pending list in the API (`GET /api/events?event=pending`) and work through it, without asking whether to start — the command is the order.
+Everything here operates on career-mode's own database (events and companies)
+through its local API. This covers both cases: the user hands you one link
+directly, or you're clearing the queue of `pending` applications the sidebar's
+"Pending" page created. **`/apply-pending` with no link is the second case:**
+the first thing to do is check the pending list in the API (`GET
+/api/events?event=pending`) and work through it, without asking whether to start
+— the command is the order.
 
 ## Reading and writing the data
 
-Use the local API at `http://localhost:8333` (the interactive docs are at `/docs`; if a request can't connect, `./start.sh` starts the server). Send JSON with `curl -s -H 'Content-Type: application/json'`. The routes you need: `GET /api/companies`, `GET /api/events` (filter with `?event=pending`, `?jdUrl=...`, `?companyId=...`), `POST` to `/api/companies` or `/api/events` to create, `PATCH /api/<collection>/<id>` to change some fields, `DELETE /api/<collection>/<id>`. Never open the SQLite file directly: the API applies the rules below. Errors come back as `{"detail": "..."}`; a 409 means it already exists (name taken) or still has events.
+Use the local API at `http://localhost:8333` (the interactive docs are at
+`/docs`; if a request can't connect, `./start.sh` starts the server). Send JSON
+with `curl -s -H 'Content-Type: application/json'`. The routes you need:
+`GET /api/companies`, `GET /api/events` (filter with `?event=pending`,
+`?jdUrl=...`, `?companyId=...`), `POST` to `/api/companies` or `/api/events` to
+create, `PATCH /api/<collection>/<id>` to change some fields,
+`DELETE /api/<collection>/<id>`. Never open the SQLite file directly: the API
+applies the rules below. Errors come back as `{"detail": "..."}`; a 409 means it
+already exists (name taken) or still has events.
 
 ## Rule: on a Job Board Platform only a JD Post is read, and only read
 
-Reading a JD Post on a Job Board Platform (LinkedIn, Indeed, etc.) is fine, and that is all: its profiles, company pages, feeds and messages are never opened, and nothing is ever done on the platform (no Easy Apply, like, comment, connect or message). A platform can flag automated activity and restrict the user's account, so keep it to reading, one post at a time with a short pause between them. The browser is also for application forms on third-party sites (Workable, Viterbit, Loxo, the company's own ATS, etc.) and for reading any other page that WebFetch can't read (see the last point below).
+Reading a JD Post on a Job Board Platform (LinkedIn, Indeed, etc.) is fine, and
+that is all: its profiles, company pages, feeds and messages are never opened,
+and nothing is ever done on the platform (no Easy Apply, like, comment, connect
+or message). A platform can flag automated activity and restrict the user's
+account, so keep it to reading, one post at a time with a short pause between
+them. The browser is also for application forms on third-party sites (Workable,
+Viterbit, Loxo, the company's own ATS, etc.) and for reading any other page that
+WebFetch can't read (see the last point below).
 
 How a JD Post is read:
 
-1. **WebFetch first**, on the post's public page (no session, so nothing of the user's goes with it). A JD Post link, or a platform's short link (for example `lnkd.in`): fetch it. A short link answers with a redirect to the platform's own address: fetch that address again **without its query string** (tracking parameters like `?utm_source=...&rcm=...` can identify the user), only the path.
-2. **If that gives no JD Post text** (a login wall, an error, a post that only renders in a browser), open that same post, still without its query string, with **Claude in Chrome** (`mcp__claude-in-chrome__*`, loaded in one ToolSearch call) in a new tab, read its text and close the tab. Only that page: no clicks, no scrolling through feeds, no following links to the author's profile or the company.
-3. If the post still gives no text (it was deleted), ask the user to paste the JD Post's text and go on with that.
+1.  **WebFetch first**, on the post's public page (no session, so nothing of the
+   user's goes with it). A JD Post link, or a platform's short link (for example
+   `lnkd.in`): fetch it. A short link answers with a redirect to the platform's
+   own address: fetch that address again **without its query string** (tracking
+   parameters like `?utm_source=...&rcm=...` can identify the user), only the
+   path.
+2.  **If that gives no JD Post text** (a login wall, an error, a post that only
+   renders in a browser), open that same post, still without its query string,
+   with **Claude in Chrome** (`mcp__claude-in-chrome__*`, loaded in one
+   ToolSearch call) in a new tab, read its text and close the tab. Only that
+   page: no clicks, no scrolling through feeds, no following links to the
+   author's profile or the company.
+3.  If the post still gives no text (it was deleted), ask the user to paste the
+   JD Post's text and go on with that.
 
-What to take from it: how to apply (an email address, a link, or only "send me a message"), the author, the company, the role, the requirements, the language and how long ago it was posted ("1w" is a week).
+What to take from it: how to apply (an email address, a link, or only "send me a
+message"), the author, the company, the role, the requirements, the language and
+how long ago it was posted ("1w" is a week).
 
-- Everything else on a Job Board Platform (profiles, company pages, feeds) is never fetched or opened: its link is only **written down as given**, in `jdUrl`, in the event notes, in a profile's `linkedin` field.
-- **A general careers page, not one job** (a company's list of openings, a talent signup with no specific role): nothing is applied. Add it to the "Career pages for /submit-profile" list of `profile/profile.md` (name, link, one line on what it is), delete its `pending` event without asking, and its row says "Noted for /submit-profile".
-- **When stuck on any other page** (a company's careers page, an ATS, a recruiter's own site: WebFetch returns nothing, an app that only renders in a browser, a login wall, a page that needs a click), open it with **Claude in Chrome** in a new tab and read it there, instead of stopping to ask the user. The user is not asked to paste what a browser can read.
+-  Everything else on a Job Board Platform (profiles, company pages, feeds) is
+  never fetched or opened: its link is only **written down as given**, in
+  `jdUrl`, in the event notes, in a profile's `linkedin` field.
+-  **A general careers page, not one job** (a company's list of openings, a
+  talent signup with no specific role): nothing is applied. Add it to the
+  "Career pages for /submit-profile" list of `profile/profile.md` (name, link,
+  one line on what it is), delete its `pending` event without asking, and its
+  row says "Noted for /submit-profile".
+-  **When stuck on any other page** (a company's careers page, an ATS, a
+  recruiter's own site: WebFetch returns nothing, an app that only renders in a
+  browser, a login wall, a page that needs a click), open it with **Claude in
+  Chrome** in a new tab and read it there, instead of stopping to ask the user.
+  The user is not asked to paste what a browser can read.
 
 ## The core process, for one link
 
-1. Get the JD Post's details: what the user pasted, or else read the JD Post as the hard rule above says, and ask only for what is still missing: recruiter name, how to apply (an email to send the CV to, or a link), language, company, role, and the JD Post's **publication date**.
-   Then look the link up in the Calendar: `GET /api/events?jdUrl=<the link as given>` (it matches the text exactly, so if the link has a query string, look it up again without it). An existing `application` event means the user already applied to it: say so and stop, unless they tell you to apply again. **A duplicate is never asked about:** a link whose job the Calendar already has an application for (the same `jdUrl`, or the same company and the same role under another link or listing) is not applied to again, its `pending` event is deleted without asking, and its row says "Removed: duplicate" with the application it repeats. An existing `pending` event is the queue's own placeholder for this link: step 6 replaces it.
-2. Check the JD Post is still current, by the date it was **last updated** when it shows one, else the date it was published: **one month or more** is discarded (not applied to; its `pending` event, if any, is deleted without asking, and the row says "Removed: too old"), less than that goes on, however long ago it was first published. A Greenhouse post (`job-boards.greenhouse.io/<board>/jobs/<id>`, or a `gh_jid` on the company's own page) gives both dates at `https://boards-api.greenhouse.io/v1/boards/<board>/jobs/<id>` (`updated_at`, `first_published`). With no date at all, it goes on, and the summary says so.
-   Then **check the fit with the profile**: the language it asks for, where they can work from and the salary range, when the JD Post states one. **The language is what counts:** a post that asks for Python or JavaScript (TypeScript too) fits, and everything else in it is secondary: the framework, the cloud, the database, any tool, Azure, .NET or whatever it names, because a tool that is asked can be learned. No technology is a reason to skip a post or to stop and ask, except what the profile's "Not interested" section rules out: a post that matches it is not applied to, and its `pending` event is deleted without asking (its row says "Removed" and why). A post with neither Python nor JavaScript is applied to as well: any skill can be learned. **A hybrid or on-site role is never a reason to skip it either:** always apply, because the user may move there at first. What does end it is something that is not a tool and that the profile can't back: a country the user can't work from, a language they don't speak (Portuguese, say), a university degree that is a must (see the profile's "Not interested"), or a role that is not development. It is not applied to: its `pending` event, if any, is deleted without asking, and its row says "Removed" and why. A post is never skipped or asked about for a skill, a tool, the years of a technology or a seniority level: apply, and answer the form as `/apply-site` says. **A role that involves AI or LLM work is never a reason to skip it or to ask:** always apply, and say in the text only what the CV and the profile back, without overselling RAG or agentic work.
-   Then **decide the channel from what the JD Post says**, not from the link: an email address → `email_apply`; a link to a form or the company's site → `web_form`; neither, only "send me a message" → it can't be done by email: it is not applied to, its `pending` event, if any, is deleted without asking, and its row says "Removed: no way to apply". The Pending page only guesses the channel (every link it queues says `web_form`), so this decision is the one that counts.
-3. Pick the matching message from this app's Outreach → Messages tab (it shows `profile/outreach.md`): the **Application by Email Message** for a JD Post with an email, the **Cover Letter Message** for a form. Use its text in the **JD Post's language** (if the profile has none in that language, ask). Fill in its placeholders: `platform_recruiter` is the recruiter's first name as the JD Post gives it (no name: greet without one, never ask), `platform_post_id` is the link to the JD Post. If the text is still the example's placeholder (the Messages tab shows a banner while that is so), don't use it: ask the user to write it first (`profile/README.md` explains how).
-   For an email, also decide the **subject**: exactly what the JD Post asks for (a reference code, a format), or else the role and the user's full name, in the message's language, such as "Application for <role> – <full name>".
-4. **The company, agency or client.** Find it by name (ignoring case) in `GET /api/companies` and reuse it as it is, whichever type it has: a name is an agency or a client, never both, and the server refuses a second one (409). If there is none, look up what it does (its own website, or a web search; never its page on a Job Board Platform, and `linkedin` only the URL the user gave, if any) and `POST /api/companies` a real profile, not just a bare name: `name`, `companyType`, `notes` (what it does, in one line), `website` (only when confirmed), `linkedin`, `recruiters`, `applicationLink`. `companyType` is `agency` for an intermediary that places people with clients (staffing, recruiting, consulting, software services) and `client` for an employer that hires for itself; when it can't be told it is a `client`, and the summary says so. A client that came through an agency has that agency's id as `viaCompanyId`. A company that already exists keeps its profile: just link the application to it.
-5. **Send it.** This is the one point where the two channels genuinely diverge, so it's broken out into its own skill rather than inlined here twice:
-   - `email_apply` (the JD Post gives an email address) → follow **`/apply-email`**, with the recipient, the subject and the message from steps 1-3.
+1.  Get the JD Post's details: what the user pasted, or else read the JD Post as
+   the hard rule above says, and ask only for what is still missing: recruiter
+   name, how to apply (an email to send the CV to, or a link), language,
+   company, role, and the JD Post's **publication date**.
+   Then look the link up in the Calendar:
+   `GET /api/events?jdUrl=<the link as given>` (it matches the text exactly, so
+   if the link has a query string, look it up again without it). An existing
+   `application` event means the user already applied to it: say so and stop,
+   unless they tell you to apply again. **A duplicate is never asked about:** a
+   link whose job the Calendar already has an application for (the same `jdUrl`,
+   or the same company and the same role under another link or listing) is not
+   applied to again, its `pending` event is deleted without asking, and its row
+   says "Removed: duplicate" with the application it repeats. An existing
+   `pending` event is the queue's own placeholder for this link: step 6 replaces
+   it.
+2.  Check the JD Post is still current, by the date it was **last updated** when
+   it shows one, else the date it was published: **one month or more** is
+   discarded (not applied to; its `pending` event, if any, is deleted without
+   asking, and the row says "Removed: too old"), less than that goes on, however
+   long ago it was first published. A Greenhouse post
+   (`job-boards.greenhouse.io/<board>/jobs/<id>`, or a `gh_jid` on the company's
+   own page) gives both dates at
+   `https://boards-api.greenhouse.io/v1/boards/<board>/jobs/<id>` (`updated_at`,
+   `first_published`). With no date at all, it goes on, and the summary says so.
+   Then **check the fit with the profile**: the language it asks for, where they
+   can work from and the salary range, when the JD Post states one. **The
+   language is what counts:** a post that asks for Python or JavaScript
+   (TypeScript too) fits, and everything else in it is secondary: the framework,
+   the cloud, the database, any tool, Azure, .NET or whatever it names, because
+   a tool that is asked can be learned. No technology is a reason to skip a post
+   or to stop and ask, except what the profile's "Not interested" section rules
+   out: a post that matches it is not applied to, and its `pending` event is
+   deleted without asking (its row says "Removed" and why). A post with neither
+   Python nor JavaScript is applied to as well: any skill can be learned. **A
+   hybrid or on-site role is never a reason to skip it either:** always apply,
+   because the user may move there at first. What does end it is something that
+   is not a tool and that the profile can't back: a country the user can't work
+   from, a language they don't speak (Portuguese, say), a university degree that
+   is a must (see the profile's "Not interested"), or a role that is not
+   development. It is not applied to: its `pending` event, if any, is deleted
+   without asking, and its row says "Removed" and why. A post is never skipped
+   or asked about for a skill, a tool, the years of a technology or a seniority
+   level: apply, and answer the form as `/apply-site` says. **A role that
+   involves AI or LLM work is never a reason to skip it or to ask:** always
+   apply, and say in the text only what the CV and the profile back, without
+   overselling RAG or agentic work.
+   Then **decide the channel from what the JD Post says**, not from the link: an
+   email address → `email_apply`; a link to a form or the company's site →
+   `web_form`; neither, only "send me a message" → it can't be done by email: it
+   is not applied to, its `pending` event, if any, is deleted without asking,
+   and its row says "Removed: no way to apply". The Pending page only guesses
+   the channel (every link it queues says `web_form`), so this decision is the
+   one that counts.
+3.  Pick the matching message from this app's Outreach → Messages tab (it shows
+   `profile/outreach.md`): the **Application by Email Message** for a JD Post
+   with an email, the **Cover Letter Message** for a form. Use its text in the
+   **JD Post's language** (if the profile has none in that language, ask). Fill
+   in its placeholders: `platform_recruiter` is the recruiter's first name as
+   the JD Post gives it (no name: greet without one, never ask),
+   `platform_post_id` is the link to the JD Post. If the text is still the
+   example's placeholder (the Messages tab shows a banner while that is so),
+   don't use it: ask the user to write it first (`profile/README.md` explains
+   how).
+   For an email, also decide the **subject**: exactly what the JD Post asks for
+   (a reference code, a format), or else the role and the user's full name, in
+   the message's language, such as "Application for <role> – <full name>".
+4.  **The company, agency or client.** Find it by name (ignoring case) in
+   `GET /api/companies` and reuse it as it is, whichever type it has: a name is
+   an agency or a client, never both, and the server refuses a second one (409).
+   If there is none, look up what it does (its own website, or a web search;
+   never its page on a Job Board Platform, and `linkedin` only the URL the user
+   gave, if any) and `POST /api/companies` a real profile, not just a bare name:
+   `name`, `companyType`, `notes` (what it does, in one line), `website` (only
+   when confirmed), `linkedin`, `recruiters`, `applicationLink`. `companyType`
+   is `agency` for an intermediary that places people with clients (staffing,
+   recruiting, consulting, software services) and `client` for an employer that
+   hires for itself; when it can't be told it is a `client`, and the summary
+   says so. A client that came through an agency has that agency's id as
+   `viaCompanyId`. A company that already exists keeps its profile: just link
+   the application to it.
+5.  **Send it.** This is the one point where the two channels genuinely diverge,
+   so it's broken out into its own skill rather than inlined here twice:
+   -  `email_apply` (the JD Post gives an email address) → follow
+     **`/apply-email`**, with the recipient, the subject and the message from
+     steps 1-3.
    - `web_form` → follow **`/apply-site`**.
 
-   Both report back: sent or submitted, or stopped and why. If nothing went out (a captcha, a failed send, a dead link), don't log anything: leave the `pending` event as it is, if there is one, and say why. If the user finishes the form by hand and tells you so, go on to step 6.
-6. **Log the application in the Calendar**, once it went out — `POST /api/events` with `date` (today), `event: 'application'`, `companyId` (the client, or the agency when there is no client) and, for a client that came through an agency, `viaCompanyId` (from step 4), `notes`, `jdUrl` and `applyType` (the channel of step 2: the Weekly Report's "by mail"/"by platform" counts read it off the `application` event). It is never skipped for an application that was sent. If a `pending` event for this link exists, `DELETE` it now: don't flip its `event` field, the pending event is a rough stand-in and the real one needs the fully resolved fields. A few things that are easy to get backwards here:
-   - The application link and the specific recruiter for *this* process always go on the event, never on the company profile — those stay calendar-agnostic, reusable across every application to that company. `notes` follow the format of `AGENTS.md` (Data), with what the JD Post and the sending gave: the role and its terms, the address or form it went to and what was answered, and who posted it.
-   - There is no company label to fill in: the calendar derives it from the links (the company's name, or "Agency → Client" when the event has a `viaCompanyId`). When an agency is juggling more than one client at once, give each event its own client as `companyId` and the agency as `viaCompanyId`.
-   - A company is archived when its latest event is a closing one (**Rejection, Red Flag, On-hold, Offer or Archive**) and active again with any later one. The status is derived from the events — you never set it, just create the event with the right `event` type.
+   Both report back: sent or submitted, or stopped and why. If nothing went out
+   (a captcha, a failed send, a dead link), don't log anything: leave the
+   `pending` event as it is, if there is one, and say why. If the user finishes
+   the form by hand and tells you so, go on to step 6.
+6.  **Log the application in the Calendar**, once it went out —
+   `POST /api/events` with `date` (today), `event: 'application'`, `companyId`
+   (the client, or the agency when there is no client) and, for a client that
+   came through an agency, `viaCompanyId` (from step 4), `notes`, `jdUrl` and
+   `applyType` (the channel of step 2: the Weekly Report's "by mail"/"by
+   platform" counts read it off the `application` event). It is never skipped
+   for an application that was sent. If a `pending` event for this link exists,
+   `DELETE` it now: don't flip its `event` field, the pending event is a rough
+   stand-in and the real one needs the fully resolved fields. A few things that
+   are easy to get backwards here:
+   -  The application link and the specific recruiter for *this* process always
+     go on the event, never on the company profile — those stay
+     calendar-agnostic, reusable across every application to that company.
+     `notes` follow the format of `AGENTS.md` (Data), with what the JD Post and
+     the sending gave: the role and its terms, the address or form it went to
+     and what was answered, and who posted it.
+   -  There is no company label to fill in: the calendar derives it from the
+     links (the company's name, or "Agency → Client" when the event has a
+     `viaCompanyId`). When an agency is juggling more than one client at once,
+     give each event its own client as `companyId` and the agency as
+     `viaCompanyId`.
+   -  A company is archived when its latest event is a closing one (**Rejection,
+     Red Flag, On-hold, Offer or Archive**) and active again with any later one.
+     The status is derived from the events — you never set it, just create the
+     event with the right `event` type.
 
 ## Processing the whole pending queue
 
-The sidebar's "Pending" page doesn't apply to anything itself — it queues a JD Post link as an event with `event: 'pending'` and `jdUrl`, and stops there. Only links are queued: the form refuses an email address alone. Nothing gets processed until the user invokes `/apply-pending`. When that happens:
+The sidebar's "Pending" page doesn't apply to anything itself — it queues a JD
+Post link as an event with `event: 'pending'` and `jdUrl`, and stops there. Only
+links are queued: the form refuses an email address alone. Nothing gets
+processed until the user invokes `/apply-pending`. When that happens:
 
-1. `GET /api/events?event=pending` for every pending event, oldest first (the list comes newest first, so reverse it).
-2. A `pending` event holds only a link, so for each one, one at a time with a short pause between them, run the core process above (read the JD Post as the hard rule says, then steps 1-6). Step 6 replaces the pending placeholder with the real `application` event.
-3. **A link that is skipped is removed, without asking:** its `pending` event is deleted and its row says "Removed" and why. That is every link that is not applied to because of the JD Post or the profile: a duplicate (step 1 of the core process), too old, no fit (a country or a language the user can't work with, a degree that is a must, a role that is not development), no way to apply, a deleted post nobody can paste, already rejected for that role, a post the profile's "Not interested" section rules out, or a process that has an AI interview at any stage (the JD Post or the form says so). The same goes for a general careers page, which goes to the profile's list instead (see the rule above). The user can undo a removal from the table. A link that can't be completed for a reason that waits on the user or on the site (a captcha, a failed send, a site to allow, a question) keeps its `pending` event and is flagged in the table. A video asked for anywhere in the process is never a reason to remove or skip a link: answer it with the `INTRO_VIDEO_URL` setting's link (see `/apply-site` step 6).
-4. Always finish with one table in chat, every link of the run in it, the applied ones first, each row numbered (`#`, from 1): the company (with the role), **Applied** (yes or no), the channel (email or form, for an applied one) and, for one not applied, why (too old, no fit and the reason, captcha, a question for the user...) and whether it was **Removed** (its `pending` event deleted, step 3) or is still pending. Nothing else is said of what went fine; below the table, only what is stuck on something only the user can do (what is left to click or type), a question, or a failure.
-5. Nothing is asked about the removed rows: they are already deleted (step 3) and the table says why. If the user wants one back, they say its number and it is queued again as a `pending` event with its link.
-6. After every answer of the user (an application they finished or allowed, a borderline call, a removal to undo), show the table again, renumbered, with only the links still pending. Keep going until there are no pending events left or the user stops.
+1.  `GET /api/events?event=pending` for every pending event, oldest first (the
+   list comes newest first, so reverse it).
+2.  A `pending` event holds only a link, so for each one, one at a time with a
+   short pause between them, run the core process above (read the JD Post as the
+   hard rule says, then steps 1-6). Step 6 replaces the pending placeholder with
+   the real `application` event.
+3.  **A link that is skipped is removed, without asking:** its `pending` event
+   is deleted and its row says "Removed" and why. That is every link that is not
+   applied to because of the JD Post or the profile: a duplicate (step 1 of the
+   core process), too old, no fit (a country or a language the user can't work
+   with, a degree that is a must, a role that is not development), no way to
+   apply, a deleted post nobody can paste, already rejected for that role, a
+   post the profile's "Not interested" section rules out, or a process that has
+   an AI interview at any stage (the JD Post or the form says so). The same goes
+   for a general careers page, which goes to the profile's list instead (see the
+   rule above). The user can undo a removal from the table. A link that can't be
+   completed for a reason that waits on the user or on the site (a captcha, a
+   failed send, a site to allow, a question) keeps its `pending` event and is
+   flagged in the table. A video asked for anywhere in the process is never a
+   reason to remove or skip a link: answer it with the `INTRO_VIDEO_URL`
+   setting's link (see `/apply-site` step 6).
+4.  Always finish with one table in chat, every link of the run in it, the
+   applied ones first, each row numbered (`#`, from 1): the company (with the
+   role), **Applied** (yes or no), the channel (email or form, for an applied
+   one) and, for one not applied, why (too old, no fit and the reason, captcha,
+   a question for the user...) and whether it was **Removed** (its `pending`
+   event deleted, step 3) or is still pending. Nothing else is said of what went
+   fine; below the table, only what is stuck on something only the user can do
+   (what is left to click or type), a question, or a failure.
+5.  Nothing is asked about the removed rows: they are already deleted (step 3)
+   and the table says why. If the user wants one back, they say its number and
+   it is queued again as a `pending` event with its link.
+6.  After every answer of the user (an application they finished or allowed, a
+   borderline call, a removal to undo), show the table again, renumbered, with
+   only the links still pending. Keep going until there are no pending events
+   left or the user stops.

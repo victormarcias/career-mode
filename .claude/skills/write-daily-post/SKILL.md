@@ -6,13 +6,20 @@ model: sonnet
 
 # Daily Post (reflection)
 
-The user writes a short daily reflection post for social media (LinkedIn-style) on a topic they give as the input of the command. The post reads like a real senior engineer's take, not a summary. Follow the profile's "Rules for presenting me" here too: never overstate what the user is still learning.
+The user writes a short daily reflection post for social media (LinkedIn-style)
+on a topic they give as the input of the command. The post reads like a real
+senior engineer's take, not a summary. Follow the profile's "Rules for
+presenting me" here too: never overstate what the user is still learning.
 
 ## 1. Take the topic
 
-The topic is what the user wrote after the command (`/write-daily-post <topic>`, in any language), and nothing else: never pick one on your own and never read a notes folder. With no topic given, ask for one and stop.
+The topic is what the user wrote after the command (`/write-daily-post <topic>`,
+in any language), and nothing else: never pick one on your own and never read a
+notes folder. With no topic given, ask for one and stop.
 
-Look at the posts already saved (`grep -m1 '^Topic:' profile/daily-posts/*.txt`, if there are any): when the user's topic is already there, say so in one line and take a different angle on it, instead of repeating the post.
+Look at the posts already saved (`grep -m1 '^Topic:' profile/daily-posts/*.txt`,
+if there are any): when the user's topic is already there, say so in one line
+and take a different angle on it, instead of repeating the post.
 
 The posts are there for recruiters as much as for the feed: they show the user's
 technical judgment. So whatever the topic, the take lands as one of these four
@@ -42,27 +49,83 @@ what language the user asked in.
 
 ## 3. Add hashtags
 
-List 3–5 hashtags below the paragraph (hashtags weigh little on LinkedIn, and more than five reads as noise): a mix of ones specific to the topic (e.g. `#n8n`, `#LangChain`) and broader software/career ones (e.g. `#SoftwareEngineering`, `#TechCareers`).
+List 3–5 hashtags below the paragraph (hashtags weigh little on LinkedIn, and
+more than five reads as noise): a mix of ones specific to the topic (e.g.
+`#n8n`, `#LangChain`) and broader software/career ones (e.g.
+`#SoftwareEngineering`, `#TechCareers`).
 
 ## 4. Show it and save it
 
-Show the post and hashtags directly in chat: that's the deliverable. The user copies it and posts it themselves — never post it anywhere automatically (no LinkedIn automation, no drafting through any social API).
+Show the post and hashtags directly in chat: that's the deliverable. The user
+copies it and posts it themselves — never post it anywhere automatically (no
+LinkedIn automation, no drafting through any social API).
 
-Right below them, every time, this reminder, in the user's chat language: **🔗 A link goes in the first comment, never in the post** (LinkedIn shows posts with links less). When the post points to something the user gave a link for (a repo, an article), the post's last sentence says it is in the first comment, and the comment is shown ready to paste: one short line saying what it is, then the link.
+Right below them, every time, this reminder, in the user's chat language: **🔗 A
+link goes in the first comment, never in the post** (LinkedIn shows posts with
+links less). When the post points to something the user gave a link for (a repo,
+an article), the post's last sentence says it is in the first comment, and the
+comment is shown ready to paste: one short line saying what it is, then the
+link.
 
-Also save it in `profile/daily-posts/` (create the folder; git ignores `profile/`, so it stays on this computer) as `<name>.txt`, which holds, in this order: a first line `Topic: <area>/<specific point>`, a blank line, the paragraph, a blank line and the hashtags. The topic is a short area name, a slash and the specific point the post is about, in the user's own terms, such as `Topic: ai-content/dead internet and ai slop`. `<name>` is `daily-post-YYYYMMDD`, today's date, with no topic in it; add `-2`, `-3`... if that name is taken, and never overwrite a file. The image of step 5 takes the same name.
+Also save it in `profile/daily-posts/` (create the folder; git ignores
+`profile/`, so it stays on this computer) as `<name>.txt`, which holds, in this
+order: a first line `Topic: <area>/<specific point>`, a blank line, the
+paragraph, a blank line and the hashtags. The topic is a short area name, a
+slash and the specific point the post is about, in the user's own terms, such as
+`Topic: ai-content/dead internet and ai slop`. `<name>` is
+`daily-post-YYYYMMDD`, today's date, with no topic in it; add `-2`, `-3`... if
+that name is taken, and never overwrite a file. The image of step 5 takes the
+same name.
 
-Then add one line to `profile/daily-posts/log.csv`, which only says whether each post went well: `date,status`, with the date exactly as the file name has it after `daily-post-` (`YYYYMMDD`, or `YYYYMMDD-2`...) and the status `ok`. Create the file with the header line `date,status` if it is not there, and only append lines (the one exception is marking a line `error`, as step 5 says). One line per post, even if two share a day. Save nothing anywhere else: that folder is the only place the posts and their log go.
+Then add one line to `profile/daily-posts/log.csv`, which only says whether each
+post went well: `date,status`, with the date exactly as the file name has it
+after `daily-post-` (`YYYYMMDD`, or `YYYYMMDD-2`...) and the status `ok`. Create
+the file with the header line `date,status` if it is not there, and only append
+lines (the one exception is marking a line `error`, as step 5 says). One line
+per post, even if two share a day. Save nothing anywhere else: that folder is
+the only place the posts and their log go.
 
 ## 5. The accompanying image
 
-Once the post is shown and saved, ask with **AskUserQuestion** whether to generate its image: one question, with the options "Generate it" and "No, I'll use my own". On "Generate it", go on with the steps below; otherwise stop, and the post stays saved without an image. A later, separate ask for the image of a post already shown goes straight to the steps below.
+Once the post is shown and saved, ask with **AskUserQuestion** whether to
+generate its image: one question, with the options "Generate it" and "No, I'll
+use my own". On "Generate it", go on with the steps below; otherwise stop, and
+the post stays saved without an image. A later, separate ask for the image of a
+post already shown goes straight to the steps below.
 
-1. Check the key is set: `GEMINI_API_KEY` in `curl -s http://localhost:8333/api/settings/env` (`isSet`). If it is not, say so and stop: the user sets it in Settings, or by running `/setup` again.
-2. The image is named like the post it belongs to: `profile/daily-posts/<name>.png`, with the `<name>` of the `.txt` saved in step 4 for the post shown in chat. If that post was never saved (it is from before this folder), save its `.txt` first, as in step 4.
-3. Make a temporary directory outside this repo (`mktemp -d`) and write the post's paragraph text (just the reflection, no hashtags needed) to a plain text file in it.
-4. Run `.claude/skills/write-daily-post/generate_daily_image.py <post_text_file> profile/daily-posts/<name>.png` from this repo's root. It calls the Gemini API (reading `GEMINI_API_KEY` from this repo's own `.env`, gitignored) and prints the path of the image it wrote. If it fails (an error, or Gemini answers with text and no image), say so in one line, delete nothing yet and **make the image yourself**, with no second try at Gemini: draw a 1080×1080 SVG in the temporary directory (the post's key sentence or two as large text on a plain dark background with one accent colour, nothing cut off or crowded), render it with `qlmanage -t -s 1080 -o <dir> <file>.svg` (macOS; it writes `<file>.svg.png`), open the PNG to check the text fits, and save it as `profile/daily-posts/<name>.png`.
-5. Copy the image to `~/Downloads` too (without overwriting a file there) — the user expects to find it there — and delete the temporary directory.
-6. Deliver it to the user as a downloadable attachment (`display: "attach"`) — never render it inline, since it's meant to be saved and uploaded elsewhere, not looked at in the chat panel. In the same reply, show the post's text again in chat, the paragraph and the hashtags exactly as saved in the `.txt` (without its `Topic:` line), so the user can copy the text and take the image from the same place.
+1.  Check the key is set: `GEMINI_API_KEY` in
+   `curl -s http://localhost:8333/api/settings/env` (`isSet`). If it is not, say
+   so and stop: the user sets it in Settings, or by running `/setup` again.
+2.  The image is named like the post it belongs to:
+   `profile/daily-posts/<name>.png`, with the `<name>` of the `.txt` saved in
+   step 4 for the post shown in chat. If that post was never saved (it is from
+   before this folder), save its `.txt` first, as in step 4.
+3.  Make a temporary directory outside this repo (`mktemp -d`) and write the
+   post's paragraph text (just the reflection, no hashtags needed) to a plain
+   text file in it.
+4.  Run
+   `.claude/skills/write-daily-post/generate_daily_image.py <post_text_file> profile/daily-posts/<name>.png`
+   from this repo's root. It calls the Gemini API (reading `GEMINI_API_KEY` from
+   this repo's own `.env`, gitignored) and prints the path of the image it
+   wrote. If it fails (an error, or Gemini answers with text and no image), say
+   so in one line, delete nothing yet and **make the image yourself**, with no
+   second try at Gemini: draw a 1080×1080 SVG in the temporary directory (the
+   post's key sentence or two as large text on a plain dark background with one
+   accent colour, nothing cut off or crowded), render it with
+   `qlmanage -t -s 1080 -o <dir> <file>.svg` (macOS; it writes
+   `<file>.svg.png`), open the PNG to check the text fits, and save it as
+   `profile/daily-posts/<name>.png`.
+5.  Copy the image to `~/Downloads` too (without overwriting a file there) — the
+   user expects to find it there — and delete the temporary directory.
+6.  Deliver it to the user as a downloadable attachment (`display: "attach"`) —
+   never render it inline, since it's meant to be saved and uploaded elsewhere,
+   not looked at in the chat panel. In the same reply, show the post's text
+   again in chat, the paragraph and the hashtags exactly as saved in the `.txt`
+   (without its `Topic:` line), so the user can copy the text and take the image
+   from the same place.
 
-**A bad image is discarded.** When the user says the image came out wrong, the post was not published: set the status of that post's line in `log.csv` to `error` (change that line only) and delete the image from `profile/daily-posts/` and the copy in `~/Downloads`. The post's `.txt` stays. Do not generate another image the same day unless the user asks.
+**A bad image is discarded.** When the user says the image came out wrong, the
+post was not published: set the status of that post's line in `log.csv` to
+`error` (change that line only) and delete the image from `profile/daily-posts/`
+and the copy in `~/Downloads`. The post's `.txt` stays. Do not generate another
+image the same day unless the user asks.
