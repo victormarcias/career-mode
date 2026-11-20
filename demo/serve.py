@@ -2,7 +2,7 @@
 
     uvicorn serve:app --app-dir demo --host 0.0.0.0 --port 8080      (what the Dockerfile runs)
 
-- The prefix (DEMO_PREFIX, /demo/career-mode by default) is what the portfolio's rewrite sends here. It is removed before
+- The prefix (DEMO_PREFIX, /demo/career-mode by default) is what the host's rewrite sends here. It is removed before
   the app sees the request, so the app itself is the one that runs on your computer, unchanged.
 - Read-only: anything but GET, HEAD and OPTIONS is refused, so a visitor can look but not change or delete.
 - The data is made when the process starts, in a temporary folder, dated around that day. The process exits when the

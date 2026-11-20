@@ -10,8 +10,10 @@ company when it is new.
 
 The sending goes to [apply-email](../apply-email/README.md) or
 [apply-site](../apply-site/README.md), and the application is logged in the
-Calendar only once it went out; a link that cannot be finished stays pending,
-and the run shows a table of what was and was not applied to. It touches the
+Calendar only once it went out. A link it skips (a duplicate, too old, no fit,
+a degree that is a must) is removed from Pending without asking, and a link
+that waits on the user or the site (a captcha, say) stays pending; the run
+shows a table of what was applied to, removed and left pending. It touches the
 career-mode database through its local API and, for forms and pages WebFetch
 cannot read, the connected Chrome. On a Job Board Platform only a JD Post is
 read, never profiles, company pages or feeds. Instructions:
