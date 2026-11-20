@@ -85,8 +85,8 @@ A thread that is not clear goes in "Needs the user", never into a skill.
    missing, say so and skip the replies (the logging still runs). `reply` to the
    latest message from the company, `replyAll` false, no `to`/`cc`/`bcc`, plain
    text. A text with a link goes through `POST /api/mail/send` instead, as
-   `AGENTS.md` says under "Email". Then archive the thread (`unlabel_thread`,
-   `["INBOX"]`); a failed reply leaves it in the inbox.
+   `AGENTS.md` says under "Email". The thread stays in the inbox: a rejection is
+   never archived.
 2.  **Log it**, whether it was answered or not, through the API at
    `http://localhost:8333` (`./start.sh` if it doesn't answer). Only a process
    that is already in the Calendar: find the company by name in
@@ -229,12 +229,10 @@ confirmation, it has nothing left to do in the inbox: archive it with
   this skill's to fix.
 -  A **recruiter** thread that `/reply` logged (created the passive message, or
   added a new paragraph to one already logged) — archive its thread.
--  A **rejection** thread was already archived in step 3 when it was answered:
-  it is not touched again here.
 
-Never archive a thread that **needs the user**, an **interview** thread, one
-left alone in step 2, or one whose handling stopped before it reached a Calendar
-entry.
+Never archive a **rejection** thread (answered or not), a thread that **needs
+the user**, an **interview** thread, one left alone in step 2, or one whose
+handling stopped before it reached a Calendar entry.
 
 ## Answering for the user
 

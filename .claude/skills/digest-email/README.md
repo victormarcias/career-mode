@@ -10,8 +10,8 @@ applications whose thread went quiet for 7 days get one follow-up on that same
 thread, tagged `Follow Up`. The tags are the ones already made in Gmail.
 
 Once a thread's Calendar entry exists it is archived, and so is an automatic
-"thanks for applying" confirmation; a thread that needs the user, or an
-interview, never is. It ends with a table of Name, Subject and Action for what
+"thanks for applying" confirmation; a rejection, a thread that needs the user
+and an interview never are. It ends with a table of Name, Subject and Action for what
 it did. It never opens a link of an email. It touches Gmail (read, tags and
 archive), the career-mode database through its local API and the skills it
 calls. Instructions: [SKILL.md](SKILL.md).
