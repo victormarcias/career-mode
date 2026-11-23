@@ -16,4 +16,7 @@ the days or `--verbose` the user gave passed on:
 3. `/digest-email`, for the mailbox.
 
 End with what those skills end with (the applications table and the email
-table), and nothing else. Nothing is committed.
+table), and nothing else. Both are tables drawn as aligned text inside a
+```` ```diff ```` block, painted by what the user has to do: red (`- `) when
+they must act, green (`+ `) when it is done, no color for the rest. Then
+anything that was done wrong in the run. Nothing is committed.

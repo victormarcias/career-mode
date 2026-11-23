@@ -285,7 +285,18 @@ a follow-up, the person it was sent to. **Subject** is the thread's subject.
 table), `Tagged Interviews`, `Tagged Rejected`, `Followed up, tagged Follow Up`,
 `Archived confirmation`, `Needs you: <what it asks>, tagged Needs Attention`,
 `Skipped: company wrote last`, `Skipped: email not found`,
-`Skill stopped: <why>`. A thread with two actions has them in one row. Below the
-table, one line with how many threads were left alone. With no thread in the
+`Skill stopped: <why>`. A thread with two actions has them in one row.
+**Color the rows by what the user has to do**, drawing the table as aligned
+text (columns `Name | Subject | Action`, a header and a dashed line, both
+starting with two spaces) inside a ```` ```diff ```` block, so the terminal
+paints each row: `- ` (red) when the user must act (`Needs you`, an interview
+time to book, `Skipped: company wrote last`, which is theirs to answer, a
+drafted reply until they send it), `+ ` (green) when it was done here
+(`Replied and logged rejection`, `Followed up`, `Archived confirmation`), and
+two spaces for the rest (`Tagged Interviews` with a time already set,
+`Skipped: email not found`, `Skill stopped`). Not a Markdown table, which
+can't be colored. No emojis, and every line at 80 columns or less. List the
+red rows first. Below the block, one line with how many threads were left
+alone. With no thread in the
 table, say there was nothing to do. Add nothing else unless the command has
 `--verbose`, which adds one line on what each step did. Nothing is committed.

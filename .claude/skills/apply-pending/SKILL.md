@@ -227,6 +227,16 @@ processed until the user invokes `/apply-pending`. When that happens:
    event deleted, step 3) or is still pending. Nothing else is said of what went
    fine; below the table, only what is stuck on something only the user can do
    (what is left to click or type), a question, or a failure.
+   **Color the rows by what the user has to do**, drawing the table as
+   aligned text (columns split with ` | `, a header and a dashed line, both
+   starting with two spaces) inside a ```` ```diff ```` block, so the terminal
+   paints each row: `- ` (red) when the user must act (a captcha, a sign-in, a
+   question, a decision, an unreadable post to paste; the link stays pending),
+   `+ ` (green) when it was applied, and two spaces when there is nothing to
+   do (removed, duplicate, too old, no fit) or it is only worth a look (an
+   unclear call, no post date, a link not reached yet). Not a Markdown table,
+   which can't be colored. No emojis, and every line at 80 columns or less.
+   Put the red rows right after the green ones.
 5.  Nothing is asked about the removed rows: they are already deleted (step 3)
    and the table says why. If the user wants one back, they say its number and
    it is queued again as a `pending` event with its link.
