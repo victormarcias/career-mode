@@ -26,14 +26,14 @@ create, `PATCH /api/<collection>/<id>` to change some fields,
 applies the rules below. Errors come back as `{"detail": "..."}`; a 409 means it
 already exists (name taken) or still has events.
 
-## Rule: on a Job Board Platform only a JD Post is read, and only read
+## Rule: on a Job Board Platform anything may be read, nothing is done
 
-Reading a JD Post on a Job Board Platform (LinkedIn, Indeed, etc.) is fine, and
-that is all: its profiles, company pages, feeds and messages are never opened,
-and nothing is ever done on the platform (no Easy Apply, like, comment, connect
-or message). A platform can flag automated activity and restrict the user's
-account, so keep it to reading, one post at a time with a short pause between
-them. The browser is also for application forms on third-party sites (Workable,
+Reading on a Job Board Platform (LinkedIn, Indeed, etc.) is fine: JD Posts,
+profiles, company pages and feeds. Nothing is ever done on the platform (no
+Easy Apply, like, comment, connect or message). A platform can flag automated
+activity and restrict the user's account, so keep it to reading, one page at a
+time with a short pause between them. The browser is also for application forms
+on third-party sites (Workable,
 Viterbit, Loxo, the company's own ATS, etc.) and for reading any other page that
 WebFetch can't read (see the last point below).
 
@@ -143,9 +143,10 @@ how long ago it was posted ("1w" is a week).
 4.  **The company, agency or client.** Find it by name (ignoring case) in
    `GET /api/companies` and reuse it as it is, whichever type it has: a name is
    an agency or a client, never both, and the server refuses a second one (409).
-   If there is none, look up what it does (its own website, or a web search;
-   never its page on a Job Board Platform, and `linkedin` only the URL the user
-   gave, if any) and `POST /api/companies` a real profile, not just a bare name:
+   If there is none, look up what it does (its own website, a web search or
+   its page on a Job Board Platform, read only; `linkedin` only the URL the
+   user gave or the page read, if any) and `POST /api/companies` a real
+   profile, not just a bare name:
    `name`, `companyType`, `notes` (what it does, in one line), `website` (only
    when confirmed), `linkedin`, `recruiters`, `applicationLink`. `companyType`
    is `agency` for an intermediary that places people with clients (staffing,

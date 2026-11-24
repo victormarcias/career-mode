@@ -130,5 +130,5 @@ is optional, and never invent an answer: a skipped field is written as
 4.  Say what changed, and remind the user to check it against the CV: the skills
    copy this file into real applications.
 
-Never commit, and write nothing outside `profile/`. Never read linkedin.com: a
-LinkedIn link in the CV is only copied as it is written.
+Never commit, and write nothing outside `profile/`. A LinkedIn link in the CV
+is only copied as it is written.

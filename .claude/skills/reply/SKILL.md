@@ -10,9 +10,10 @@ The user pastes a message from a recruiter who wrote first (and maybe their
 profile link). Draft the reply, log it in the Calendar, done. The user sends the
 reply. Not for JD Posts the user applies to: those are `/apply-pending`'s.
 
-**Never open the platform** (LinkedIn, etc.), with no tool: links to it are only
-written down as given. A JD on the company's own site, or the company's website,
-can be read with WebFetch.
+**Never do anything on the platform** (LinkedIn, etc.): reading is fine, so the
+recruiter's profile link may be read, but nothing is sent, liked or connected.
+A JD on the company's own site, or the company's website, can be read with
+WebFetch.
 
 ## 1. The reply
 

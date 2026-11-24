@@ -16,8 +16,8 @@ the answers as options, and always a "Skip for now" option. Say in one line what
 each step did. Never ask again about something they skipped in this run. If the
 user asks you to stop, stop and say how to continue later (`/setup` again).
 
-Never open a Job Board Platform's profiles or company pages (LinkedIn, etc.) by
-any tool. A link to one is only written down as given.
+A Job Board Platform's pages (LinkedIn, etc.) may be read, never interacted
+with.
 
 ## 1. Look around (no questions)
 
