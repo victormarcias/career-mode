@@ -33,9 +33,8 @@ profiles, company pages and feeds. Nothing is ever done on the platform (no
 Easy Apply, like, comment, connect or message). A platform can flag automated
 activity and restrict the user's account, so keep it to reading, one page at a
 time with a short pause between them. The browser is also for application forms
-on third-party sites (Workable,
-Viterbit, Loxo, the company's own ATS, etc.) and for reading any other page that
-WebFetch can't read (see the last point below).
+on third-party sites (Workable, Viterbit, Loxo, the company's own ATS, etc.) and
+for reading any other page that WebFetch can't read (see the last point below).
 
 How a JD Post is read:
 
@@ -146,12 +145,11 @@ how long ago it was posted ("1w" is a week).
    If there is none, look up what it does (its own website, a web search or
    its page on a Job Board Platform, read only; `linkedin` only the URL the
    user gave or the page read, if any) and `POST /api/companies` a real
-   profile, not just a bare name:
-   `name`, `companyType`, `notes` (what it does, in one line), `website` (only
-   when confirmed), `linkedin`, `recruiters`, `applicationLink`. `companyType`
-   is `agency` for an intermediary that places people with clients (staffing,
-   recruiting, consulting, software services) and `client` for an employer that
-   hires for itself; when it can't be told it is a `client`, and the summary
+   profile, not just a bare name: `name`, `companyType`, `notes` (what it does,
+   in one line), `website` (only when confirmed), `linkedin`, `recruiters`,
+   `applicationLink`. `companyType` is `agency` for an intermediary that places
+   people with clients (staffing, recruiting, consulting, software services) and
+   `client` for an employer that hires for itself; when it can't be told it is a `client`, and the summary
    says so. A client that came through an agency has that agency's id as
    `viaCompanyId`. A company that already exists keeps its profile: just link
    the application to it.
