@@ -53,8 +53,8 @@ run, so a run cut short keeps what it found.
 
 1.  Take the platforms from **🔗 Job Board Sites** (or the ones the user named).
    Leave out:
-   -  **LinkedIn, always.** Nothing on LinkedIn is browsed or done; only a JD
-     Post the user sends is read, by `/apply-pending`.
+   -  **LinkedIn, always.** Its job search is not crawled; a JD Post the user
+     sends is read by `/apply-pending`.
    -  A talent community or a single company's form in that list (not a board of
      jobs).
    - A platform whose record says jobs page `none` or AI `not allowed`.
