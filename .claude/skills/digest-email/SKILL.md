@@ -1,6 +1,6 @@
 ---
 name: digest-email
-description: "Digest the user's recent Gmail: reply to the rejections with the Application Rejected Message and log them, hand recruiters who wrote first to /reply, tag the interview, rejection and needs-attention threads, follow up the email applications whose thread went quiet for 7 days, archive what is handled, and show a table of what was done. Use whenever the user invokes /digest-email or asks to check, sweep, digest or go through their email."
+description: "Digest the user's recent Gmail: reply to the rejections with the Application Rejected Message and log them, hand recruiters who wrote first to /reply, tag the interview, rejection and needs-attention threads, follow up the email applications whose thread went quiet for 14 days, archive what is handled, and show a table of what was done. Use whenever the user invokes /digest-email or asks to check, sweep, digest or go through their email."
 model: sonnet
 ---
 
@@ -76,7 +76,7 @@ Put each thread in one place, from its sender, subject and snippet:
 -  **Application confirmation:** an automatic "thanks for applying" email from a
   company or its recruiting system ("we received your application", "thank you
   for applying", and the same in Spanish) that only confirms and asks for
-  nothing. It is archived in step 5. One that also says no is a **Rejection**,
+  nothing. It is archived in step 6. One that also says no is a **Rejection**,
   and one that asks for something is **Needs the user**.
 - **Everything else** (alerts, newsletters, receipts): left alone and counted.
 
@@ -97,8 +97,7 @@ A thread that is not clear goes in "Needs the user", never into a skill.
    missing, say so and skip the replies (the logging still runs). `reply` to the
    latest message from the company, `replyAll` false, no `to`/`cc`/`bcc`, plain
    text. A text with a link goes through `POST /api/mail/send` instead, as
-   `AGENTS.md` says under "Email". The thread stays in the inbox: a rejection is
-   never archived.
+   `AGENTS.md` says under "Email". The thread is archived in step 6.
 2.  **Log it**, whether it was answered or not, through the API at
    `http://localhost:8333` (`./start.sh` if it doesn't answer). Only a process
    that is already in the Calendar: find the company by name in
@@ -138,7 +137,7 @@ user's), take it off with `unlabel_thread`: the chore is done.
 ## 5. Follow up the applications that went quiet
 
 Always, on every run. An application sent by email whose thread has been quiet
-for 7 days (the user's message is the latest one) gets one short follow-up, as a
+for 14 days (the user's message is the latest one) gets one short follow-up, as a
 reply on its own thread, so it lands under the application the recruiter already
 has. It sends without asking and the user gives no input.
 
@@ -171,7 +170,7 @@ already have.
 `curl -s -H 'Content-Type: application/json'`: `GET /api/companies` and
 `GET /api/events`. An application is a candidate when all of these hold:
 
--  It is an `application` event with `applyType` `email_apply`, sent **7 days
+-  It is an `application` event with `applyType` `email_apply`, sent **14 days
   ago or more** (the days the user gives, if they give some), counted from its
   `date`.
 -  Its company is not archived (`status` `active`): an archived one was closed
@@ -202,7 +201,7 @@ when:
   address that appears only inside a message.
 -  **The latest message is not the user's:** the company wrote last, and that is
   for the user to read and answer, not to nudge.
--  **The latest message is less than 7 days old** (the days the user gives, if
+-  **The latest message is less than 14 days old** (the days the user gives, if
   they give some): the thread has not been quiet long enough. The days count
   from that message, not from the application.
 
@@ -230,6 +229,10 @@ When a thread that has the `Follow Up` label gets an answer (its latest message
 is not the user's), take the label off with `unlabel_thread`: the follow-up did
 its job.
 
+A thread tagged `Follow Up` whose latest message is the user's and that is in
+the inbox is archived in step 6: it waits on the company, and Gmail brings it
+back to the inbox when they answer.
+
 ## 6. Archive what was handled
 
 Once a thread's Calendar entry exists, or it is only an application
@@ -241,8 +244,13 @@ confirmation, it has nothing left to do in the inbox: archive it with
   this skill's to fix.
 -  A **recruiter** thread that `/reply` logged (created the passive message, or
   added a new paragraph to one already logged) — archive its thread.
+-  A **rejection** — archive its thread once it is tagged `Rejected` (answered
+  or not, logged or not: the tag keeps it findable).
+-  A **follow-up** — archive the thread of each follow-up sent in step 5, and
+  any thread in the inbox tagged `Follow Up` whose latest message is the
+  user's.
 
-Never archive a **rejection** thread (answered or not), a thread that **needs
+Never archive a thread that **needs
 the user**, an **interview** thread, one left alone in step 2, or one whose
 handling stopped before it reached a Calendar entry.
 
@@ -280,9 +288,9 @@ row for each thread that had an action and in this form:
 
 **Name** is the sender (the person, or the company when there is no person); for
 a follow-up, the person it was sent to. **Subject** is the thread's subject.
-**Action** says what was done, in a few words: `Replied and logged rejection`,
+**Action** says what was done, in a few words: `Replied and logged rejection, archived`,
 `Drafted reply, logged passive message` (the draft itself is shown above the
-table), `Tagged Interviews`, `Tagged Rejected`, `Followed up, tagged Follow Up`,
+table), `Tagged Interviews`, `Tagged Rejected`, `Followed up, tagged Follow Up, archived`,
 `Archived confirmation`, `Needs you: <what it asks>, tagged Needs Attention`,
 `Skipped: company wrote last`, `Skipped: email not found`,
 `Skill stopped: <why>`. A thread with two actions has them in one row.
@@ -292,7 +300,7 @@ starting with two spaces) inside a ```` ```diff ```` block, so the terminal
 paints each row: `- ` (red) when the user must act (`Needs you`, an interview
 time to book, `Skipped: company wrote last`, which is theirs to answer, a
 drafted reply until they send it), `+ ` (green) when it was done here
-(`Replied and logged rejection`, `Followed up`, `Archived confirmation`), and
+(`Replied and logged rejection, archived`, `Followed up`, `Archived confirmation`), and
 two spaces for the rest (`Tagged Interviews` with a time already set,
 `Skipped: email not found`, `Skill stopped`). Not a Markdown table, which
 can't be colored. No emojis, and every line at 80 columns or less. List the
