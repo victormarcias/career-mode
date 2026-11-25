@@ -12,7 +12,7 @@ thread, tagged `Follow Up`. The tags are the ones already made in Gmail.
 Once a thread's Calendar entry exists it is archived, and so are an automatic
 "thanks for applying" confirmation, a rejection (once tagged `Rejected`) and a
 follow-up waiting on the company (tagged `Follow Up`); a thread that needs the
-user and an interview never are. It ends with a table of Name, Subject and Action for what
-it did. It never opens a link of an email. It touches Gmail (read, tags and
-archive), the career-mode database through its local API and the skills it
-calls. Instructions: [SKILL.md](SKILL.md).
+user and an interview never are. It ends with a table of Name, Subject and
+Action for what it did. It never opens a link of an email. It touches Gmail
+(read, tags and archive), the career-mode database through its local API and
+the skills it calls. Instructions: [SKILL.md](SKILL.md).

@@ -137,9 +137,9 @@ user's), take it off with `unlabel_thread`: the chore is done.
 ## 5. Follow up the applications that went quiet
 
 Always, on every run. An application sent by email whose thread has been quiet
-for 14 days (the user's message is the latest one) gets one short follow-up, as a
-reply on its own thread, so it lands under the application the recruiter already
-has. It sends without asking and the user gives no input.
+for 14 days (the user's message is the latest one) gets one short follow-up, as
+a reply on its own thread, so it lands under the application the recruiter
+already has. It sends without asking and the user gives no input.
 
 **The message** is the **📝 Application Follow-up Message** of
 `profile/outreach.md` (read it at run time, never from memory), in the
@@ -186,10 +186,11 @@ already have.
   same company does not count.
 
 **Its email.** For each one, `search_threads` with
-`in:sent has:attachment after:<the day before its date> before:<the day after its date>`
-(the `YYYY/MM/DD` form), `pageSize` 30, and take the thread whose recipient or
-subject matches the company: the recipient's domain is the company's website
-domain, or the company's name is in the subject or the recipient's address. When
+`in:sent has:attachment after:<day before> before:<day after>`
+(the days around its `date`, in the `YYYY/MM/DD` form), `pageSize` 30, and
+take the thread whose recipient or subject matches the company: the
+recipient's domain is the company's website domain, or the company's name is
+in the subject or the recipient's address. When
 several match, `get_thread` with `PLAIN_TEXT` and take the one whose body names
 the company or the role of the event. Then read the thread (`get_thread` with
 `PLAIN_TEXT`): what counts is its **latest message**, whoever the earlier ones
@@ -288,10 +289,12 @@ row for each thread that had an action and in this form:
 
 **Name** is the sender (the person, or the company when there is no person); for
 a follow-up, the person it was sent to. **Subject** is the thread's subject.
-**Action** says what was done, in a few words: `Replied and logged rejection, archived`,
+**Action** says what was done, in a few words:
+`Replied and logged rejection, archived`,
 `Drafted reply, logged passive message` (the draft itself is shown above the
-table), `Tagged Interviews`, `Tagged Rejected`, `Followed up, tagged Follow Up, archived`,
-`Archived confirmation`, `Needs you: <what it asks>, tagged Needs Attention`,
+table), `Tagged Interviews`, `Tagged Rejected`,
+`Followed up, tagged Follow Up, archived`, `Archived confirmation`,
+`Needs you: <what it asks>, tagged Needs Attention`,
 `Skipped: company wrote last`, `Skipped: email not found`,
 `Skill stopped: <why>`. A thread with two actions has them in one row.
 **Color the rows by what the user has to do**, drawing the table as aligned
@@ -300,11 +303,11 @@ starting with two spaces) inside a ```` ```diff ```` block, so the terminal
 paints each row: `- ` (red) when the user must act (`Needs you`, an interview
 time to book, `Skipped: company wrote last`, which is theirs to answer, a
 drafted reply until they send it), `+ ` (green) when it was done here
-(`Replied and logged rejection, archived`, `Followed up`, `Archived confirmation`), and
-two spaces for the rest (`Tagged Interviews` with a time already set,
-`Skipped: email not found`, `Skill stopped`). Not a Markdown table, which
-can't be colored. No emojis, and every line at 80 columns or less. List the
-red rows first. Below the block, one line with how many threads were left
-alone. With no thread in the
+(`Replied and logged rejection, archived`, `Followed up`,
+`Archived confirmation`), and two spaces for the rest (`Tagged Interviews`
+with a time already set, `Skipped: email not found`, `Skill stopped`). Not a
+Markdown table, which can't be colored. No emojis, and every line at 80
+columns or less. List the red rows first. Below the block, one line with how
+many threads were left alone. With no thread in the
 table, say there was nothing to do. Add nothing else unless the command has
 `--verbose`, which adds one line on what each step did. Nothing is committed.
