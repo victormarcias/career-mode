@@ -107,8 +107,9 @@ how long ago it was posted ("1w" is a week).
    out: a post that matches it is not applied to, and its `pending` event is
    deleted without asking (its row says "Removed" and why). A post with neither
    Python nor JavaScript is applied to as well: any skill can be learned. **A
-   hybrid or on-site role is never a reason to skip it either:** always apply,
-   because the user may move there at first. What does end it is something that
+   hybrid or on-site role is not a reason to skip it either,** unless the
+   profile's "Not interested" section rules it out: otherwise apply, because the
+   user may move there at first. What does end it is something that
    is not a tool and that the profile can't back: a country the user can't work
    from, a language they don't speak (Portuguese, say), a university degree that
    is a must (see the profile's "Not interested"), or a role that is not

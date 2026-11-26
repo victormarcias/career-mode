@@ -114,7 +114,8 @@ more than 3 months old. This check never asks the user anything.
   3.  **Check the fit, flexibly.** Follow step 2 of `/apply-pending`'s core
      process: the language counts (Python or JavaScript/TypeScript), and a
      framework, cloud, tool, years or seniority never rules a job out. Hybrid or
-     on-site is not a reason to skip. AI or LLM work is applied to, saying only
+     on-site is not a reason to skip, unless the profile's "Not interested"
+     section rules it out. AI or LLM work is applied to, saying only
      what the CV backs. What rules a job out is only what the profile can't back
      and isn't a skill: a country the user can't work from, a language they
      don't speak, a required degree, a role that isn't development, a match in
