@@ -154,6 +154,7 @@ def test_the_examples_are_a_complete_invented_person():
     assert [line for line in messages.splitlines() if line.startswith('## ')] == [
         '## 📝 Platform Reachout Message', '## 📝 Proposal Reply Message', '## 📝 Application by Email Message',
         '## 📝 Application Follow-up Message', '## 📝 Application Rejected Message', '## 📝 Cover Letter Message',
+        '## 📝 No AI Interviews Message',
     ]
-    assert messages.count('### 🇪🇸 Spanish') == messages.count('### 🇬🇧 English') == 6  # one text per language, every message
+    assert messages.count('### 🇪🇸 Spanish') == messages.count('### 🇬🇧 English') == 7  # one text per language, every message
     assert 'Juan Perez' in profile  # that they hold no real data is tests/test_no_personal_data.py's job

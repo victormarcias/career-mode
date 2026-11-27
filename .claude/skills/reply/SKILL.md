@@ -24,6 +24,14 @@ scratch, even when the user asks for it shorter or more casual: trim the
 template instead. If it's still the example's placeholder, ask the user to write
 it first (`profile/README.md` explains how).
 
+**An AI interview.** When the recruiter's process includes an interview with no
+person on the other side (a live AI interviewer or screening bot, or a one-way
+recorded video interview), the reply is the **📝 No AI Interviews Message**
+instead, as it is, with the recruiter's first name; nothing else from this
+section applies. A static "send a video" ask is not one: it gets the Intro video
+link (the `INTRO_VIDEO_URL` setting). The Calendar logs the passive message and
+then a `rejection` with the note `❌ Reason: AI interview, withdrew.`
+
 What the recruiter asks (English level, CV, availability...) is **always**
 answered, in one short line, in both modes. Something the profile can't answer:
 ask the user. The CV is never attached, even when they ask for it attached: give
@@ -73,6 +81,9 @@ with `curl -s -H 'Content-Type: application/json'`:
    an existing event that lacks it), and `notes` in the format of `AGENTS.md`
    (Data): what the message says (where it came from, the role and its terms)
    and what the reply says (the salary given, the English level, the CV link).
+3.  **A declined AI interview only:** `POST /api/events` with
+   `event: 'rejection'`, the same `companyId`, today's `date`, `time` now, and
+   `notes` `❌ Reason: AI interview, withdrew.`
 
 Then show the draft. Say what was saved only if something failed. Nothing is
 sent and nothing is committed.

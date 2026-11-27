@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- **No AI Interviews Message:** a seventh message, to withdraw from a process
+  with an AI interview, live or recorded; `/digest-email` leaves it as a Gmail
+  draft and tags the thread `Needs Attention` and `No More AI`, and logs the
+  rejection once the user sends it; `/reply` drafts it. A static video ask
+  still gets the Intro video link.
 - **Meeting link:** an interview has its own Meeting link field, opened like the other links; the Google Calendar sync fills it from the invitation and keeps nothing else of it in the notes but its password, when it has one.
 - **CV Google Doc setting (`CV_DOC_ID`):** the ID of the Google Doc the CV is
   written in, so the skills can open it to edit the CV itself.

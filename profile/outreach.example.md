@@ -87,3 +87,19 @@ Tu carta de presentación general.
 ```
 Your general cover letter.
 ```
+
+## 📝 No AI Interviews Message
+
+### 🇪🇸 Spanish
+
+```
+Tu mensaje para bajarte de un proceso con una entrevista con IA, en vivo o
+grabada. Podés usar _nombre_.
+```
+
+### 🇬🇧 English
+
+```
+Your message to withdraw from a process with an AI interview, live or
+recorded. You can use _name_.
+```

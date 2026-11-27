@@ -92,6 +92,7 @@ The skills look a message up by its title, so keep these six.
 | 📝 Application Follow-up Message | ask for news on an application | by hand |
 | 📝 Application Rejected Message | thank them and ask for feedback after a rejection | `/digest-email` |
 | 📝 Cover Letter Message | introduce yourself when there is no specific JD Post | `/apply-site` |
+| 📝 No AI Interviews Message | withdraw when the process has an AI interview, live or recorded | `/digest-email`, `/reply` |
 
 Placeholders, filled in by you or by a skill when it uses the message:
 `_name_` / `_nombre_`, `_position_` / `_puesto_`, `platform_recruiter` and

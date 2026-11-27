@@ -2,8 +2,11 @@
 
 One command for the mailbox. It reads the last 2 days of the user's Gmail, sorts
 each thread and handles it: rejections get the Application Rejected Message of
-`profile/outreach.md` and are logged in the Calendar, and recruiters who wrote
-first go to [reply](../reply/README.md). The threads that propose or
+`profile/outreach.md` and are logged in the Calendar, an AI interview (live or
+recorded, with no person on the other side) gets a Gmail draft of the No AI
+Interviews Message and the `Needs Attention` and `No More AI` tags, and is
+logged as a rejection once the user sends it, and recruiters who wrote first go
+to [reply](../reply/README.md). The threads that propose or
 confirm an interview get the `Interviews` tag, the rejections get `Rejected`,
 the ones that ask the user to do something get `Needs Attention`, and the email
 applications whose thread went quiet for 14 days get one follow-up on that same
