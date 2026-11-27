@@ -12,7 +12,7 @@ everything else, so your own files never leave this computer.
 | `photo.png` (or `.jpg`) | Your profile picture, uploaded in Settings. The skills upload it to forms that ask for one. Yours. |
 | `job_boards.md` | `/go-hunting`'s record of each platform: its jobs page, whether it allows AI, the last hunt and notes on the board. The skill creates and keeps it. Yours. |
 | `daily-posts/` | The posts a private daily-post skill writes, each as `daily-post-YYYYMMDD.txt` with its image (`.png`) next to it, and `log.csv`, the date of each one and whether it went well (`ok`, or `error` when the image was discarded). The first line of each `.txt` is its topic. Yours. |
-| `profile.example.md`, `outreach.example.md` | The same two files to start from: an invented person (Juan Perez) for the profile, and the six messages with a placeholder where each text goes. They ship with the repo. |
+| `profile.example.md`, `outreach.example.md` | The same two files to start from: an invented person (Juan Perez) for the profile, and every message with a placeholder where each text goes. They ship with the repo. |
 
 `./start.sh` makes `profile.md` and `outreach.md` from the examples the
 first time. Delete a file of yours to start it over.
@@ -78,11 +78,11 @@ Follow profile/profile.example.md: same sections, same field names.
 
 `outreach.md` holds the messages that Outreach → Messages shows: your
 reach-out, your reply to a recruiter, your cover letter and so on. It starts as a
-copy of the example, the six titles with a placeholder where each text goes, and
+copy of the example, the titles below with a placeholder where each text goes, and
 the tab says so until you change it. Reload the page after you edit it. git ignores it, so your
 messages stay on this computer and are never uploaded to GitHub.
 
-The skills look a message up by its title, so keep these six.
+The skills look a message up by its title, so keep the titles below as they are.
 
 | Message | For | Used by |
 |---|---|---|
